@@ -19,24 +19,22 @@ double SphericalHOFunc::eval(int n, int l, double b, double r){
 }
 
 
-
-
 //------------------------------------------------------------------------------
-double  SphericalHOFunc::hoRadial (int n, int l, double b, double r){
+double SphericalHOFunc::hoRadial (int n, int l, double b, double r){
     double q = r / b;
     double qsq = q * q;
-    double a = (double) l + 1. / 2.;
+    double a = (double)( l + 1. / 2.);
 
     return
-      norm (n, l, b) * gsl_pow_int (q, (l + 1)) * exp (-qsq / 2.)
-      * gsl_sf_laguerre_n ((n - 1), a, qsq);
+      norm (n, l, b) * gsl_pow_int (q, l) * exp (-qsq / 2.)
+      * gsl_sf_laguerre_n (n, a, qsq);
 }
 
 
 //------------------------------------------------------------------------------
 double SphericalHOFunc::norm(int n, int l, double b){
-    double arg = (double) n + (double) l + 1. / 2.;
+    int arg = 2*n + 2*l + 1;
 
-    return sqrt (2. * gsl_sf_fact ((unsigned) (n - 1)) /
-             (b * gsl_sf_gamma (arg)));
+    return sqrt (pow(2., n + l + 2.) * gsl_sf_fact((unsigned)n) /
+             (b * sqrt(M_PI) * gsl_sf_doublefact((unsigned)arg)));
 }

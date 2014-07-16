@@ -4,9 +4,9 @@ OFILES=sphericalhofunc.o integratorGaussLegendre.o
 CPPFLAGS=-Wall -g -std=c++0x -O3
 MPICC=g++
 
-INCLUDES=
+INCLUDES= -I/opt/local/include
 
-LIBS= -g -lgsl -lgslcblas -I/opt/local/include -L/opt/local/lib -larmadillo
+LIBS= -lgsl -lgslcblas -L/opt/local/lib -larmadillo
 
 
 all: $(TARGET)
