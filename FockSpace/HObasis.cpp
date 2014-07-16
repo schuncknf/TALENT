@@ -80,7 +80,7 @@ int main()
 	{      
 	  for(j=i; j<N; j++)
 	    {
-	      H(i,j) = Hij_l(i,j,l,rmin,rmax,max_step,nu);
+	      //  H(i,j) = Hij_l(i,j,l,rmin,rmax,max_step,nu);
 	    }
 	  for(j=0; j<i; j++)
 	    {
@@ -104,11 +104,10 @@ int main()
       //cout << "r: " << r << " integ: " << integ << endl;
       //cout << r << " " << radiallogs(N, l, r, nu) << endl;
     }
-
    
   cout << "N: " << N << " l: " << l << " Norm: " << integ << endl;
   
-  int n = 100;
+  int n = 10;
   double a,b,alf;
   double *x = new double [n];
   double *w = new double [n];
@@ -121,8 +120,7 @@ int main()
   gauss_laguerre(xgl,wgl, n, alf);
   
   a = 0.0;
-  b = 100.0;
-  alf = 1.0;
+  b = 100.0; 
   
   double int_gausslag = 0.0;
   for ( int i = 1;  i <= n; i++){
@@ -502,11 +500,20 @@ void gauss_laguerre(double *x, double *w, int n, double alf)
 }
 // end function gaulag
 
-double int_function(double x)
+double int_function(double u)
 {
-  double value = sin(x);
+  double nu = 1.0;
+  double N = 5;
+  double l = 0;
+  double value;
+  //u = r*r;
+
+  value = radiallogs(N, l, sqrt(u), nu)*radiallogs(N, l, sqrt(u), nu)*exp(-nu*u);
+ 
   return value;
 } // end of function to evaluate
+
+
        /*
        ** The function 
        **              gauleg()
