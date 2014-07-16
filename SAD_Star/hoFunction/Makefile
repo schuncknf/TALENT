@@ -1,5 +1,6 @@
-TARGET=hoFunction
-OFILES=sphericalhofunc.o integratorGaussLegendre.o
+#TARGET=hoFunction vmatrixgenerator.o
+TARGET=vmatrixGeneratorC
+OFILES=sphericalhofunc.o integratorGaussLegendre.o 
 
 CPPFLAGS=-Wall -g -std=c++0x -O3
 MPICC=g++
