@@ -12,7 +12,7 @@
 
 // calculation through a recursion relation among functions
 // of constant (n+l), starting with n = 0
-double sho_wf (double r, double mw, int n, int l, int which)
+double sho_wf (double r, double mw, int n, int l)
 {
   int i, npl;
   double x, mwr2, cur, last, last2, factor;
