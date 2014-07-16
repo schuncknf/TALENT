@@ -18,17 +18,22 @@ using namespace arma;
 
 
 //----------------------------------------------------------------------------------------
-void generateRandomMatrix(int seed, cx_mat& randA, int iSize, int jSize) {
-    randA = randu<cx_mat>(iSize, jSize);
-}
+//void generateRandomMatrix(int seed, cx_mat& randA, int iSize, int jSize) {
+//    randA = randu<cx_mat>(iSize, jSize);
+//}
 
 
 //----------------------------------------------------------------------------------------
 void generateMyMatrix(cx_mat& A, int dim){
+    
     A.zeros(dim,dim);
-    for(int i=0; i<dim; i++){
-        A(i,i)= cx_double(double(i+1),0.);
+    
+    for(int j =0; j<dim; j++ ) {
+        for(int i=0; i<dim; i++){
+            A(i,j)= cx_double(double(1.),0.);
+        }
     }
+    
 }
 
 //----------------------------------------------------------------------------------------
