@@ -17,6 +17,11 @@
 #include <armadillo>
 
 
+#define EPS 3.0e-14
+#define MAXIT 10
+#define   ZERO       1.0E-10
+
+
 using namespace std;
 using namespace arma;
 
@@ -24,18 +29,18 @@ int factorial(int);
 double logfact(int);
 int oddfact(int);
 double logoddfact(int);
-int nCk(int, int);
-double lognCk(int, int);
-double assolagu(int, int, double);
-double assolagulogs(int, int, double);
-double radial(int, int, double);
 double radiallogs(int, int, double, double);
 double recursive(int, double, double);
 double Hij_l(int, int, int, double, double, int, double);
 double potential(double);
-double simp(double rmin, double rmax, int max_step, int i, int j, int l, double);
+double simp(double rmin, double rmax, int max_step, int i, int j, int l,double);
 double func(int i, int j, int l, double r, double nu);
 void output(int, mat, mat, vec, double, double, int, int, double);
+void gauss_laguerre(double *x, double *w, int n, double alf);
+double int_function(double x);
+void gauleg(double x1, double x2, double x[], double w[], int n);
+
+double gammln(double);
 
 ofstream ham;
 ofstream eigs;
@@ -61,8 +66,8 @@ int main()
   rmin = 0.0;
   rmax = 20.0;
   max_step = 2000; 
-  N=30;
-  l=0;
+  N=5;
+  l=2;
   //H.eye(); // initialize H to the identity mtx
   //for(N=2; N<=Nmax; N=N+5)
   for(nu = 0.00001; nu<20.0; nu*=4.0)
@@ -99,10 +104,37 @@ int main()
       //cout << "r: " << r << " integ: " << integ << endl;
       //cout << r << " " << radiallogs(N, l, r, nu) << endl;
     }
-  
+
+   
   cout << "N: " << N << " l: " << l << " Norm: " << integ << endl;
   
+  int n = 100;
+  double a,b,alf;
+  double *x = new double [n];
+  double *w = new double [n];
+  double *xgl = new double [n+1];
+  double *wgl = new double [n+1];
+  //   set up the mesh points and weights
+  gauleg(a, b,x,w, n);
+  //   set up the mesh points and weights and the power of x^alf
+  alf = 1.0;
+  gauss_laguerre(xgl,wgl, n, alf);
+  
+  a = 0.0;
+  b = 100.0;
+  alf = 1.0;
+  
+  double int_gausslag = 0.0;
+  for ( int i = 1;  i <= n; i++){
+    int_gausslag += wgl[i]*int_function(xgl[i]);
+  }
 
+  cout << "Gaussian-Laguerre quad = " << int_gausslag << endl;
+
+  delete [] x;
+  delete [] w;
+  delete [] xgl;
+  delete [] wgl;
   lepageplot.close();
   lerror.close();
   Nerror.close();
@@ -287,36 +319,6 @@ double func(int i, int j, int l, double r, double nu)
 } //end func
 
 
-double radial(int n, int l, double r)
-{
-  double v, coeff, R;
-  v = 1.0;
-
-  // coeff nans after most n>10.
-  coeff = sqrt(pow(v,1.5)*pow(2,l-n+2)*oddfact(2*n+2*l+1)/
-	       (sqrt(M_PI)*factorial(n)*pow(oddfact(2*l+1),2.0)));
-
-  R = coeff*pow(v*r*r,l/2)*assolagu(n,l,v*r*r)*exp(-v*r*r/2.0);
-  
-  return R;
-}
-
-/*
-double radiallogs(int n, int l, double r)
-{
-  double v, logcoeff, R,coeff;
-  v = 1.0;
-
-  logcoeff = 0.5*(1.5*log(v) + (l-n+2)*log(2) + logoddfact(2*n+2*l+1)) 
-    -0.5*(0.5*log(M_PI) + logfact(n) + 2*logoddfact(2*l+1));
-
-  // pulled the exp(-v*r*r/2.0) term into assolagulogs
-  R = exp(logcoeff)*pow(v*r*r,l/2)*assolagulogs(n,l,v*r*r);
-  
-  return R;
-}
-*/
-
 double radiallogs(int n, int l, double r, double nu)
 {
   // v = nu = m*omega/(2*h_bar) this is different from practioners!
@@ -369,69 +371,6 @@ double recursive(int n, double alpha, double x)
 
     }
 }
-
-
-// calculates Laguerre with superscript l+1/2, subscript n for an x
-double assolagu(int n, int l, double x)
-{
-  int i;
-  double sum = 0;
-  
-  for(i=0; i<=n; i++)
-    {
-      sum += pow(-1.0,i)*pow(2.0,i)*nCk(n,i)*oddfact(2*l+1)*pow(x,i)/
-	oddfact(2*l+2*i+1);
-    }
-  return sum;
-}
-
-// where x will be v*r*r
-// feed exp(-v*r*r/2.0) into the laguerre poly to make each term smaller
-double assolagulogs(int n, int l, double x)
-{
-  int i; 
-  double sum = 0;
-  double logterm;
-  
-  
-  if( x <= 1.05 ) // don't want log(x) to blow up
-    {
-      for(i=0; i<=n; i++)
-	{
-	  logterm = i*log(2) + lognCk(n,i) + logoddfact(2*l+1)
-	    -logoddfact(2*l+2*i+1)- x/2.0;
-	  
-	  sum += pow(-1.0,i)*exp(logterm)*pow(x,i);
-	}
-      return sum;
-    }
-  else
-    {      
-      for(i=0; i<=n; i++)
-	{      
-	  logterm = i*log(2) + lognCk(n,i) + logoddfact(2*l+1)
-	    -logoddfact(2*l+2*i+1) + i*log(x)- x/2.0;
-	  
-	  sum += pow(-1.0,i)*exp(logterm);	
-	}
-      return sum;
-    }
-}
-
-
-
-
-int nCk(int n, int k)
-{
-  return factorial(n)/(factorial(k)*factorial(n-k));
-} // end n Choose k
-
-
-double lognCk(int n, int k)
-{
-  return logfact(n) - logfact(k) - logfact(n-k);
-} // end log n Choose k
-
 
 
 int factorial(int n)
@@ -524,3 +463,132 @@ double logoddfact(int n)
     }
   
 } // end logoddfact
+
+
+// guass leguerre integration from Morten's demonstration
+void gauss_laguerre(double *x, double *w, int n, double alf)
+{
+  int i,its,j;
+  double ai;
+  double p1,p2,p3,pp,z,z1;
+  
+  for (i=1;i<=n;i++) {
+    if (i == 1) {
+      z=(1.0+alf)*(3.0+0.92*alf)/(1.0+2.4*n+1.8*alf);
+    } else if (i == 2) {
+      z += (15.0+6.25*alf)/(1.0+0.9*alf+2.5*n);
+    } else {
+      ai=i-2;
+      z += ((1.0+2.55*ai)/(1.9*ai)+1.26*ai*alf/
+	    (1.0+3.5*ai))*(z-x[i-2])/(1.0+0.3*alf);
+    }
+    for (its=1;its<=MAXIT;its++) {
+      p1=1.0;
+      p2=0.0;
+      for (j=1;j<=n;j++) {
+	p3=p2;
+	p2=p1;
+	p1=((2*j-1+alf-z)*p2-(j-1+alf)*p3)/j;
+      }
+      pp=(n*p1-(n+alf)*p2)/z;
+      z1=z;
+      z=z1-p1/pp;
+      if (fabs(z-z1) <= EPS) break;
+    }
+    if (its > MAXIT) cout << "too many iterations in gaulag" << endl;
+    x[i]=z;
+    w[i] = -exp(gammln(alf+n)-gammln((double)n))/(pp*n*p2);
+  }
+}
+// end function gaulag
+
+double int_function(double x)
+{
+  double value = sin(x);
+  return value;
+} // end of function to evaluate
+       /*
+       ** The function 
+       **              gauleg()
+       ** takes the lower and upper limits of integration x1, x2, calculates
+       ** and return the abcissas in x[0,...,n - 1] and the weights in w[0,...,n - 1]
+       ** of length n of the Gauss--Legendre n--point quadrature formulae.
+       */
+
+void gauleg(double x1, double x2, double x[], double w[], int n)
+{
+   int         m,j,i;
+   double      z1,z,xm,xl,pp,p3,p2,p1;
+   double      const  pi = 3.14159265359; 
+   double      *x_low, *x_high, *w_low, *w_high;
+
+   m  = (n + 1)/2;                             // roots are symmetric in the interval
+   xm = 0.5 * (x2 + x1);
+   xl = 0.5 * (x2 - x1);
+
+   x_low  = x;                                       // pointer initialization
+   x_high = x + n - 1;
+   w_low  = w;
+   w_high = w + n - 1;
+
+   for(i = 1; i <= m; i++) {                             // loops over desired roots
+      z = cos(pi * (i - 0.25)/(n + 0.5));
+
+           /*
+	   ** Starting with the above approximation to the ith root
+           ** we enter the mani loop of refinement bt Newtons method.
+           */
+
+      do {
+         p1 =1.0;
+	 p2 =0.0;
+
+   	   /*
+	   ** loop up recurrence relation to get the
+           ** Legendre polynomial evaluated at x
+           */
+
+	 for(j = 1; j <= n; j++) {
+	    p3 = p2;
+	    p2 = p1;
+	    p1 = ((2.0 * j - 1.0) * z * p2 - (j - 1.0) * p3)/j;
+	 }
+
+	   /*
+	   ** p1 is now the desired Legrendre polynomial. Next compute
+           ** ppp its derivative by standard relation involving also p2,
+           ** polynomial of one lower order.
+           */
+ 
+	 pp = n * (z * p1 - p2)/(z * z - 1.0);
+	 z1 = z;
+	 z  = z1 - p1/pp;                   // Newton's method
+      } while(fabs(z - z1) > ZERO);
+
+          /* 
+	  ** Scale the root to the desired interval and put in its symmetric
+          ** counterpart. Compute the weight and its symmetric counterpart
+          */
+
+      *(x_low++)  = xm - xl * z;
+      *(x_high--) = xm + xl * z;
+      *w_low      = 2.0 * xl/((1.0 - z * z) * pp * pp);
+      *(w_high--) = *(w_low++);
+   }
+} // End_ function gauleg()
+
+double gammln( double xx)
+{
+	double x,y,tmp,ser;
+	static double cof[6]={76.18009172947146,-86.50532032941677,
+		24.01409824083091,-1.231739572450155,
+		0.1208650973866179e-2,-0.5395239384953e-5};
+	int j;
+
+	y=x=xx;
+	tmp=x+5.5;
+	tmp -= (x+0.5)*log(tmp);
+	ser=1.000000000190015;
+	for (j=0;j<=5;j++) ser += cof[j]/++y;
+	return -tmp+log(2.5066282746310005*ser/x);
+}
