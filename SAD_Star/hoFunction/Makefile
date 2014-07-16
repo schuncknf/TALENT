@@ -6,8 +6,7 @@ MPICC=g++
 
 INCLUDES=
 
-LIBS= -larmadillo -lgsl
-
+LIBS= -g -lgsl -lgslcblas -I/opt/local/include -L/opt/local/lib -larmadillo
 
 
 all: $(TARGET)
@@ -18,6 +17,5 @@ $(TARGET):  $(OFILES) $(TARGET).cpp
 
 %.o: %.cpp %.h
 	$(MPICC) $(CPPFLAGS) $(INCLUDES) $< -c
-
 clean:
 	rm -f $(TARGET) $(OFILES)

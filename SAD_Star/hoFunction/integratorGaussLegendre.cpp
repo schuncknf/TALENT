@@ -58,12 +58,12 @@ void IntegratorGaussLegendre::readTab(string file, vector<vector<double> > & dat
   while(! input.eof()){
       input>>word;
 
-      if(word.front()== '$'){
+      if(word[0] == '$'){
           data.push_back(valVec);
           n++;
           valVec.clear();
       }
-      else if(word.size() > 40 || word.front()=='0'){
+      else if(word.size() > 40 || word[0] =='0'){
           double val= std::atof(word.c_str());
           valVec.push_back(val);
       }
