@@ -1,3 +1,6 @@
+Nathan, Fernando, Fabrizio 
+
+
 compile: gfortran -o run_hyd CoulombOscRelMe.f90 -L/user/local/lib/ -llapack -lblas 
 
 run ./run_hyd
