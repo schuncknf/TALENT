@@ -26,5 +26,9 @@ converges with varying nu and varying N. These saved files have been renamed to
 "N#.dat" where # is the Hamiltonian dimension used for that run.
 
 Things to still work on:
-Using fancy quadrature integration rather than my simple Simpson method. 
-However, I might skip this, as we need to start working on the next project.
+Using fancy quadrature integration rather than my simple Simpson method. At the
+Moment, the code outputs to the terminal the norm of the highest N wavefunction
+used using Euler's method of integration, as well as the attempted Norm using
+Gauss-Laguerre integration.  The Euler's always returns 1 as it should, but I
+am not getting that for the Gauss-Laguerre integration yet.  However, I might 
+skip this, as we need to start working on the next project.
