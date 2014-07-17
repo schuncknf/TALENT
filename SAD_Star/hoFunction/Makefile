@@ -1,21 +1,27 @@
-TARGET=hoFunction
-OFILES=sphericalhofunc.o integratorGaussLegendre.o
+#TARGET=hoFunction vmatrixgenerator.o
+TARGET=vmatrixGeneratorC
+TESTTARGET= testMain
+OFILES=sphericalhofunc.o integratorGaussLegendre.o 
 
 CPPFLAGS=-Wall -g -std=c++0x -O3
 MPICC=g++
 
-INCLUDES=
+INCLUDES= -I/opt/local/include
 
-LIBS= -g -lgsl -lgslcblas -I/opt/local/include -L/opt/local/lib -larmadillo
+LIBS= -lgsl -lgslcblas -L/opt/local/lib -larmadillo
+TESTLIB= $(LIBS) -lboost_unit_test_framework
 
 
 all: $(TARGET)
 
-
 $(TARGET):  $(OFILES) $(TARGET).cpp
-	$(MPICC) $(OFILES) $(TARGET).cpp -o $(TARGET) $(LIBS)
+	$(MPICC) $(CPPFLAGS) $(INCLUDES) $(OFILES) $(TARGET).cpp -o $(TARGET) $(LIBS)
 
 %.o: %.cpp %.h
 	$(MPICC) $(CPPFLAGS) $(INCLUDES) $< -c
+
+tests:  $(OFILES) $(TESTTARGET).cpp
+	$(MPICC) $(CPPFLAGS) $(INCLUDES) $(OFILES) $(TESTTARGET).cpp -o $(TESTTARGET) $(TESTLIB)
+
 clean:
 	rm -f $(TARGET) $(OFILES)

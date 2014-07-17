@@ -8,6 +8,7 @@
 
 #include "sphericalhofunc.h"
 #include "integratorGaussLegendre.h"
+#include "vmatrixgenerator.h"
 
 #define HBARRE 6.58211928
 
@@ -63,6 +64,14 @@ int main (int argc, char* argv[])
 //        cout<<x<<" "<<hoProd(x)<<endl;
 //    }
 
+
+    cout<<"Matrix element test"<<endl;
+    VMatrixGenerator generator;
+    generator.setRadialPotential(xFunc);
+    generator.setIntOrder(3);
+
+    vector<vector<double> > mat;
+    generator.generateMatrix(mat, 3);
 
     return 0;
 }
