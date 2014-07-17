@@ -1,0 +1,12 @@
+compile: gfortran -o run_hyd CoulombOscRelMe.f90 -L/user/local/lib/ -llapack -lblas 
+
+run ./run_hyd
+
+
+output is in: Hyd_energy.dat
+
+rows correspond to different omega values, given in column 1. 
+column 2 is nmax = 0
+column 3 is nmax = 5
+column 4 is nmax = 10 
+and so on until nmax = 50
