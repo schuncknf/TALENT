@@ -1,4 +1,8 @@
-#include <armadillo>
+#ifndef VMATRIXGENERATORC_CPP
+#define VMATRIXGENERATORC_CPP
+
+#include<functional>
+#include<armadillo>
 
 #include "sphericalhofunc.h"
 #include "integratorGaussLegendre.h"
@@ -7,6 +11,7 @@
 
 using namespace std;
 using namespace arma;
+using namespace std::placeholders;
 
 
 //------------------------------------------------------------------------------
@@ -29,12 +34,14 @@ double integrand(double r, int n1, int n2, SphericalHOFunc& rFunc) {
 double calcElement(int n1, int n2, IntegratorGaussLegendre& integrator, int order, SphericalHOFunc& rFunc){
 
     double elem=0;
-    int l1=0;
-    int l2=0;
+    int l1= 0;
+    int l2= 0;
     double b= rFunc.getB();
 
     // Potential part:
-    elem+= integrator.integrate3(&integrand, 0., 25., order, n1, n2, rFunc);
+    auto integrandF= bind(integrand, _1, n1, n2, rFunc);
+    elem+= integrator.integrate(integrandF, 0., 25);
+
     // Kinetic part:
     double kin(0);
     if(n1 == n2){
@@ -57,6 +64,7 @@ void generateMatrix(mat &A, int nMax, SphericalHOFunc& rFunc) {
     int order=50;
     IntegratorGaussLegendre integrator;
     integrator.readTables("lgvalues-weights.php", "lgvalues-abscissa.php");
+    integrator.setOrder(3);
 
     A.zeros(nMax,nMax);
     for(int i=0; i< nMax; i++){
@@ -85,4 +93,8 @@ int main (int argc, char* argv[]){
   eig_sym(eigenVal, eigenVec, A);
   cout<< eigenVal<<endl;
 
+  return 0;
 }
+
+
+#endif

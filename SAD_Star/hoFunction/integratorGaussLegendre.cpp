@@ -2,7 +2,7 @@
 
 
 //------------------------------------------------------------------------------
-IntegratorGaussLegendre::IntegratorGaussLegendre()
+IntegratorGaussLegendre::IntegratorGaussLegendre(): order_(2)
 {
 }
 
@@ -14,64 +14,17 @@ IntegratorGaussLegendre::~IntegratorGaussLegendre()
 
 
 //------------------------------------------------------------------------------
+void IntegratorGaussLegendre::setOrder(int n){
+  order_=n;
+}
+
+
+//------------------------------------------------------------------------------
 void IntegratorGaussLegendre::readTables(string weightFile, string abscissaFile){
     this->readTab(weightFile, weights_);
     this->readTab(abscissaFile, abscissa_);
 }
 
-
-//------------------------------------------------------------------------------
-double IntegratorGaussLegendre::integrate(double (*func)(double), double a, double b, int order) const{
-    if(order> weights_.size() || order>abscissa_.size() || order<2){
-        throw logic_error( (string("in ")+__FILE__+" "+__FUNCTION__+", table unavailable for this order").c_str());
-    }
-
-    double sum=0;
-    double x;
-    for(int i=0; i<order; i++){
-        x= abscissa_.at(order).at(i) * (b-a)/2. + (b+a)/2.;
-        sum+= weights_.at(order).at(i)* func(x);
-    }
-    sum*= (b-a)/2.;
-
-    return sum;
-}
-
-
-//------------------------------------------------------------------------------
-double IntegratorGaussLegendre::integrate2(double (*func)(void *, double), void *object, double a, double b, int order){
-    if(order> weights_.size() || order>abscissa_.size() || order<2){
-        throw logic_error( (string("in ")+__FILE__+" "+__FUNCTION__+", table unavailable for this order").c_str());
-    }
-
-    double sum=0;
-    double x;
-    for(int i=0; i<order; i++){
-        x= abscissa_.at(order).at(i) * (b-a)/2. + (b+a)/2.;
-        sum+= weights_.at(order).at(i)* func(object, x);
-    }
-    sum*= (b-a)/2.;
-
-    return sum;
-}
-
-
-//------------------------------------------------------------------------------
-double IntegratorGaussLegendre::integrate3(double (*func)(double, int, int, SphericalHOFunc& rFunc), double a, double b, int order, int n1, int n2, SphericalHOFunc& rFunc){
-    if(order> weights_.size() || order>abscissa_.size() || order<2){
-        throw logic_error( (string("in ")+__FILE__+" "+__FUNCTION__+", table unavailable for this order").c_str());
-    }
-
-    double sum=0;
-    double x;
-    for(int i=0; i<order; i++){
-        x= abscissa_.at(order).at(i) * (b-a)/2. + (b+a)/2.;
-        sum+= weights_.at(order).at(i)* func(x, n1, n2, rFunc);
-    }
-    sum*= (b-a)/2.;
-
-    return sum;
-}
 
 //------------------------------------------------------------------------------
 /**

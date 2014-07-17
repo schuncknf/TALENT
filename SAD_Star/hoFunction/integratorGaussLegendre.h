@@ -7,8 +7,6 @@
 #include<vector>
 #include<stdexcept>
 
-#include "sphericalhofunc.h"
-
 using namespace std;
 
 
@@ -21,11 +19,11 @@ public:
     IntegratorGaussLegendre();
     ~IntegratorGaussLegendre();
 
-    double integrate( double (*func)(double), double a, double b, int order) const;
-    double integrate2(double (*func)(void*, double), void* object, double a, double b, int order);
-    double integrate3( double (*func)(double, int, int, SphericalHOFunc& rFunc), double a, double b, int order, int n1, int n2, SphericalHOFunc& rFunc);
-//    double integrate3(double (VMatrixGenerator::*)(double)const, double a, double b, int order);
     void readTables(string weightFile, string abscissaFile);
+    void setOrder(int n);
+
+    template<class T>
+    double integrate(T func, double a, double b) const;
 
 
 private:
@@ -35,5 +33,24 @@ private:
     void readTab(string file, vector<vector<double> >& data);
 
 };
+
+
+//------------------------------------------------------------------------------
+template<class T>
+double IntegratorGaussLegendre::integrate(T func, double a, double b) const{
+    if(order_> weights_.size() || order_>abscissa_.size() || order_<2){
+        throw logic_error( (string("in ")+__FILE__+" "+__FUNCTION__+", table unavailable for this order").c_str());
+    }
+
+    double sum=0;
+    double x;
+    for(int i=0; i<order_; i++){
+        x= abscissa_.at(order_).at(i) * (b-a)/2. + (b+a)/2.;
+        sum+= weights_.at(order_).at(i)* func(x);
+    }
+    sum*= (b-a)/2.;
+
+    return sum;
+}
 
 #endif // INTEGRATOR_H
