@@ -51,7 +51,7 @@ void generateMatrix(mat &A, int nMax) {
 //------------------------------------------------------------------------------
 int main (int argc, char* argv[]){
   mat A;
-  int nMax=2;
+  int nMax=5;
 
   generateMatrix(A, nMax);
   cout<<A<<endl;
