@@ -18,12 +18,13 @@ public:
     SphericalHOFunc();
     ~SphericalHOFunc();
 
-    double eval(int n, int l, double b, double r);
+    double eval(int n, int l, double r);
+    void set_b_(double j);
 
 private:
-    double hoRadial (int n, int l, double b, double r);
-    double norm (int n, int l, double b);
-//    double hoEigenValue (int n, int l, double b, double m);
+    double hoRadial (int n, int l, double r);
+    double norm (int n, int l);
+    double b_;
 
 };
 
