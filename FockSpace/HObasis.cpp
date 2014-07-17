@@ -80,7 +80,7 @@ int main()
 	{      
 	  for(j=i; j<N; j++)
 	    {
-	      //  H(i,j) = Hij_l(i,j,l,rmin,rmax,max_step,nu);
+	      H(i,j) = Hij_l(i,j,l,rmin,rmax,max_step,nu);
 	    }
 	  for(j=0; j<i; j++)
 	    {
