@@ -85,6 +85,7 @@ real(8) function overlap_integral(n1,n2,lr,oscl,rr,wrr)
 
   oscl_r=oscl        ! Oscillator parameter for relative
   
+  nrel_max = 100
   int_sum=0.d0
   do i = 1, nrel_max
      int_sum = int_sum +  Rnl(n1,lr,oscl,rr(i)) * &
@@ -126,7 +127,7 @@ real(8) function general_pot_integral(n1,n2,lr,oscl,rr,wrr)
   REAL(8), DIMENSION(100) :: rr, wrr
   REAL(8) :: cx(0:200),fac,dfac,Rnl,vpot
 
-
+  nrel_max =100
            int_sum = 0.D0
            DO i=1,nrel_max
               
