@@ -14,7 +14,7 @@ all: $(TARGET)
 
 
 $(TARGET):  $(OFILES) $(TARGET).cpp
-	$(MPICC) $(OFILES) $(TARGET).cpp -o $(TARGET) $(LIBS)
+	$(MPICC) $(OFILES) $(INCLUDES) $(TARGET).cpp -o $(TARGET) $(LIBS)
 
 %.o: %.cpp %.h
 	$(MPICC) $(CPPFLAGS) $(INCLUDES) $< -c
