@@ -24,4 +24,6 @@ hydrogen.c: diagonalization of hydrogen atom in spherical HO basis
 
 eigen.c: an attempt to separate matrix functions (in progress)
 
-gauher.c: Gauss-Hermite quadrature (in progress)
+gauher.c: Gauss-Hermite quadrature (to be used for the on-fly generation of weights)
+
+sho_test_gauher.c: testing of orthogonality of R_nl(r) with Gauss-Hermite integration - much better than Gauss-Laguerre. It uses fixed number of abscissas: 64, scaling is set accoring to hw. This is good up to polynomials of degree 124, i.e. 2n+l < 125.
