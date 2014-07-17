@@ -7,6 +7,8 @@
 #include<vector>
 #include<stdexcept>
 
+#include "sphericalhofunc.h"
+
 using namespace std;
 
 
@@ -21,7 +23,7 @@ public:
 
     double integrate( double (*func)(double), double a, double b, int order) const;
     double integrate2(double (*func)(void*, double), void* object, double a, double b, int order);
-    double integrate3( double (*func)(double, int, int), double a, double b, int order, int n1, int n2);
+    double integrate3( double (*func)(double, int, int, SphericalHOFunc& rFunc), double a, double b, int order, int n1, int n2, SphericalHOFunc& rFunc);
 //    double integrate3(double (VMatrixGenerator::*)(double)const, double a, double b, int order);
     void readTables(string weightFile, string abscissaFile);
 

@@ -19,7 +19,8 @@ public:
     ~SphericalHOFunc();
 
     double eval(int n, int l, double r);
-    void set_b_(double j);
+    void setB(double j);
+    double getB();
 
 private:
     double hoRadial (int n, int l, double r);

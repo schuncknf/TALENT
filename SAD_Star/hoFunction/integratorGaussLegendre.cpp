@@ -57,7 +57,7 @@ double IntegratorGaussLegendre::integrate2(double (*func)(void *, double), void 
 
 
 //------------------------------------------------------------------------------
-double IntegratorGaussLegendre::integrate3(double (*func)(double, int, int), double a, double b, int order, int n1, int n2){
+double IntegratorGaussLegendre::integrate3(double (*func)(double, int, int, SphericalHOFunc& rFunc), double a, double b, int order, int n1, int n2, SphericalHOFunc& rFunc){
     if(order> weights_.size() || order>abscissa_.size() || order<2){
         throw logic_error( (string("in ")+__FILE__+" "+__FUNCTION__+", table unavailable for this order").c_str());
     }
@@ -66,7 +66,7 @@ double IntegratorGaussLegendre::integrate3(double (*func)(double, int, int), dou
     double x;
     for(int i=0; i<order; i++){
         x= abscissa_.at(order).at(i) * (b-a)/2. + (b+a)/2.;
-        sum+= weights_.at(order).at(i)* func(x, n1, n2);
+        sum+= weights_.at(order).at(i)* func(x, n1, n2, rFunc);
     }
     sum*= (b-a)/2.;
 

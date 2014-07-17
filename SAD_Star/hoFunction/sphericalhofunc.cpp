@@ -20,8 +20,14 @@ double SphericalHOFunc::eval(int n, int l, double r) {
 
 
 //------------------------------------------------------------------------------
-void SphericalHOFunc::set_b_(double j) {
+void SphericalHOFunc::setB(double j) {
     b_ = j;
+}
+
+
+//------------------------------------------------------------------------------
+double SphericalHOFunc::getB(){
+    return b_;
 }
 
 
