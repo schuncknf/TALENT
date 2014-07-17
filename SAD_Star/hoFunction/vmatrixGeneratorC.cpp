@@ -31,7 +31,7 @@ double integrand(double r, int n1, int n2, SphericalHOFunc& rFunc) {
 
 
 //------------------------------------------------------------------------------
-double calcElement(int n1, int n2, IntegratorGaussLegendre& integrator, int order, SphericalHOFunc& rFunc){
+double calcElement(int n1, int n2, IntegratorGaussLegendre& integrator, SphericalHOFunc& rFunc){
 
     double elem=0;
     int l1= 0;
@@ -40,7 +40,7 @@ double calcElement(int n1, int n2, IntegratorGaussLegendre& integrator, int orde
 
     // Potential part:
     auto integrandF= bind(integrand, _1, n1, n2, rFunc);
-    elem+= integrator.integrate(integrandF, 0., 25);
+    elem+= integrator.integrate(integrandF, 0., 50);
 
     // Kinetic part:
     double kin(0);
@@ -61,15 +61,14 @@ double calcElement(int n1, int n2, IntegratorGaussLegendre& integrator, int orde
 
 //------------------------------------------------------------------------------
 void generateMatrix(mat &A, int nMax, SphericalHOFunc& rFunc) {
-    int order=50;
     IntegratorGaussLegendre integrator;
     integrator.readTables("lgvalues-weights.php", "lgvalues-abscissa.php");
-    integrator.setOrder(3);
+    integrator.setOrder(50);
 
     A.zeros(nMax,nMax);
     for(int i=0; i< nMax; i++){
         for(int j=0; j<nMax; j++){
-            A(i,j)= calcElement(i, j, integrator, order, rFunc);
+            A(i,j)= calcElement(i, j, integrator, rFunc);
         }
     }
 }
