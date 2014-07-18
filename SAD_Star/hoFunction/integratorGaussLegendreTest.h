@@ -54,6 +54,19 @@ BOOST_AUTO_TEST_CASE( func1Test )
     BOOST_CHECK_CLOSE(res, 2.e3/3., 1e-6);
 }
 
+//------------------------------------------------------------------------------
+double funcTest2(double x){
+    return x*exp(-x);
+}
+//------------------------------------------------------------------------------
+BOOST_AUTO_TEST_CASE( func2Test )
+{
+    integrator_.setOrder(60);
+    double res= integrator_.integrate0ToInf(funcTest2);
+    BOOST_CHECK_CLOSE(res, 1., 1e-6);
+}
+
+
 
 BOOST_AUTO_TEST_SUITE_END()
 

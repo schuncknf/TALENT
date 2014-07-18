@@ -3,15 +3,26 @@
 
 #include<functional>
 #include<armadillo>
+#include<gsl/gsl_integration.h>
 
 #include "sphericalhofunc.h"
-#include "integratorGaussLegendre.h"
+#include "integratorGaussLaguerre.h"
+#include "integratorGaussLaguerre.h"
 
 
 
 using namespace std;
 using namespace arma;
 using namespace std::placeholders;
+
+
+
+//------------------------------------------------------------------------------
+typedef struct{
+  int n1;
+  int n2;
+  SphericalHOFunc rFunc;
+} Params;
 
 
 //------------------------------------------------------------------------------
@@ -29,9 +40,20 @@ double integrand(double r, int n1, int n2, SphericalHOFunc& rFunc) {
     return res;
 }
 
+//------------------------------------------------------------------------------
+double integrand2(double r, void* p) {
+    Params* param= (Params*) p;
+
+    double res= vR(r);
+    res*= param->rFunc.eval(param->n1, 0, r);
+    res*= param->rFunc.eval(param->n2, 0, r);
+    res*= r*r;
+    return res;
+}
+
 
 //------------------------------------------------------------------------------
-double calcElement(int n1, int n2, IntegratorGaussLegendre& integrator, SphericalHOFunc& rFunc){
+double calcElement(int n1, int n2, IntegratorGaussLaguerre& integrator, SphericalHOFunc& rFunc){
 
     double elem=0;
     int l1= 0;
@@ -40,7 +62,22 @@ double calcElement(int n1, int n2, IntegratorGaussLegendre& integrator, Spherica
 
     // Potential part:
     auto integrandF= bind(integrand, _1, n1, n2, rFunc);
-    elem+= integrator.integrate(integrandF, 0., 50);
+    elem+= integrator.integrate0ToInf(integrandF);
+
+//    int dim= 1000;
+//    double error= 1e-2;
+
+//    Params* p= new Params;
+//    p->n1= n1;
+//    p->n2= n2;
+//    p->rFunc= rFunc;
+
+//    double res;
+//    gsl_integration_workspace * w= gsl_integration_workspace_alloc(dim);
+//    gsl_function F;
+//    F.function= integrand2;
+//    F.params= p;
+//    elem+= gsl_integration_qagiu(&F, 0., error, error, dim, w, &res, &error);
 
     // Kinetic part:
     double kin(0);
@@ -56,18 +93,21 @@ double calcElement(int n1, int n2, IntegratorGaussLegendre& integrator, Spherica
     elem+= kin;
 
     return kin;
+
+    //clean
+    //gsl_integration_workspace_free(w);
 }
 
 
 //------------------------------------------------------------------------------
 void generateMatrix(mat &A, int nMax, SphericalHOFunc& rFunc) {
-    IntegratorGaussLegendre integrator;
-    integrator.readTables("lgvalues-weights.php", "lgvalues-abscissa.php");
-    integrator.setOrder(50);
+    IntegratorGaussLaguerre integrator;
+    integrator.readTables("../gen_laguerre/gauss-laguerre_n100_x.txt", "../gen_laguerre/gauss-laguerre_n100_w.txt", 100);
+    integrator.setOrder(100);
 
     A.zeros(nMax,nMax);
     for(int i=0; i< nMax; i++){
-        for(int j=0; j<nMax; j++){
+        for(int j=0; j< nMax; j++){
             A(i,j)= calcElement(i, j, integrator, rFunc);
         }
     }
@@ -77,20 +117,26 @@ void generateMatrix(mat &A, int nMax, SphericalHOFunc& rFunc) {
 //------------------------------------------------------------------------------
 int main (int argc, char* argv[]){
   mat A;
-  int nMax=100;
-  double b=0.5;
+  int nMax=50;
 
-  SphericalHOFunc rFunc;
-  rFunc.setB(b);
+  for(double b=1e-6; b<0.1; b+= 5e-3){
 
-  generateMatrix(A, nMax, rFunc);
-  cout<<A<<endl;
 
-  cout<<"Eigen Value= "<<endl;
-  vec eigenVal;
-  mat eigenVec;
-  eig_sym(eigenVal, eigenVec, A);
-  cout<< eigenVal<<endl;
+      SphericalHOFunc rFunc;
+      rFunc.setB(b);
+      //  for(double x=0; x<50; x+=1e-2){
+      //      cout<<integrand(x, 2, 3, rFunc)<<endl;
+      //  }
+
+      generateMatrix(A, nMax, rFunc);
+      //cout<<A<<endl;
+
+      //cout<<"Eigen Value= "<<endl;
+      vec eigenVal;
+      mat eigenVec;
+      eig_sym(eigenVal, eigenVec, A);
+      cout<< b<<"  "<<eigenVal(0)<<endl;
+  }
 
   return 0;
 }
