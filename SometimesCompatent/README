@@ -1,5 +1,6 @@
 Nathan, Fernando, Fabrizio 
 
+USING GAUSS-LEGENDRE QUADRATURE WITH 800 POINTS 
 
 compile: gfortran -o run_hyd CoulombOscRelMe.f90 -L/user/local/lib/ -llapack -lblas 
 
