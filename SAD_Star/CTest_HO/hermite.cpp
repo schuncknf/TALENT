@@ -32,10 +32,11 @@ typedef struct {
 double norm(int n, int l, double b) { //generates the normalization factor for the HO basis
     double a = log( pow(2,n + l + 2) );
     double c = log( FACT((unsigned)n));
-    double d = log( sqrt(M_PI) * pow(b,3) );
+    double d = log( sqrt(M_PI) );
+    double f = log( pow(b,3) );
     double e = log( DFACT( (unsigned)(2*n + 2*l + 1)) );
     
-    return sqrt( exp ( a + c - d - e) );
+    return sqrt( exp ( a + c - d - e - f ) );
     
     
     //return sqrt( pow(2,n + l + 2) * FACT((unsigned)n) / (sqrt(M_PI) * DFACT( (unsigned)(2*n + 2*l + 1) * pow(b,3) ) ) );
@@ -65,67 +66,39 @@ double Hij(double r, void *params) { //generates the integrand R_nl(r)*V(r)R_n'l
     return y * z * r * r * potential(r);
 }
 
-double simpson(gsl_function *F, double a, double b) {
-    //a,b estremi di integrazione
-	double h = 0, somma = 0, m = 0, res = 0, risultato;
-	int k = 0, t = 0, N = 5e4; //N = numero di campionamenti
-	double f[N];
-	
-    h = (b-a)/(N); //passo di integrazione
-	
-    for(k = 0; k < N; k++) {
-        f[k] = GSL(F,a+k*h); //campionamento della funzione
-    }
-    
-    m = f[0] + 4 * f[1] + f[N-1] + 4 * f[N-2];
-    
-    for(k = 2; k < N - 2; k += 2) {
-        res += 4 * f[k] + 2 * f[k+1];
-    }
-	
-    risultato = (m + res) * (h/3); //risultato dell'integrale
-    
-	return risultato;
-}
-
 double setMatrix(mat A, int dim, int Mdim, gsl_function *F, prms *P) { //set the matrix for the diagonalization
     
-    double result, error = 1.e-8, abserr; //for the integrator
+    //double result, error = 1.e-8, abserr; //for the integrator
     double b = P->b;
     double l = P->l;
+    vec eigval;
+    mat eigvec;
     //gsl_integration_workspace * w = gsl_integration_workspace_alloc(dim); //workspace needed for the intergator
     gsl_integration_glfixed_table * w = gsl_integration_glfixed_table_alloc(dim);
     
-   // cout << "#Setting the matrix" << endl;
     for( int i = 0; i < Mdim; i++ ) {
         P->i = i;
         for ( int j = 0; j < Mdim; j++ ) {
             P->j = j;
-            fflush(stdout);
-            //printf("#Setting the (%d,%d) element\r",i,j);
             //gsl_integration_qagiu(F, 1.e-3, error, error, dim, w, &result, &abserr);
             //A(i,j) = result;
-            //A(i,j) = simpson(F,1.e-3,100);
-            A(i,j) = gsl_integration_glfixed (F, 1.e-3, 100, w);
+            A(i,j) = gsl_integration_glfixed (F, 0., 50, w); //works better than quagiu integrator: gauss-legendre quadrature
             
             
                 if(i == j) {
-                    A(i,j) += 0.5 * b * b * (2*i + l + 3./2.);
+                    A(i,j) += 0.5 * 1./(b * b) * (2*i + l + 3./2.);
                 } else if(i == (j - 1) ){
-                    A(i,j) += 0.5 * b * b * sqrt(j * (j + l + 0.5) );
+                    A(i,j) += 0.5 * 1./(b * b) * sqrt(j * (j + l + 0.5) );
                 } else if (i == (j + 1) ){
-                    A(i,j) += 0.5 * b * b * sqrt(i * (i + l + 0.5) );
+                    A(i,j) += 0.5 * 1./(b * b) * sqrt(i * (i + l + 0.5) );
                 }
 
         }
     }
     
-    vec eigval;
-    mat eigvec;
-    
     eig_sym(eigval, eigvec, A);
 
-        //gsl_integration_workspace_free(w);
+    //gsl_integration_workspace_free(w);
     
     return eigval(0);
 
@@ -135,32 +108,71 @@ double setMatrix(mat A, int dim, int Mdim, gsl_function *F, prms *P) { //set the
 int main() {
     
     double x, integ, energy;
-    int j;
-    vec eng(30);
-    
-    int dim = 100;
-    int Mdim = 20;
-    
+    int j, dim = 150, Mdim;
+    vec eng(30);    
     FILE *pt;
     
     prms P;
-    gsl_function F; //F basis, V potential
+    gsl_function F;
     
     F.function = Hij;
     F.params = &P;
 
     P.l = 0.;
     
-    //for (Mdim = 10; Mdim <= 80; Mdim+=1 ) {
-        for(P.b = 0.1; P.b < 3; P.b += 0.1 ) {
-            mat A(Mdim,Mdim);
-            energy = setMatrix(A, dim, Mdim, &F, &P);
-            //j = (int)(P.b*10 - 1);
-            //eng(j) = energy;
-            printf("%g \t %g\n",P.b, energy);
-        }
+    Mdim = 20;
+    
+        pt = fopen("ex-N=20.txt","w");
+    
+    for(P.b = 0.05; P.b < 3; P.b += 0.05 ) {
+        mat A(Mdim,Mdim,fill::zeros);
+        energy = setMatrix(A, dim, Mdim, &F, &P);
         
-    //}
+        fprintf(pt,"%g \t %g\n",P.b,energy);
+    }
+    
+    fclose(pt);
+    
+    Mdim = 30;
+    
+    pt = fopen("ex-N=30.txt","w");
+    
+    for(P.b = 0.05; P.b < 3; P.b += 0.05 ) {
+        mat A(Mdim,Mdim,fill::zeros);
+        energy = setMatrix(A, dim, Mdim, &F, &P);
+        
+        fprintf(pt,"%g \t %g\n",P.b,energy);
+    }
+    
+    fclose(pt);
+    
+    Mdim = 40;
+    
+    pt = fopen("ex-N=40.txt","w");
+    
+    for(P.b = 0.05; P.b < 3; P.b += 0.05 ) {
+        mat A(Mdim,Mdim,fill::zeros);
+        energy = setMatrix(A, dim, Mdim, &F, &P);
+        
+        fprintf(pt,"%g \t %g\n",P.b,energy);
+    }
+    
+    fclose(pt);
+    
+    
+    /*
+    for (Mdim = 10; Mdim <= 80; Mdim+=1 ) {
+        for(P.b = 0.05; P.b < 3; P.b += 0.05 ) {
+            mat A(Mdim,Mdim,fill::zeros);
+            energy = setMatrix(A, dim, Mdim, &F, &P);
+            j = (int)(P.b*10 - 1);
+            eng(j) = energy;
+        }
+    
+        fprintf(pt,"%d \t %g\n",Mdim,eng.min());
+    } */
+    
+    fclose(pt);
     
     
     return 0;
