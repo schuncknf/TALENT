@@ -30,21 +30,19 @@ typedef struct {
 //----------------------------------------------------------------------------------------------------------------------------------
 
 double norm(int n, int l, double b) { //generates the normalization factor for the HO basis
-    double a = log( pow(2,n + l + 2) );
-    double c = log( FACT((unsigned)n));
-    double d = log( sqrt(M_PI) );
-    double f = log( pow(b,3) );
-    double e = log( DFACT( (unsigned)(2*n + 2*l + 1)) );
+    double a = (double)(n + l + 2.) * log( 2 );
+    double c = log( FACT((unsigned)n) );
+    double d = 0.5 * log( M_PI );
+    double f = 3. * log( b );
+    double e = log( DFACT((unsigned)(2*n + 2*l + 1)) );
     
     return sqrt( exp ( a + c - d - e - f ) );
-    
-    
-    //return sqrt( pow(2,n + l + 2) * FACT((unsigned)n) / (sqrt(M_PI) * DFACT( (unsigned)(2*n + 2*l + 1) * pow(b,3) ) ) );
 }
 
 double generate_basis(double r, int n, int l, double b) { //spherical HO basis
     double x = r / b;
     double j = norm(n, l, b); //fetch the correct value for the normalization
+    
     return j * pow(x,l) * exp(-x*x/2.) * L(n, l + 1./2., x*x);
 }
 
@@ -119,45 +117,14 @@ int main() {
     F.params = &P;
 
     P.l = 0.;
+    P.b = 0.5;
     
-    Mdim = 20;
-    
-        pt = fopen("ex-N=20.txt","w");
-    
-    for(P.b = 0.05; P.b < 3; P.b += 0.05 ) {
-        mat A(Mdim,Mdim,fill::zeros);
-        energy = setMatrix(A, dim, Mdim, &F, &P);
-        
-        fprintf(pt,"%g \t %g\n",P.b,energy);
+    for( x = 0; x < 10; x += 0.01 ) {
+        printf("%g \t %g\n", x, generate_basis(x, 19, 0, 0.5));
     }
+
     
-    fclose(pt);
     
-    Mdim = 30;
-    
-    pt = fopen("ex-N=30.txt","w");
-    
-    for(P.b = 0.05; P.b < 3; P.b += 0.05 ) {
-        mat A(Mdim,Mdim,fill::zeros);
-        energy = setMatrix(A, dim, Mdim, &F, &P);
-        
-        fprintf(pt,"%g \t %g\n",P.b,energy);
-    }
-    
-    fclose(pt);
-    
-    Mdim = 40;
-    
-    pt = fopen("ex-N=40.txt","w");
-    
-    for(P.b = 0.05; P.b < 3; P.b += 0.05 ) {
-        mat A(Mdim,Mdim,fill::zeros);
-        energy = setMatrix(A, dim, Mdim, &F, &P);
-        
-        fprintf(pt,"%g \t %g\n",P.b,energy);
-    }
-    
-    fclose(pt);
     
     
     /*
