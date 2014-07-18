@@ -19,10 +19,10 @@ sho_test_gauss.c: testing of orthogonality of R_nl(r) with Gauss-Laguerre integr
 
 gauleg.c: generation of Gauss-Laguerre abscissas and weights (for given exponent and scaling)
 
-hydrogen.c: diagonalization of hydrogen atom in spherical HO basis
+hydrogen.c: diagonalization of hydrogen atom in spherical HO basis (now modular design)
 - compilation on Mac needs addition of "-llapack" in makefile
 
-eigen.c: an attempt to separate matrix functions (in progress)
+eigen.c: an attempt to separate matrix functions
 
 gauher.c: Gauss-Hermite quadrature (to be used for the on-fly generation of weights)
 
