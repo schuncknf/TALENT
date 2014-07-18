@@ -40,7 +40,7 @@ double coul(double r)
 }
 
 // fills the matrix elements of the hamiltonian
-void generate_H_me(eig_t hamilt, double hw, int N)
+void generate_H_me(eig_t hamilt, double hw, double N)
 {
   int i, j;
   for (i = 0; i < N; i++) {
@@ -53,28 +53,28 @@ void generate_H_me(eig_t hamilt, double hw, int N)
 
 int main(int argc, char *argv[])
 {
-  int N;
-  double hw, hw_min, hw_step, hw_max; // hw = h*omega; the units: h = m = 1
+  int i, N;
+  double b, b_min, b_step, b_max; // b = sqrt(h*omega); the units: h = m = 1
   eig_t hamilt;  // matrix dimension: the maximum n quantum number (l=0 in this program)
-  if (argc != 5) {
-    printf("Usage: ./hydrogen N hw_min hw_step hw_max\n");
-    return 1;
-  }
-  N = atoi(argv[1]) + 1;
-  hw_min = atof(argv[2]);
-  hw_step = atof(argv[3]);
-  hw_max = atof(argv[4]);
-  if ((N <= 0) || (hw_min <= 0.) || (hw_step <= 0.) || (hw_max <= 0.)) {
-    printf("incorect input values (they should be positive)\n");
-    return 1;
-  }
-  gaulag_init(100, 1, 0.2);
-  hamilt = alloc_eig(N); // matrices for hamiltonian, eigenvectors, eigenvalues etc.
-  printf("# n_max = %d\n# hbar*omega\tenergy\n", N - 1);
-  for (hw = hw_min; hw <= hw_max; hw += hw_step) {
-    generate_H_me(hamilt, hw, N);
-    solve_eig(hamilt, N);  // diagonalization with LAPACKe routine (all eigenvalues and eigenvectors)
-    printf("%lf\t%lf\n", hw, hamilt.lam[0]);
+  hamilt = alloc_eig(52); // matrices for hamiltonian, eigenvectors, eigenvalues etc.
+  for (b = 0.1; b < 2.01; b += 0.1) {
+    gaulag_init(180, 1, 0.04 / b);
+    printf("%3.1lf ", b);
+    generate_H_me(hamilt, b*b, 3);
+    solve_eig(hamilt, 3);
+    printf("%12.9lf ", hamilt.lam[0]);
+    generate_H_me(hamilt, b*b, 6);
+    solve_eig(hamilt, 6);
+    printf("%12.9lf ", hamilt.lam[0]);
+    generate_H_me(hamilt, b*b, 11);
+    solve_eig(hamilt, 11);
+    printf("%12.9lf ", hamilt.lam[0]);
+    generate_H_me(hamilt, b*b, 21);
+    solve_eig(hamilt, 21);
+    printf("%12.9lf ", hamilt.lam[0]);
+    generate_H_me(hamilt, b*b, 51);
+    solve_eig(hamilt, 51);
+    printf("%12.9lf\n", hamilt.lam[0]);
   }
   free_eig(hamilt);
   return 0;
