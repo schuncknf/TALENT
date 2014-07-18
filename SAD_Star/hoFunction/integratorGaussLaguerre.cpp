@@ -2,7 +2,7 @@
 
 
 //------------------------------------------------------------------------------
-IntegratorGaussLaguerre::IntegratorGaussLaguerre(): order_(2), weights_(1000), abscissa_(1000)
+IntegratorGaussLaguerre::IntegratorGaussLaguerre(): order_(2), weights_(1e5), abscissa_(1e5)
 {
 }
 

@@ -24,4 +24,4 @@ tests:  $(OFILES) $(TESTTARGET).cpp
 	$(MPICC) $(CPPFLAGS) $(INCLUDES) $(OFILES) $(TESTTARGET).cpp -o $(TESTTARGET) $(TESTLIB)
 
 clean:
-	rm -f $(TARGET) $(OFILES)
+	rm -f $(TARGET) $(TESTTARGET) $(OFILES)

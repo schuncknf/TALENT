@@ -27,7 +27,7 @@ private:
     double hoRadial (int n, int l, double r);
     double norm (int n, int l);
     double b_;
-    double myLogFac(int n);
+    double logFac(int n);
     double logDoubleFac(int n);
 
 };
