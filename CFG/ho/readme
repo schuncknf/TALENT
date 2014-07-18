@@ -1,0 +1,4 @@
+PARS.f90 :parameters.
+gaussquad.f90: gauss-legendre, laguerre, hermite integral subroutine
+lague.f90: general laguerre polynomial subroutine
+matrix.f90: coefficent Anl of wave functions; laguerre polynomial at different n,l,x points;<nl|T|n'l> matrix; <nl|V|n'l> matrix 
