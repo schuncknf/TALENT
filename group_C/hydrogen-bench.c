@@ -4,7 +4,6 @@
 #include "sho.h"
 #include "eigen.h"
 #include "gaulag.h"
-#define NGAUSS 64
 
 // calculation of matrix element of kinetic term T in spherical HO basis
 double T_me(double hw, int n1, int n2, int l)
@@ -58,7 +57,7 @@ int main(int argc, char *argv[])
   eig_t hamilt;  // matrix dimension: the maximum n quantum number (l=0 in this program)
   hamilt = alloc_eig(52); // matrices for hamiltonian, eigenvectors, eigenvalues etc.
   for (b = 0.1; b < 2.01; b += 0.1) {
-    gaulag_init(180, 1, 0.04 / b);
+    gaulag_init(256, 1, 0.07 / b);
     printf("%3.1lf ", b);
     generate_H_me(hamilt, b*b, 3);
     solve_eig(hamilt, 3);
