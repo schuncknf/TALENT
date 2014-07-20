@@ -7,8 +7,7 @@
 #include <armadillo>
 #include "hamiltonian.hpp"
 namespace HartreeFock{
-	void run( std::complex<double> (Hamiltonian::*oneBodyPart)(unsigned,unsigned),
-                  std::complex<double> (Hamiltonian::*twoBodyPart)(unsigned,unsigned,unsigned,unsigned));
+	void run( Hamiltonian* h);
 
 } // namespace HartreeFock
 #endif // HARTREE_FOCK_SOLVER

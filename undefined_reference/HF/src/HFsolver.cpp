@@ -1,8 +1,8 @@
 #include "HFsolver.hpp"
 
 
-void HartreeFock::run( std::complex<double>(Hamiltonian::*oneBodyPart)(unsigned,unsigned),
-                      std::complex<double> (Hamiltonian::*twoBodyPart)(unsigned,unsigned,unsigned,unsigned)){
+void HartreeFock::run( Hamiltonian* h){
 	// implementation of the HF solver routine goes here
+	// use h.oneBodyPart or h.twoBodyPart
 	;
 }

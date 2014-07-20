@@ -1,5 +1,5 @@
 #include "hamiltonian.hpp"
-
+#include "HFsolver.hpp"
 /**
  * this file contains all the physical details
  * of the Neutrondrop_Swave model.
@@ -29,5 +29,7 @@ std::complex<double> Neutrondrop_Swave::twoBodyPart(unsigned a,unsigned b,unsign
 */
 
 int main(){
+	Neutrondrop_Swave s = Neutrondrop_Swave();
+	HartreeFock::run(&s);	
 	return 0;
 }
