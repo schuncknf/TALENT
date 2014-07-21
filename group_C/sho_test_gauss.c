@@ -1,12 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "sho.h"
-#define RSTEP 0.01
-#define RMAX 50.
-#define NGAUSS 64
+#include "gaulag.h"
+#define NGAUSS 256
+#define SCALING 0.1
 
-// generated with scaling 0.2 and alf=1
-double x[NGAUSS] = { 0.0112946413129, 0.0378695442094, 0.0796556409391, 0.1366741967117, 
+// generated with scaling 0.2 and alf=1, NGAUSS=64
+/*double x[NGAUSS] = { 0.0112946413129, 0.0378695442094, 0.0796556409391, 0.1366741967117, 
 0.2089581583565, 0.2965500124551, 0.3995016196627, 0.5178743174762, 
 0.6517391040881, 0.8011768700312, 0.9662786708552, 1.1471460404868, 
 1.3438913470301, 1.5566381937603, 1.7855218687532, 2.0306898472178, 
@@ -37,8 +37,7 @@ double w[NGAUSS] = { 0.0189709102528, 0.0341782617074, 0.0493976611298, 0.064644
 1.0537466931701, 1.0993845604499, 1.1485635203652, 1.2019013106610, 
 1.2601828479740, 1.3244248734081, 1.3959745324539, 1.4766654242630, 
 1.5690759274922, 1.6769808484253, 1.8061969026679, 1.9663112918196, 
-2.1746609131947, 2.4671884171949, 2.9372016822563, 3.9690898844235 };
-
+2.1746609131947, 2.4671884171949, 2.9372016822563, 3.9690898844235 }; */
 
 // check the orthogonality of R_nl(r) by Gauss-Laguerre integration
 int main(int argc, char *argv[])
@@ -54,10 +53,11 @@ int main(int argc, char *argv[])
   l1 = atoi(argv[3]);
   n2 = atoi(argv[4]);
   l2 = atoi(argv[5]);
+  gaulag_init(NGAUSS, 1, SCALING);
   sum = 0.;
-  for (i = 0; i < NGAUSS; i++) {
-    r = x[i];
-    sum += w[i] * sho_wf(r, mw, n1, l1) * sho_wf(r, mw, n2, l2) * r * r;
+  for (i = 0; i < gl.N; i++) {
+    r = gl.x[i];
+    sum += gl.w[i] * sho_wf(r, mw, n1, l1) * sho_wf(r, mw, n2, l2) * r * r;
   }
   printf("Overlap is %.10lf\n", sum);
   return 0;

@@ -1,5 +1,5 @@
 // #include "Fill_HO_Matrix.cpp"
-// GSL - Include
+// GSL - Include 
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_sf_gamma.h>
 #include <gsl/gsl_sf_laguerre.h>
@@ -67,10 +67,8 @@ HO_parameters;
 
 
 double Hij (HO_parameters ho_parameters);
-double Hij_integrand (double x, void *params_ptr);
-double ho_radial (int n, int l, double b, double r);
-double norm (int n, int l, double b);
-double ho_epsilon (int n, int l, double b, double m);
+double ho_A (int n, int l, double b);
+double ho_R (int n, int l, double b, double r);
 //kinetic
 double T_ij(double hb, int i, int li, int j, int lj);
 // potentials
@@ -120,7 +118,7 @@ double Hij_integrand (double r, void *param)
   Hij_r += ho_epsilon (Lj, l2, b_ho, mass) - ho_pot;
   //Smart way to calculate the kinetic energy!
 #endif
-  return (ho_radial (Li, l1, b_ho, r) * Hij_r * ho_radial (Lj, l2, b_ho, r));
+  return (ho_R (Li, l1, b_ho, r) * Hij_r * ho_R (Lj, l2, b_ho, r));
 }
 
 double ho_epsilon (int n, int l, double b, double m)
@@ -134,30 +132,19 @@ double ho_epsilon (int n, int l, double b, double m)
 
 
 
-
-
-
-
-
-
-
 double
-ho_radial (int n, int l, double b, double r)
+ho_R (int n, int l, double b, double r)
 {
   ////////////////////////////////////////////////////////////////////
   // b= sqrt(h/(wm) )                                               //
   ////////////////////////////////////////////////////////////////////
-  double q = r / b;
-  double qq = q * q;
-  
-  ////////////////////////////////////////////////////////////////////
-  // gsl_pow_int(q, (l + 1)) <- you have not to multiply again by r //
-  ////////////////////////////////////////////////////////////////////
-  return    norm(n, l, b) * gsl_pow_int(q, (l + 1)) * exp (-qq / 2.) * gsl_sf_laguerre_n((n - 1), l + 1. / 2., qq);
+  double x=r/b;
+
+  return    ho_A(n, l, b) * gsl_pow_int(x, (l + 1)) * exp (- x*x/ 2.) * gsl_sf_laguerre_n((n - 1), l + 1./2., x*x);
 }
 
-double norm (int n, int l, double b)
-{   return sqrt (2. * gsl_sf_fact ((unsigned) (n - 1)) / (b * gsl_sf_gamma ((double) n + (double) l + 1. / 2.))); }
+double ho_A (int n, int l, double b)
+{   return sqrt (2. * gsl_sf_fact ((unsigned) (n - 1)) / (b * gsl_sf_gamma ((double)n + (double)l + 1. / 2.))); }
 
 
 double V_coulomb (double r, double C1)
@@ -175,7 +162,7 @@ double T_ij(double hw, int i, int li, int j, int lj)
       return (.5*hw*sqrt(j*(j+lj+.5)));
         break;
     case (0): 
-      return (.5*hw*(2*i+1.5));
+      return (.5*hw*(2*i+li+1.5));
         break;
     case (+1): 
       return (.5*hw*sqrt(i*(i+li+.5)));

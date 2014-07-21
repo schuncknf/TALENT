@@ -1,0 +1,20 @@
+This program calculates the ground state of the hydrogen atom by 
+expanding in the l=0 harmonic oscillator wavefunctions. 
+
+hydrogen.cpp
+	This is the main body of the program.  
+harmonic_oscillator.cpp
+	get HO wavefunction from this routine
+gauss_legendre.c
+	Program used to integrate, ripped from the interenet
+functions.cpp
+	This program contains my integrands for wavefunction and TBME
+
+My program depends on armadillo/lapack/blas gsl libraries.  Also, the header file
+gnuplot_i.hpp gives access to a gnuplot terminal within cpp.  I have included it in 
+my project directory, but the program will not execute if gnuplot is not installed.
+
+Upon running it will request a b, n1,n2 to check orthonormality upon. It will output
+the result of this calculation for this.  After it will calculate the ground and first 
+excited state for the hydrogen and plot just the ground state to the screen.  It will
+also save the resulting graphs under gsvariation.ps and excitedvariation.ps.

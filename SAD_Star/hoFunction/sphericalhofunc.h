@@ -4,6 +4,7 @@
 #include <cmath>
 #include <string>
 #include <iostream>
+#include <iomanip>
 
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_sf_gamma.h>
@@ -26,6 +27,8 @@ private:
     double hoRadial (int n, int l, double r);
     double norm (int n, int l);
     double b_;
+    double logFac(int n);
+    double logDoubleFac(int n);
 
 };
 
