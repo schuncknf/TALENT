@@ -19,8 +19,15 @@ MODULE Ho_basis
 
   !Ho_block, allocatable, protected :: hf_transform(:,:)
 
+  TYPE hf_state
+     REAL(kind=r_kind) :: e
+     INTEGER :: l,jindex
+     INTEGER :: n
+     REAL(kind=r_kind) :: occ
+  END type hf_state
+
   REAL(kind=r_kind), protected :: Ho_b, Ho_hbaromega
-  INTEGER, protected :: Ho_nmax, Ho_lmax  !TODO change Ho_nmax to array containing different nmax for different l
+  INTEGER, protected :: Ho_nmax, Ho_lmax, Ho_size_all  !TODO change Ho_nmax to array containing different nmax for different l
 
   REAL(kind=r_kind), allocatable, protected:: h_sp(:,:) !used in testing/coulomb excersize
 
@@ -28,8 +35,15 @@ MODULE Ho_basis
 
   COMPLEX(kind=r_kind), allocatable, protected :: hf_transform(:,:,:,:) !l,jindex, n,npr
   COMPLEX(kind=r_kind), allocatable, protected :: density_matrix(:,:,:,:) !l,jindex, n,npr
-  REAL(kind=r_kind), allocatable, protected :: hf_energies(:,:,:) !l,jindex,n
-  REAL(kind=r_kind), allocatable, protected :: hf_energies_sorted(:,:,:)
+  COMPLEX(kind=r_kind), allocatable, protected :: density_matrix_old(:,:,:,:) !l,jindex, n,npr
+  REAL(kind=r_kind), allocatable, protected :: hf_energies(:,:,:) !l,jindex,n 
+  REAL(kind=r_kind), allocatable, protected :: hf_energies_old(:,:,:) !l,jindex,n 
+  !INTEGER, allocatable, protected :: hf_energies_sort(:,:,:)
+
+  type(hf_state), allocatable, protected :: hf_states_all(:) !1..total number of states
+  REAL(kind=r_kind), allocatable, protected :: hf_energies_all(:)  
+  INTEGER, allocatable, protected :: hf_energies_all_sort(:)
+
   INTEGER, allocatable, protected :: fermi_index_hfbasis(:,:) !l,jindex
   COMPLEX(kind=r_kind), allocatable, protected :: hf_hamiltonian(:,:,:,:) !l,jindex,n,npr
   COMPLEX(kind=r_kind), allocatable, protected :: Ho_two_body_matel(:,:,:,:,:,:) !l,jindex,n1,n2,n3,n4
@@ -60,30 +74,180 @@ CONTAINS
 
   END FUNCTION Ho_degeneracy
 
-  SUBROUTINE hf_find_fermi_energy(N)
-   
+  SUBROUTINE hf_find_fermi_energy(N_request,e_fermi)
+
     USE sorting, only : sortrx
 
-     IMPLICIT NONE
+    IMPLICIT NONE
 
-    INTEGER :: N !number of particles
+    INTEGER, intent(in) :: N_request !number of particles
+    REAL(kind=r_kind), intent(out) :: e_fermi
+    INTEGER :: particle_number, II, index !, fermi_index_tot
+    INTEGER :: n,l,jindex
+    REAL(kind=r_kind) :: e
 
-   
+    !stores information on the eigenvectors
+    II = 1
 
-    
+    DO l=0,Ho_lmax
+       DO jindex = 0,1
+          IF(l==0 .and. jindex==1) CYCLE
+
+          DO n=0,Ho_nmax
+             hf_states_all(II)%l = l
+             hf_states_all(II)%jindex = jindex
+             hf_states_all(II)%n = II
+             hf_states_all(II)%e = hf_energies(l,jindex,n)
+
+             hf_energies_all(II) = hf_energies(l,jindex,n)
+             II = II + 1
+
+          END DO
+       END DO
+
+    END DO
+
+    !The following assumes that the diagonalization sorts according to increasing energies in each lj block
+
+    !sorts the energies
+    CALL sortrx(Ho_size_all,hf_energies_all,hf_energies_all_sort)
+
+    !finds the fermi indicies
+
+    hf_states_all(:)%occ = 0.0_r_kind
+    fermi_index_hfbasis(:,:) = 0
+    particle_number = 0
+    !fermi_index_tot = 0
+    II = 1
+    DO WHILE(particle_number < N_request)
+
+       index = hf_energies_all_sort(II)
+       
+       n = hf_states_all(index)%n
+       l = hf_states_all(index)%l
+       jindex = hf_states_all(index)%jindex
+       e = hf_states_all(index)%e
+       
+       particle_number = particle_number + Ho_degeneracy(l,jindex)
+       hf_states_all(index)%occ = REAL(Ho_degeneracy(l,jindex),kind=r_kind)
+
+       fermi_index_hfbasis(l,jindex) = n
+
+       e_fermi = e
+       !fermi_index_tot = fermi_index_tot + 1
+       II = II + 1
+
+    END DO
+
+    IF(N_request-particle_number /= 0) THEN
+       WRITE(*,*) 'ERROR: Cannot get correct particle number by filling degenerate shells'
+       WRITE(*,*) 'Requested particle number',N,'Actual particle number',particle_number 
+       STOP
+    END IF
+
+      
+
 
   END SUBROUTINE hf_find_fermi_energy
-  
+
+  SUBROUTINE print_hf_states
+    IMPLICIT NONE
+
+    INTEGER :: II, n, l , jindex, j2, index
+    REAL(kind=r_kind) :: e, occ
+
+    
+    WRITE(*,*) 'Ho_b = ',Ho_b, 'Ho_hbaromega = ',Ho_hbaromega
+    WRITE(*,*) 'Ho_lmax = ',Ho_lmax,'Ho_nmax = ',Ho_nmax
+    WRITE(*,*) 'Ho_size_all = ',Ho_size_all
+
+
+    WRITE(*,'(3A3,2A14)') 'n','l','2j','e','occ'
+    DO II = 1,Ho_size_all
+       index = hf_energies_all_sort(II)
+
+       n = hf_states_all(index)%n
+       l = hf_states_all(index)%l
+       jindex = hf_states_all(index)%jindex
+       j2 = l + (-1)**jindex
+       e = hf_states_all(index)%e
+       occ = hf_states_all(index)%occ
+
+       WRITE(*,'(3I3,2F14.6)') n,l,j2,e,occ
+
+
+    END DO
+    
+
+  END SUBROUTINE print_hf_states
+
+
+  SUBROUTINE hf_init_dens(N_request)
+    IMPLICIT NONE
+
+    INTEGER, intent(in) :: N_request
+    INTEGER :: n, l,jindex, particle_number
+    INTEGER :: N_major, N_major_max
+
+    particle_number = 0
+    
+    N_major_max = 2*Ho_nmax + Ho_lmax
+
+    density_matrix = (0.0_r_kind,0.0_r_kind)
+
+     
+    WRITE(*,*) 'hf_init_dens: filling states'
+    WRITE(*,'(A3,A3,A3)') 'n','l','2j'
+
+    Ho_fill_shells :  DO l = 0,N_major_max
+       DO jindex = 0,1
+          IF(l==0 .and. jindex==1) CYCLE
+
+          DO n = 0,(N_major_max - l)/2
+
+             IF(n > Ho_nmax .or. l > Ho_lmax) CYCLE
+
+             density_matrix(l,jindex,n,n) = (1.0_r_kind,0.0_r_kind)
+             particle_number = particle_number + Ho_degeneracy(l,jindex)
+
+             WRITE(*,'(I3,I3,I3)') n,l,l+(-1)**jindex
+
+
+             IF(particle_number >= N_request) THEN
+                EXIT Ho_fill_shells
+             END IF
+          END DO
+
+       END DO
+
+    END DO Ho_fill_shells
+
+    WRITE(*,*) 'hf_init_dens:'
+    WRITE(*,*) 'Requested particle number',N_request
+    WRITE(*,*) 'Particle number',particle_number
+
+    
+    
+
+  END SUBROUTINE hf_init_dens
+
+
 
   !rho(nljm,n'l'j'm') = rho(lj;nn')d_ll'd_jj'd_mm'
   !the reduced density rho(lj;nn') is stored, keep track of degeneracy!
-  SUBROUTINE hf_update_density_matrix
+  SUBROUTINE hf_update_density_matrix(mixing)
     IMPLICIT NONE
 
+    REAL(kind=r_kind), intent(in) :: mixing
+    
     INTEGER :: l,jindex,n1,n2,II
 
     COMPLEX(kind=r_kind), parameter :: zero_c = (0.0_r_kind,0.0_r_kind)
     COMPLEX(kind=r_kind) :: sum_occupied    
+    
+
+    density_matrix_old = density_matrix
+    
 
     DO l=0,Ho_lmax
        DO jindex = 0,1
@@ -101,13 +265,15 @@ CONTAINS
 
                 END DO
                 
-                density_matrix(l,jindex,n1,n2) = density_matrix(l,jindex,n1,n2) + sum_occupied !Ho_degeneracy(l,jindex)*sum_occupied
+                density_matrix(l,jindex,n1,n2) = mixing*density_matrix_old(l,jindex,n1,n2) + (1-mixing)*sum_occupied !Ho_degeneracy(l,jindex)*sum_occupied
                 density_matrix(l,jindex,n2,n1) = CONJG(density_matrix(l,jindex,n2,n1))
                 
              END DO
           END DO
        END DO
     END DO
+
+    
 
   END SUBROUTINE hf_update_density_matrix
 
@@ -135,9 +301,11 @@ CONTAINS
                 END DO
 
                 !hf_hamiltonian(l,jind,n1,n2) = Ho_one_body_matel(l,jind,n1,n2) + Gamma
-                hf_hamiltonian(l,jindex,n1,n2) = Ho_hbaromega  + Gamma
+                hf_hamiltonian(l,jindex,n1,n2) = Gamma 
+                hf_hamiltonian(l,jindex,n2,n1) = CONJG(hf_hamiltonian(l,jindex,n2,n1))
 
              END DO
+             hf_hamiltonian(l,jindex,n1,n1) = hf_hamiltonian(l,jindex,n1,n1) + Ho_hbaromega*(2*n1+l+1.5_r_kind)
           END DO
        END DO
     END DO
@@ -151,7 +319,10 @@ CONTAINS
     INTEGER :: l,jindex
     COMPLEX(kind=r_kind), ALLOCATABLE :: work(:)
     REAL(kind=r_kind), ALLOCATABLE :: rwork(:)
+    COMPLEX(kind=r_kind), ALLOCATABLE :: h_block(:,:)
+    REAL(kind=r_kind), ALLOCATABLE :: e_block(:)
     INTEGER :: lwork, info
+    !INTEGER :: count
 
     INTERFACE 
        SUBROUTINE zheev(jobz, uplo, n, a, lda, w, work, lwork, rw, info)
@@ -162,29 +333,41 @@ CONTAINS
        END SUBROUTINE zheev
     END INTERFACE
 
-    
+    !count = 1
 
     DO l=0,Ho_lmax
        DO jindex = 0,1
           IF(l==0 .and. jindex==1) CYCLE
 
+          ALLOCATE(h_block(Ho_nmax+1,Ho_nmax+1))
+          ALLOCATE(e_block(Ho_nmax+1))
+
+          h_block(:,:) = hf_hamiltonian(l,jindex,:,:)
+          
+
                 ALLOCATE(work(1))
                 ALLOCATE(rwork( max(1,3*(Ho_nmax+1)-2) ) )
                 lwork = -1
 
-                CALL zheev('V','U',Ho_nmax+1, hf_transform(l,jindex,:,:),Ho_nmax+1,hf_energies(l,jindex,:),work,lwork,rwork,info)
+                CALL zheev('V','U',Ho_nmax+1,h_block ,Ho_nmax+1,e_block,work,lwork,rwork,info)
 
                 lwork = work(1)
                 DEALLOCATE(work)
                 ALLOCATE(work(lwork))
 
-                CALL zheev('V','U',Ho_nmax+1, hf_transform(l,jindex,:,:),Ho_nmax+1,hf_energies(l,jindex,:),work,lwork,rwork,info)
+                CALL zheev('V','U',Ho_nmax+1, h_block,Ho_nmax+1,e_block,work,lwork,rwork,info)
 
                 DEALLOCATE(work)
                 DEALLOCATE(rwork)
 
-         
+                hf_transform(l,jindex,:,:) = h_block(:,:)
+                hf_energies(l,jindex,:) = e_block(:)
+                DEALLOCATE(h_block,e_block)
+
+                        
        END DO
+
+       !count = count + 1
     END DO
 
   END SUBROUTINE hf_diagonalize
@@ -196,8 +379,6 @@ CONTAINS
     REAL(kind=r_kind), intent(in) :: b
     INTEGER, intent(in) :: nmax, lmax
 
-    INTEGER :: n1,n2,l1,l2
-
     WRITE(*,*) 'Initializing ho basis'
 
     !currently only allowing for lmax = 0, need to consider better structure for block diagonality for lmax>0
@@ -208,8 +389,62 @@ CONTAINS
 
     CALL set_Ho_b(b)
 
+    Ho_nmax = nmax
+    Ho_lmax = lmax
+
+   
+    
+
 
   END SUBROUTINE init_Ho_basis
+
+  SUBROUTINE hf_init
+    IMPLICIT NONE
+
+    INTEGER :: l,jindex
+
+    WRITE(*,*) 'Allocating matricies for HF'
+    WRITE(*,*) 'Ho_lmax = ',Ho_lmax
+    WRITE(*,*) 'Ho_nmax = ',Ho_nmax
+
+    ALLOCATE(hf_transform(0:Ho_lmax,0:1,0:Ho_nmax,0:Ho_nmax))
+    ALLOCATE(density_matrix(0:Ho_lmax,0:1,0:Ho_nmax,0:Ho_nmax))
+    ALLOCATE(density_matrix_old(0:Ho_lmax,0:1,0:Ho_nmax,0:Ho_nmax))
+    ALLOCATE(hf_energies(0:Ho_lmax,0:1,0:Ho_nmax))
+    ALLOCATE(hf_energies_old(0:Ho_lmax,0:1,0:Ho_nmax))
+
+    Ho_size_all = 0
+
+
+
+     DO l=0,Ho_lmax
+        DO jindex = 0,1
+           IF(l==0 .and. jindex==1) CYCLE
+
+           Ho_size_all = Ho_size_all + Ho_nmax + 1
+
+        END DO
+     END DO
+
+     ALLOCATE(hf_states_all(Ho_size_all)) 
+     ALLOCATE(hf_energies_all(Ho_size_all))
+     ALLOCATE(hf_energies_all_sort(Ho_size_all))
+
+     ALLOCATE(fermi_index_hfbasis(0:Ho_lmax,0:1))
+     ALLOCATE(hf_hamiltonian(0:Ho_lmax,0:1,0:Ho_nmax,0:Ho_nmax))
+     ALLOCATE(Ho_two_body_matel(0:Ho_lmax,0:1,0:Ho_nmax,0:Ho_nmax,0:Ho_nmax,0:Ho_nmax))
+       
+
+
+
+  END SUBROUTINE hf_init
+
+  SUBROUTINE calculate_two_body_matels
+    IMPLICIT NONE
+
+    Ho_two_body_matel = (0.0_r_kind,0.0_r_kind)
+    
+  END SUBROUTINE calculate_two_body_matels
 
 
 
