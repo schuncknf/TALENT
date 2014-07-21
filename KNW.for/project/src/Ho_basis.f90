@@ -1,19 +1,219 @@
 MODULE Ho_basis
   USE types
   USE numerical_integration
+  USE constants
 
-  PRIVATE
+  IMPLICIT NONE
 
-  PUBLIC :: RadHO, overlap_ho, Ho_b, init_ho_basis, h_sp
+ ! PRIVATE
+
+  !PUBLIC :: RadHO, overlap_ho, Ho_b, init_ho_basis, init_ho_basis_old, h_sp
+
+! not supported in gfortran
+!!$  TYPE Ho_block(nmax)
+!!$     INTEGER, len :: nmax
+!!$     INTEGER :: l,s
+!!$     COMPLEX(kind=r_kind) :: block(0:nmax,0:nmax)
+!!$
+!!$  END type Ho_block
+
+  !Ho_block, allocatable, protected :: hf_transform(:,:)
 
   REAL(kind=r_kind), protected :: Ho_b, Ho_hbaromega
-  INTEGER, protected :: Ho_nmax, Ho_lmax
+  INTEGER, protected :: Ho_nmax, Ho_lmax  !TODO change Ho_nmax to array containing different nmax for different l
 
-  REAL(kind=r_kind), allocatable, protected:: h_sp(:,:)
+  REAL(kind=r_kind), allocatable, protected:: h_sp(:,:) !used in testing/coulomb excersize
+
+  ! 2j = 2l + (-1)**jindex
+
+  COMPLEX(kind=r_kind), allocatable, protected :: hf_transform(:,:,:,:) !l,jindex, n,npr
+  COMPLEX(kind=r_kind), allocatable, protected :: density_matrix(:,:,:,:) !l,jindex, n,npr
+  REAL(kind=r_kind), allocatable, protected :: hf_energies(:,:,:) !l,jindex,n
+  REAL(kind=r_kind), allocatable, protected :: hf_energies_sorted(:,:,:)
+  INTEGER, allocatable, protected :: fermi_index_hfbasis(:,:) !l,jindex
+  COMPLEX(kind=r_kind), allocatable, protected :: hf_hamiltonian(:,:,:,:) !l,jindex,n,npr
+  COMPLEX(kind=r_kind), allocatable, protected :: Ho_two_body_matel(:,:,:,:,:,:) !l,jindex,n1,n2,n3,n4
+
 
 CONTAINS
 
-  SUBROUTINE init_ho_basis(b,nmax,lmax)
+!!$  !sorts the  columns of the hf_transformation according to hf energies  
+!!$  SUBROUTINE sort_hf
+!!$    
+!!$  END SUBROUTINE sort_hf
+  
+
+  INTEGER FUNCTION Ho_degeneracy(l,jindex)
+    IMPLICIT NONE
+    INTEGER, intent(in) :: l,jindex
+    INTEGER :: j2
+
+    IF(jindex < 0 .or. jindex > 1) THEN
+       WRITE(*,*) 'In function Ho_degenerace, incorrect jindex'
+       STOP
+    END IF
+
+    IF(jindex == 0) j2 = 2*l + 1
+    IF(jindex == 1) j2 = 2*l - 1
+
+    Ho_degeneracy = j2+1
+
+  END FUNCTION Ho_degeneracy
+
+  SUBROUTINE hf_find_fermi_energy(N)
+   
+    USE sorting, only : sortrx
+
+     IMPLICIT NONE
+
+    INTEGER :: N !number of particles
+
+   
+
+    
+
+  END SUBROUTINE hf_find_fermi_energy
+  
+
+  !rho(nljm,n'l'j'm') = rho(lj;nn')d_ll'd_jj'd_mm'
+  !the reduced density rho(lj;nn') is stored, keep track of degeneracy!
+  SUBROUTINE hf_update_density_matrix
+    IMPLICIT NONE
+
+    INTEGER :: l,jindex,n1,n2,II
+
+    COMPLEX(kind=r_kind), parameter :: zero_c = (0.0_r_kind,0.0_r_kind)
+    COMPLEX(kind=r_kind) :: sum_occupied    
+
+    DO l=0,Ho_lmax
+       DO jindex = 0,1
+          IF(l==0 .and. jindex==1) CYCLE
+
+          
+          DO n1 = 0,Ho_nmax
+             DO n2 = n1,Ho_nmax
+
+                sum_occupied = zero_c
+
+                DO II = 1,fermi_index_hfbasis(l,jindex)  !hf_transform should be sorted according to hf sp-energies in each block
+                   
+                   sum_occupied = sum_occupied + hf_transform(l,jindex,n1,II)*CONJG(hf_transform(l,jindex,n2,II))
+
+                END DO
+                
+                density_matrix(l,jindex,n1,n2) = density_matrix(l,jindex,n1,n2) + sum_occupied !Ho_degeneracy(l,jindex)*sum_occupied
+                density_matrix(l,jindex,n2,n1) = CONJG(density_matrix(l,jindex,n2,n1))
+                
+             END DO
+          END DO
+       END DO
+    END DO
+
+  END SUBROUTINE hf_update_density_matrix
+
+
+  SUBROUTINE hf_update_hamiltonian
+    IMPLICIT NONE
+
+    INTEGER :: l,jindex,n1,n2,n3,n4
+    COMPLEX(kind=r_kind), parameter :: zero_c = (0.0_r_kind,0.0_r_kind)
+    COMPLEX(kind=r_kind) :: Gamma
+
+    DO l=0,Ho_lmax
+       DO jindex = 0,1
+          IF(l==0 .and. jindex==1) CYCLE
+          DO n1 = 0,Ho_nmax
+             DO n2 = n1,Ho_nmax
+
+                Gamma = zero_c
+                DO n3 = 0,Ho_nmax
+                   DO n4 = 0,Ho_nmax !check symmetries of Gamma
+
+                      Gamma = Gamma + Ho_degeneracy(l,jindex)*Ho_two_body_matel(l,jindex,n1,n4,n2,n3)*density_matrix(l,jindex,n3,n4) 
+
+                   END DO
+                END DO
+
+                !hf_hamiltonian(l,jind,n1,n2) = Ho_one_body_matel(l,jind,n1,n2) + Gamma
+                hf_hamiltonian(l,jindex,n1,n2) = Ho_hbaromega  + Gamma
+
+             END DO
+          END DO
+       END DO
+    END DO
+
+  END SUBROUTINE hf_update_hamiltonian
+
+
+  SUBROUTINE hf_diagonalize
+    IMPLICIT NONE
+
+    INTEGER :: l,jindex
+    COMPLEX(kind=r_kind), ALLOCATABLE :: work(:)
+    REAL(kind=r_kind), ALLOCATABLE :: rwork(:)
+    INTEGER :: lwork, info
+
+    INTERFACE 
+       SUBROUTINE zheev(jobz, uplo, n, a, lda, w, work, lwork, rw, info)
+         CHARACTER(len=1) ::  jobz, uplo
+         INTEGER          ::  info, lda, lwork, n
+         REAL(KIND=8)     ::  rw(*), w(*)
+         COMPLEX(8)   ::  a(lda, *), work(*)
+       END SUBROUTINE zheev
+    END INTERFACE
+
+    
+
+    DO l=0,Ho_lmax
+       DO jindex = 0,1
+          IF(l==0 .and. jindex==1) CYCLE
+
+                ALLOCATE(work(1))
+                ALLOCATE(rwork( max(1,3*(Ho_nmax+1)-2) ) )
+                lwork = -1
+
+                CALL zheev('V','U',Ho_nmax+1, hf_transform(l,jindex,:,:),Ho_nmax+1,hf_energies(l,jindex,:),work,lwork,rwork,info)
+
+                lwork = work(1)
+                DEALLOCATE(work)
+                ALLOCATE(work(lwork))
+
+                CALL zheev('V','U',Ho_nmax+1, hf_transform(l,jindex,:,:),Ho_nmax+1,hf_energies(l,jindex,:),work,lwork,rwork,info)
+
+                DEALLOCATE(work)
+                DEALLOCATE(rwork)
+
+         
+       END DO
+    END DO
+
+  END SUBROUTINE hf_diagonalize
+
+
+  SUBROUTINE init_Ho_basis(b,nmax,lmax)
+    IMPLICIT NONE
+
+    REAL(kind=r_kind), intent(in) :: b
+    INTEGER, intent(in) :: nmax, lmax
+
+    INTEGER :: n1,n2,l1,l2
+
+    WRITE(*,*) 'Initializing ho basis'
+
+    !currently only allowing for lmax = 0, need to consider better structure for block diagonality for lmax>0
+    IF(lmax > 0) THEN
+       WRITE(*,*) 'Only lmax = 0 supportet ATM, quitting'
+       STOP
+    END IF
+
+    CALL set_Ho_b(b)
+
+
+  END SUBROUTINE init_Ho_basis
+
+
+
+  SUBROUTINE init_ho_basis_old(b,nmax,lmax)
     IMPLICIT NONE
     
     REAL(kind=r_kind), intent(in) :: b
@@ -63,7 +263,7 @@ CONTAINS
 
 
 
-  END SUBROUTINE init_ho_basis
+  END SUBROUTINE init_ho_basis_old
 
 
   REAL(kind=r_kind) FUNCTION coulomb_pot(r)
@@ -84,6 +284,8 @@ CONTAINS
        STOP
     END IF
     Ho_b = b
+
+    Ho_hbaromega = hbarc**2/(Ho_b**2*mnc2)
 
   END SUBROUTINE set_Ho_b
 
