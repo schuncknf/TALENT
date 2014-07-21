@@ -1,0 +1,9 @@
+TEAM FOCK SPACE
+Justin 
+Maciej
+Chunli
+
+This folder will be used for the Hartree-Fock project.  The main program at the
+momemnt is HF.cpp. This program can be compiled with
+
+g++ -o HF.exe HF.cpp -larmadillo
