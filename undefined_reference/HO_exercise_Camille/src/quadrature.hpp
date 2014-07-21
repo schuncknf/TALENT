@@ -16,7 +16,8 @@ class Quad{
 		~Quad();
 		void write(const char* output);
 		void read(const char* input);
-		double integrate( double (*f)(double,void*), void* f_params); // Quadrature Integration
+		double integrate( double (*f)(double,void*), void* f_params); // 1D Quadrature Integration
+		double integrate( double (*f)(double,double,void*), void* f_params); // 2D Quadrature Integration
 	private:
 		int kind;
 		double alpha,beta;
