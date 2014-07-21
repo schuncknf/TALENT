@@ -13,7 +13,7 @@
  */
 class Hamiltonian{
 	virtual std::complex<double> oneBodyPart(unsigned,unsigned) = 0; // pure virtual functions, any non-virtual child classes should implement these
-	virtual std::complex<double> twoBodyPart(unsigned,unsigned,unsigned,unsigned) = 0;	
+	virtual std::complex<double> twoBodyPart(unsigned,unsigned,unsigned,unsigned) = 0;
 };
 
 

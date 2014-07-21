@@ -89,14 +89,10 @@ for(int dimension = DMIN; dimension <= DMAX; dimension = dimension + DSTEP )
     }
     cout << "base dimension: "<< dimension<<" HOmega: " <<B_min <<"  Best eigenvalue: " << E_min << endl;
     Energy_out << dimension <<"   "<<B_min<<"   "<<E_min<<endl;
-   
-
    }
- 
+
   Energy_out.close();
   Radial_out.close();
-  
-  
   cout << endl << "I'm done, thanks to have runned our program, plot H.eng to see the 'non convergence' of the H1. goodbye" << endl;
 return 0;
 }
