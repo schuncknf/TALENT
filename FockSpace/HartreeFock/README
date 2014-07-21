@@ -6,4 +6,14 @@ Chunli
 This folder will be used for the Hartree-Fock project.  The main program at the
 momemnt is HF.cpp. This program can be compiled with
 
-g++ -o HF.exe HF.cpp -larmadillo
+g++ -o HF.exe HF.cpp -larmadillo -std=c++11
+
+and ran with
+
+./HF.exe spBaby.dat mtxBaby.dat
+
+where 'spBaby.dat' and 'mtxBaby.dat' are input files that contain some play
+single-particle states and some play mtx elements.  In this example, I am using
+a simple 2 level scheme with each level supporting spin up and spin down, and
+the mtx elements are only connecting states with a pairing force. This example
+comes from Morten's nuclear structure course.
