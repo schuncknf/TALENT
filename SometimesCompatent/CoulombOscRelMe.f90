@@ -1,19 +1,31 @@
 program Hydrogen_Energy
   implicit none 
 
-  real(8) :: coulomb_integral,oscl,E(10),Rnl,overlap_integral
+  real(8) :: coulomb_integral,oscl
+  real(8) :: omega,Rnl,overlap_integral
   real(8),allocatable,dimension(:,:) :: HAM ,T,V 
   real(8),allocatable,dimension(:) :: eig,wk
-  integer :: n,l,i,j,nmax,info,koscl
+  real(8),dimension(800) :: rr,wrr
+  real(8),dimension(5) :: narray,E
+  integer :: n,l,i,j,nmax,info,koscl,nrel_max,q
 
+  narray = (/2,5,10,20,50/) 
   open(unit=31, file='Hyd_energy.dat') 
   l = 0 ! zero partial wave
   
-  do koscl = 1,15 ! loop over omega
-     oscl = 1./sqrt(koscl*0.2d0)   ! inverse length param
-     !print*, koscl
-     do nmax =  1,51,5 ! loop over basis size
-      
+  nrel_max = 800
+  CALL gauss_legendre(0.d0, 20.d0, rr, wrr, nrel_max )
+  print*, overlap_integral(20,20,l,1.d0,rr,wrr)
+  
+  do koscl = 1,20 ! loop over inverse length param
+     oscl = 0.1*koscl 
+     omega = 1./oscl**2
+     !oscl = 1./sqrt(koscl*0.2d0)   ! inverse length param
+     print*, koscl
+     !do nmax =  1,51,5 ! loop over basis size
+     do  q = 1,5
+        nmax = narray(q)+1
+     
         allocate(HAM(nmax,nmax)) 
         allocate(T(nmax,nmax)) 
         allocate(V(nmax,nmax)) 
@@ -25,7 +37,7 @@ program Hydrogen_Energy
            do j = i,nmax
               ! see general_pot_integral for other potentials
          
-              V(i,j) = coulomb_integral(i-1,j-1,l,oscl) 
+              V(i,j) = coulomb_integral(i-1,j-1,l,oscl,rr,wrr) 
               V(j,i) = V(i,j) 
       
            end do
@@ -46,13 +58,13 @@ program Hydrogen_Energy
         end do
   
         !Scale T by omega
-        T = T*koscl*.2d0
+        T = T*omega
         HAM = T+V
   
         call dsyev( 'V','U',nmax,HAM,nmax,eig,wk,10*nmax,info)
    
         ! ground state energy stored
-        E(nmax/5+1) = minval(eig) 
+        E(q) = minval(eig) 
    
 
         deallocate(HAM) 
@@ -63,28 +75,25 @@ program Hydrogen_Energy
    
      end do
      !write to file
-     write(31,'(11(f14.7))' ) , koscl*0.2d0 ,E 
+     write(31,'(f3.1,5(f13.9))' ) , oscl ,E 
   end do
   close(31)  
      
 end program
 !=====================================================
-real(8) function overlap_integral(n1,n2,lr,oscl)
+real(8) function overlap_integral(n1,n2,lr,oscl,rr,wrr)
 
   IMPLICIT NONE
   real(8),parameter :: pi = 3.14159
   INTEGER :: n1, n2, lr, i, nrel_max
   REAL(8) :: oscl_r, int_sum, xr, xp, z, factor1, factor2,oscl
-  REAL(8), ALLOCATABLE, DIMENSION(:) :: rr, wrr
-  REAL(8) :: cx(0:200),fac,dfac,Rnl
+  REAL(8), DIMENSION(800) :: rr, wrr
+  REAL(8) :: cx(0:800),fac,dfac,Rnl
 
 
   oscl_r=oscl        ! Oscillator parameter for relative
-
-  nrel_max = 400.
-  ALLOCATE ( rr(nrel_max ), wrr(nrel_max ))
-  CALL gauss_legendre(0.d0, 20.d0, rr, wrr, nrel_max )
   
+  nrel_max = 800
   int_sum=0.d0
   do i = 1, nrel_max
      int_sum = int_sum +  Rnl(n1,lr,oscl,rr(i)) * &
@@ -95,19 +104,16 @@ real(8) function overlap_integral(n1,n2,lr,oscl)
 
 END function
 !===============================================
-real(8) function coulomb_integral(n1,n2,lr,oscl)
+real(8) function coulomb_integral(n1,n2,lr,oscl,rr,wrr)
 
   IMPLICIT NONE
   real(8),parameter :: pi = 3.14159
   INTEGER :: n1, n2, lr, i, nrel_max
   REAL(8) :: oscl_r, int_sum, xr, xp, z, factor1, factor2,oscl
-  REAL(8), ALLOCATABLE, DIMENSION(:) :: rr, wrr
-  REAL(8) :: cx(0:200),fac,dfac,Rnl
+  REAL(8),DIMENSION(800) :: rr, wrr
+  REAL(8) :: cx(0:800),fac,dfac,Rnl
 
-  nrel_max = 400
-  ALLOCATE ( rr(nrel_max ), wrr(nrel_max ))
-  CALL gauss_legendre(0.d0, 20.d0, rr, wrr, nrel_max )
-
+  nrel_max = 800
            int_sum = 0.D0
            DO i=1,nrel_max
               
@@ -117,23 +123,19 @@ real(8) function coulomb_integral(n1,n2,lr,oscl)
            !  Coulomb energy in natural units
           coulomb_integral = int_sum
    
-  DEALLOCATE ( rr, wrr)
 
 END function
 !==============================================
-real(8) function general_pot_integral(n1,n2,lr,oscl)
+real(8) function general_pot_integral(n1,n2,lr,oscl,rr,wrr)
 
   IMPLICIT NONE
   real(8),parameter :: pi = 3.14159
   INTEGER :: n1, n2, lr, i, nrel_max
   REAL(8) :: oscl_r, int_sum, xr, xp, z, factor1, factor2,oscl
-  REAL(8), ALLOCATABLE, DIMENSION(:) :: rr, wrr
-  REAL(8) :: cx(0:200),fac,dfac,Rnl,vpot
+  REAL(8), DIMENSION(800) :: rr, wrr
+  REAL(8) :: cx(0:800),fac,dfac,Rnl,vpot
 
-  nrel_max = 400
-  ALLOCATE ( rr(nrel_max ), wrr(nrel_max ))
-  CALL gauss_legendre(0.d0, 20.d0, rr, wrr, nrel_max )
-
+  nrel_max =800
            int_sum = 0.D0
            DO i=1,nrel_max
               
@@ -143,7 +145,6 @@ real(8) function general_pot_integral(n1,n2,lr,oscl)
            !  Coulomb energy in natural units
           general_pot_integral = int_sum
    
-  DEALLOCATE ( rr, wrr)
 
 END function
 !==============================================
@@ -152,7 +153,7 @@ real(8) function Rnl(n,l,oscl,r)
   implicit none 
   
   real(8),parameter :: pi = 3.14159
-  real(8) :: factor2,oscl,r,xi,cx(0:200) ,dfac,fac
+  real(8) :: factor2,oscl,r,xi,cx(0:800) ,dfac,fac
   integer :: n,l
   
   ! log of Anl 
