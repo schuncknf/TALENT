@@ -53,25 +53,26 @@ void generate_H_me(eig_t hamilt, double hw, double N)
 int main(int argc, char *argv[])
 {
   int i, N;
-  double b, b_min, b_step, b_max; // b = sqrt(h*omega); the units: h = m = 1
+  double b, b_min, b_step, b_max, mw; // b = sqrt(h*omega); the units: h = m = 1
   eig_t hamilt;  // matrix dimension: the maximum n quantum number (l=0 in this program)
   hamilt = alloc_eig(52); // matrices for hamiltonian, eigenvectors, eigenvalues etc.
   for (b = 0.1; b < 2.01; b += 0.1) {
-    gaulag_init(256, 1, 0.07 / b);
+    gaulag_init(256, 1, 0.07 * b);
     printf("%3.1lf ", b);
-    generate_H_me(hamilt, b*b, 3);
+    mw = 1. / (b * b);
+    generate_H_me(hamilt, mw, 3);
     solve_eig(hamilt, 3);
     printf("%12.9lf ", hamilt.lam[0]);
-    generate_H_me(hamilt, b*b, 6);
+    generate_H_me(hamilt, mw, 6);
     solve_eig(hamilt, 6);
     printf("%12.9lf ", hamilt.lam[0]);
-    generate_H_me(hamilt, b*b, 11);
+    generate_H_me(hamilt, mw, 11);
     solve_eig(hamilt, 11);
     printf("%12.9lf ", hamilt.lam[0]);
-    generate_H_me(hamilt, b*b, 21);
+    generate_H_me(hamilt, mw, 21);
     solve_eig(hamilt, 21);
     printf("%12.9lf ", hamilt.lam[0]);
-    generate_H_me(hamilt, b*b, 51);
+    generate_H_me(hamilt, mw, 51);
     solve_eig(hamilt, 51);
     printf("%12.9lf\n", hamilt.lam[0]);
   }
