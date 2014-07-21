@@ -21,7 +21,7 @@ std::complex<double> Neutrondrop_Swave::twoBodyPart(unsigned a,unsigned b,unsign
 
 /** main function here for now.
   * 
-  * to decide:
+  * to decide:Neutrondrop_Swave
   *  -- each physical system has a main
   * or
   *  -- one file with a main that accesses
