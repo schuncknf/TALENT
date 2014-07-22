@@ -23,5 +23,5 @@ void IntegratorGaussLegendreGSL::setOrder(int n){
 
 //------------------------------------------------------------------------------
 double IntegratorGaussLegendreGSL::integrate(gsl_function& func, double a, double b) const{
-    double result= gsl_integration_glfixed (&func, a, b, w_);
+    return gsl_integration_glfixed (&func, a, b, w_);
 }

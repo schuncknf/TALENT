@@ -11,6 +11,8 @@
 #include <math.h>
 #include <map>
 
+#include<gsl/gsl_integration.h>
+
 using namespace std;
 
 class IntegratorGaussLaguerre
@@ -27,6 +29,8 @@ public:
 //    double integrate(T func, double a, double b) const;
     template<class T>
     double integrate0ToInf(T func) const;
+
+    double integrate0ToInf(gsl_function F) const;
 
 
 private:

@@ -1,7 +1,6 @@
-#TARGET=hoFunction vmatrixgenerator.o
-TARGET=vmatrixGeneratorC
+TARGET=main
 TESTTARGET= testMain
-OFILES=sphericalhofunc.o integratorGaussLegendre.o integratorGaussLaguerre.o integratorGaussLegendreGSL.o
+OFILES=sphericalhofunc.o integratorGaussLegendre.o integratorGaussLaguerre.o integratorGaussLegendreGSL.o VCoulombMatrixGenerator.o
 
 CPPFLAGS=-Wall -g -std=c++0x -O3
 MPICC=g++
