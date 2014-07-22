@@ -21,4 +21,7 @@ DETAILS:
 using namespace arma;
 
 // Declarations
-void setMatrix(mat& A, int Mdim, double b);
+namespace VCoulombMatrixGenerator{
+  void setMatrix(mat& A, int Mdim, double b);
+}
+

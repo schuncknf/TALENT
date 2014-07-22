@@ -23,6 +23,8 @@ DETAILS:
 #include "sphericalhofunc.h"
 #include<gsl/gsl_integration.h>
 
+#include "VCoulombMatrixGenerator.h"
+
 //#include "Integrator.h" //or whatever we will call it
 //#include "HoBasis.h" //as before
 
@@ -30,6 +32,7 @@ DETAILS:
  FURTHER DECLARATIONS
 */
 using namespace arma; //for the armadillo library
+using namespace VCoulombMatrixGenerator;
 
 /*
  STRUCTURES
@@ -46,6 +49,7 @@ typedef struct {
     int l2; //angular momentum for the second function
     double b; //frequency dependent variable
 } matElStruct;
+
 
 /*
     FUNCTIONS
@@ -102,7 +106,7 @@ void addKinMatEl(mat& A, matElStruct *mES) {
 }
 
 //----------------------------------------------------------------------------------------------------------------------------------
-void setMatrix(mat& A, int Mdim, double b) {
+void VCoulombMatrixGenerator::setMatrix(mat& A, int Mdim, double b) {
     IntegratorGaussLegendreGSL integrator;
     //integrator.readTables("../gen_legendre");
     integrator.setOrder(250);
