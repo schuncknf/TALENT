@@ -73,7 +73,7 @@ double Vij(double r, void *params) {
     //explicitely ignoring spherical harmonics in case of l=0, has to be fixed in different cases
 }
 
-void kineticMatEl(mat *A, matElStruct *mES) {
+void addKinMatEl(mat *A, matElStruct *mES) {
 
     double b = mES->b;
     int i = mES->i;
@@ -91,7 +91,7 @@ void kineticMatEl(mat *A, matElStruct *mES) {
 }
 
 //----------------------------------------------------------------------------------------------------------------------------------
-void setMatrix(mat *A, int Mdim, gsl_function *F) {
+void setMatrix(mat *A, int Mdim, gsl_function *F, matElStruct *mES) {
     //set the matrix for the diagonalization: the gsl_function F is the integrand of the matrix element and P is its parameters structure.
     //r_max = 50 seems a good cutoff for Coulomb potential matrix elements up to 80 HO shells - no further investigation has been performed
     //angular momentum has explicitely not taken into account
@@ -103,6 +103,7 @@ void setMatrix(mat *A, int Mdim, gsl_function *F) {
             
             //gsl_integration_glfixed has to be changed with the future name of the function
             A(i,j) = gsl_integration_glfixed (F, 0., 50, w);
+            addKinMatEl(A, mES);
             //gsl_function, r_min, r_max and the workspace array, but we can put it directly inside the integration class
         }
     }
