@@ -73,6 +73,22 @@ double Vij(double r, void *params) {
     //explicitely ignoring spherical harmonics in case of l=0, has to be fixed in different cases
 }
 
+void kineticMatEl(mat *A, matElStruct *mES) {
+
+    double b = mES->b;
+    int i = mES->i;
+    int j = mES->j;
+
+        if(i == j) {
+            A(i,j) += 0.5/(b * b) * (2*i + l + 3./2.);
+        } else if(i == (j - 1) ){
+            A(i,j) += 0.5/(b * b) * sqrt(j * (j + l + 0.5) );
+        } else if (i == (j + 1) ){
+            A(i,j) += 0.5/(b * b) * sqrt(i * (i + l + 0.5) );
+        }
+
+}
+
 //----------------------------------------------------------------------------------------------------------------------------------
 void setMatrix(mat *A, int Mdim, gsl_function *F) {
     //set the matrix for the diagonalization: the gsl_function F is the integrand of the matrix element and P is its parameters structure.

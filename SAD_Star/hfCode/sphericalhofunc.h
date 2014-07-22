@@ -29,7 +29,6 @@ private:
     double b_;
     double logFac(int n);
     double logDoubleFac(int n);
-
 };
 
 #endif // SPHERICALHOFUNC_H
