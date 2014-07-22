@@ -67,9 +67,9 @@ double IntegratorGaussLaguerre::integrate0ToInf(T func) const{
     double t(0.);
     for(int i=0; i<order_; i++){
         t= abscissa_.at(order_).at(i);
-        sum+= weights_.at(order_).at(i) * exp(t) * func(t);
+        sum+= exp( log(weights_.at(order_).at(i)) + t) * func(t);
         //cout<<"exp "<< exp(t)<<"  func "<<func(t)<<"w "<<weights_.at(order_).at(i)<<endl;
-//        cout<<"xi= "<<abscissa_.at(order_).at(i)<<endl;
+//        cout<<"g-laguerre xi= "<<abscissa_.at(order_).at(i)<<endl;
 //        cout<<"wi= "<<weights_.at(order_).at(i)<<endl;
         if(std::isnan(sum)){
             cout<<"STOP"<<endl;

@@ -27,7 +27,7 @@ typedef struct{
 
 //------------------------------------------------------------------------------
 double vR(double r){
-    return 1./r;
+    return -1./r;
 }
 
 
@@ -82,17 +82,17 @@ double calcElement(int n1, int n2, IntegratorGaussLaguerre& integrator, Spherica
     // Kinetic part:
     double kin(0);
     if(n1 == n2){
-        kin= 0.5*b*b*(2*n1+l1);
+        kin= 0.5/b/b*(2*n1+l1 +3./2.);
     }
     else if(n1== n2 -1){
-        kin= 0.5*b*b*sqrt(n2*(n2+l1+0.5));
+        kin= 0.5/b/b*sqrt(n2*(n2+l1+0.5));
     }
     else if (n1== n2 + 1){
-        kin= 0.5*b*b*sqrt(n1*(n1+l1+0.5));
+        kin= 0.5/b/b*sqrt(n1*(n1+l1+0.5));
     }
     elem+= kin;
 
-    return kin;
+    return elem;
 
     //clean
     //gsl_integration_workspace_free(w);
@@ -103,7 +103,9 @@ double calcElement(int n1, int n2, IntegratorGaussLaguerre& integrator, Spherica
 void generateMatrix(mat &A, int nMax, SphericalHOFunc& rFunc) {
     IntegratorGaussLaguerre integrator;
     integrator.readTables("../gen_laguerre/gauss-laguerre_n100_x.txt", "../gen_laguerre/gauss-laguerre_n100_w.txt", 100);
-    integrator.setOrder(100);
+    integrator.readTables( "../gen_laguerre/gauss-laguerre_n1000_w.txt", "../gen_laguerre/gauss-laguerre_n1000_x.txt", 1000);
+    integrator.readTables( "../gen_laguerre/gauss-laguerre_n2000_w.txt", "../gen_laguerre/gauss-laguerre_n2000_x.txt", 2000);
+    integrator.setOrder(1000);
 
     A.zeros(nMax,nMax);
     for(int i=0; i< nMax; i++){
@@ -117,11 +119,9 @@ void generateMatrix(mat &A, int nMax, SphericalHOFunc& rFunc) {
 //------------------------------------------------------------------------------
 int main (int argc, char* argv[]){
   mat A;
-  int nMax=50;
+  int nMax=30;
 
-  for(double b=1e-6; b<0.1; b+= 5e-3){
-
-
+  for(double b=0.1; b<2.; b+= 0.1){
       SphericalHOFunc rFunc;
       rFunc.setB(b);
       //  for(double x=0; x<50; x+=1e-2){
@@ -135,7 +135,12 @@ int main (int argc, char* argv[]){
       vec eigenVal;
       mat eigenVec;
       eig_sym(eigenVal, eigenVec, A);
+
+      double eMin;
       cout<< b<<"  "<<eigenVal(0)<<endl;
+      for(int i=0; i<eigenVal.size(); i++){
+
+      }
   }
 
   return 0;

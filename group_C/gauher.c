@@ -3,11 +3,11 @@
 #include <math.h>
 #include "gauher.h"
 // Relative precision.
-#define EPS 3.0e-14
+#define EPS 1.0e-16
 // 1/pi^(1/4)
 #define PIM4 0.7511255444649425
 // Maximum iterations.
-#define MAXIT 10
+#define MAXIT 64
 
 struct gauher_str gh = { 0, NULL, NULL };
 // usage:
@@ -24,7 +24,7 @@ struct gauher_str gh = { 0, NULL, NULL };
 void gauher_init(int m, double scale)
 {
   int i,its,j,n;
-  double p1,p2,p3,pp,z,z1;  // High precision is a good idea for this routine.
+  long double p1,p2,p3,pp,z,z1;  // High precision is a good idea for this routine.
   n = 2 * m;  // The roots are symmetric about the origin, so we have to find only half of them.
   if (m <= 0) {
     fprintf(stderr, "gauher_init: Ignoring the non-positive input number %d\n", m);
@@ -67,11 +67,9 @@ void gauher_init(int m, double scale)
     }
     if (its >= MAXIT) fprintf(stderr, "too many iterations in gauher\n");
     gh.x[i]=z;         // Store the root
-    gh.w[i]=2.0/(pp*pp);  // Compute the weight
+    gh.w[i]=(double)(2.0/(pp*pp) * expl(gh.x[i]*gh.x[i]) * scale);  // Compute the weight
   }
   // rescaling, so the quadrature is optimal for exp(-(x/scale)^2)
-  for (i = 0; i < m; i++) {
-    gh.w[i] *= exp(gh.x[i]*gh.x[i]) * scale;
+  for (i = 0; i < m; i++)
     gh.x[i] *= scale;
-  }
 }

@@ -1,0 +1,34 @@
+TEAM FOCK SPACE:
+JUSTIN
+MACHIEJ
+CHUNLI
+
+The HObasis.cpp code is a program that creates 3D Quantum Harmonic Oscillator 
+(3DQHO) Wave Functions, and solves the Schroedinger Equation with a Coulomb
+potential using these as basis functions.  To compile, use the following command
+in the terminal:
+
+g++ HObasis.cpp -o HObasis.exe -larmadillo
+
+or any compiler of your choice. Just make sure to link armadillo.  The code is
+pretty constantly being modified to print different things through the various
+output files, but most recently the "Nerror.dat" file prints two columns of
+data.  This can be used to make a ground state energy vs. "nu" plot, where nu
+is defined as nu = 0.5*mu*omega/h_bar.  I used the wikipedia entry
+
+http://en.wikipedia.org/wiki/Quantum_harmonic_oscillator#Example:_3D_isotropic_harmonic_oscillator
+
+to contruct my 3DQHO wave functions, and thus used the nu parameter as they did.
+To create the plot that I have included, I ran the code modifying the variable
+cleverly named "N" which is the dimension of the Hamiltonian.  By plotting
+several of these data files, which I will include, we can see how the energy 
+converges with varying nu and varying N. These saved files have been renamed to
+"N#.dat" where # is the Hamiltonian dimension used for that run.
+
+Things to still work on:
+Using fancy quadrature integration rather than my simple Simpson method. At the
+Moment, the code outputs to the terminal the norm of the highest N wavefunction
+used using Euler's method of integration, as well as the attempted Norm using
+Gauss-Laguerre integration.  The Euler's always returns 1 as it should, but I
+am not getting that for the Gauss-Laguerre integration yet.  However, I might 
+skip this, as we need to start working on the next project.

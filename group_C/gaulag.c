@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <math.h>
 #include "gaulag.h"
-#define EPS 1.0e-13
-#define MAXIT 256
+#define EPS 1.0e-16
+#define MAXIT 64
 
 struct gaulag_str gl = { 0, NULL, NULL };
 // Given alf, the parameter α of the Laguerre polynomials, this routine
@@ -15,8 +15,8 @@ struct gaulag_str gl = { 0, NULL, NULL };
 void gaulag_init(int n, int alf, double scale)
 {
   int i, its, j;
-  double ai, factor;
-  double p1,p2,p3,pp,z,z1;   // High precision is a good idea for this routine.
+  long double ai, factor;
+  long double p1,p2,p3,pp,z,z1;   // High precision is a good idea for this routine.
   if ((n <= 0) || (alf < 0)) {
     fprintf(stderr, "gaulag_init: Ignoring the negative input\n");
     return;
@@ -35,7 +35,7 @@ void gaulag_init(int n, int alf, double scale)
   }
   factor = 1.;
   for (i = n + alf - 1; i >= n; i--)
-    factor *= (double)i;
+    factor *= (long double)i;
   for (i = 0; i < n; i++) {  // Loop over the desired roots.
     if (i == 0) {  // Initial guess for the smallest root.
       z=(1.0+alf)*(3.0+0.92*alf)/(1.0+2.4*n+1.8*alf);
@@ -64,10 +64,8 @@ void gaulag_init(int n, int alf, double scale)
     }
     if (its > MAXIT) fprintf(stderr, "too many iterations in gaulag\n");
     gl.x[i]=z;   // Store the root and the weight.
-    gl.w[i] = -factor/(pp*n*p2);
+    gl.w[i] = -(double)(factor/(pp*n*p2) * scale * expl(gl.x[i]) * powl(gl.x[i], -alf));
   }
-  for (i = 0; i < n; i++) {
-    gl.w[i] *= scale * exp(gl.x[i]) * pow(gl.x[i], -alf);
+  for (i = 0; i < n; i++)
     gl.x[i] *= scale;
-  }
 }

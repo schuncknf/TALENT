@@ -10,7 +10,7 @@ FC = gfortran
 BINDIR = ./
 
 # Name of executable
-EXENAME = test_ho
+EXENAME = hf
 
 LIBS = -L$/. -llapack -lblas
 
@@ -18,7 +18,7 @@ OPTS = -O3  -funroll-loops -ffast-math -g -fcheck=all -fbounds-check -ffree-form
 
 # Notice that use statements may only invoke modules lying further upp (to the left) 
 # in the list
-OBJECTS = types.o symmat_mod.o numerical_integration.o Ho_basis.o test_ho.o
+OBJECTS = types.o constants.o sorting.o symmat_mod.o numerical_integration.o Ho_basis.o hf_solver_mod.o hf_main.o
 
 #.f90.o :
 #	$(FC) -c $(OPTS) $<
@@ -32,14 +32,32 @@ types.o : types.f90
 Ho_basis.o : Ho_basis.f90
 	$(FC) -c $(OPTS) $<
 
+#Ho_basis.o : Ho_basis.f03
+#	$(FC) -c $(OPTS) $<
+
+
 numerical_integration.o : numerical_integration.f90
 	$(FC) -c $(OPTS) $<
 
-test_ho.o : test_ho.f90
-	$(FC) -c $(OPTS) $<
+#test_ho.o : test_ho.f90
+#	$(FC) -c $(OPTS) $<
 
 symmat_mod.o : symmat_mod.f90
 	$(FC) -c $(OPTS) $<
+
+constants.o : constants.f90
+	$(FC) -c $(OPTS) $<
+
+sorting.o : sorting.f90
+	$(FC) -c $(OPTS) $<
+
+hf_solver_mod.o : hf_solver_mod.f90
+	$(FC) -c $(OPTS) $<
+	
+hf_main.o : hf_main.f90
+	$(FC) -c $(OPTS) $<
+
+
 
 clean:
 	rm -f $(OBJECTS)

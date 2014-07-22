@@ -2,10 +2,10 @@
 #include <stdlib.h>
 #include "sho.h"
 #include "gaulag.h"
-#define NGAUSS 64
-#define SCALING 0.2
+#define NGAUSS 256
+#define SCALING 0.1
 
-// generated with scaling 0.2 and alf=1
+// generated with scaling 0.2 and alf=1, NGAUSS=64
 /*double x[NGAUSS] = { 0.0112946413129, 0.0378695442094, 0.0796556409391, 0.1366741967117, 
 0.2089581583565, 0.2965500124551, 0.3995016196627, 0.5178743174762, 
 0.6517391040881, 0.8011768700312, 0.9662786708552, 1.1471460404868, 

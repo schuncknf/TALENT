@@ -1,5 +1,5 @@
 
-all: mtrx_test sho_print sho_test print_gaulag sho_test_gauss hydrogen print_gauher sho_test_gauher
+all: mtrx_test sho_print sho_test print_gaulag sho_test_gauss hydrogen print_gauher sho_test_gauher hydrogen-bench
 
 mtrx_test: mtrx_test.c
 	gcc -o mtrx_test mtrx_test.c -llapacke
@@ -24,3 +24,6 @@ print_gauher: print_gauher.c gauher.c
 
 sho_test_gauher: sho_test_gauher.c sho.c gauher.c
 	gcc -o sho_test_gauher sho_test_gauher.c sho.c gauher.c -lm
+
+hydrogen-bench: hydrogen-bench.c sho.c eigen.c gaulag.c
+	gcc -o hydrogen-bench hydrogen-bench.c sho.c eigen.c gaulag.c -lm -llapacke

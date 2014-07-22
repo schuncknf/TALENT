@@ -46,7 +46,7 @@ READ(*,*) nmax
 WRITE(*,*) 'nmax = ',nmax
 
 
-CALL init_ho_basis(bosc,nmax,0)
+CALL init_ho_basis_old(bosc,nmax,0)
 
 !CALL print_matrix(nmax+1,h_sp)
 

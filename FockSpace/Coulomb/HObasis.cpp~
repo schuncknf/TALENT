@@ -52,8 +52,8 @@ ofstream lepageplot;
 int main()
 {
   int i,j,l,N,Nmax,max_step;  
-  double rmin, rmax,nu;
-  Nmax=20; 
+  double rmin, rmax,nu,b;
+  Nmax=10; 
 
   ham.open("ham.dat");
   eigs.open("eigs.dat");
@@ -66,73 +66,133 @@ int main()
   rmin = 0.0;
   rmax = 20.0;
   max_step = 2000; 
-  N=5;
-  l=2;
+  N=10;
+  l=0;
+  int counter = 0;
+  mat Moreeigvals(5,20);
   //H.eye(); // initialize H to the identity mtx
-  //for(N=2; N<=Nmax; N=N+5)
-  for(nu = 0.00001; nu<20.0; nu*=4.0)
+  for(N=2; N<=Nmax; N++)
+    {      
+      if(N==2 || N==5 || N==10 || N==20 || N==50)
+	{
+	  for(b = 0.1; b < 2.01; b += 0.1)
+	    {
+	      mat H(N,N);
+	      mat eigvecs(N,N);
+	      vec eigvals(N);
+	    
+	      nu = 0.5/(b*b);
+	      
+	      for(i=0; i<N; i++)
+		{      
+		  for(j=i; j<N; j++)
+		    {
+		      H(i,j) = Hij_l(i,j,l,rmin,rmax,max_step,nu);
+		    }
+		  for(j=0; j<i; j++)
+		    {
+		      H(i,j) = H(j,i);
+		    }
+		}
+	      
+	      eig_sym(eigvals, eigvecs, H);
+	      
+	      for(int ii=0; ii < 20; ii++)
+		{
+		  Moreeigvals(counter,ii) = eigvals(0);
+		}
+	      counter++;
+	      
+	      //   output(N, H, eigvecs, eigvals, rmin, rmax, max_step, l,nu);
+	    }
+	  
+	  double integ = 0.0;
+	  double step = (rmax-rmin)/max_step;
+	  // cout << "step: " << step << endl;
+	  nu = 1.0;
+	  // cout << "N: " << N << " l: " << l << " Norm: " << integ << endl;
+	  for(double r=rmin; r<=rmax; r+=step)
+	    {
+	      integ += r*r*radiallogs(N, l, r, nu)*radiallogs(N, l, r, nu)*step;  
+	      //cout << "r: " << r << " integ: " << integ << endl;
+	      //cout << r << " " << radiallogs(N, l, r, nu) << endl;
+	    }
+	  
+	  //cout << "N: " << N << " l: " << l << " Norm: " << integ << endl;
+	  
+	  /*
+	    int n = 100;
+	    double a,b,alf,xx;
+	    
+	    a = 0.0;
+	    b = 20.0; 
+	    
+	    double *x = new double [n];
+	    double *w = new double [n];
+	    double *xgl = new double [n+1];
+	    double *wgl = new double [n+1];
+	    double *r = new double [n];
+	    double *s = new double [n];
+	    //   set up the mesh points and weights
+	    gauleg(a, b,x,w, n);
+	    
+	    
+	    //   set up the mesh points and weights and the power of x^alf
+	    
+	    //   evaluate the integral with the Gauss-Legendre method
+	    //   Note that we initialize the sum. Here brute force gauleg
+	    double int_gauss = 0.;
+	    for ( int i = 0;  i < n; i++){
+	    int_gauss+=w[i]*int_function(x[i]);
+	    }
+	    
+	    cout << "Gaussian-Legendre quad = " << int_gauss << endl;
+	    
+	    gauleg(-1.0, 1.0,x,w, n);
+	    double pi_4 = acos(-1.0)*0.25;
+	    for ( int i = 0;  i < n; i++){
+	    xx=pi_4*(x[i]+1.0); 
+	    r[i]= tan(xx);
+	    s[i]=pi_4/(cos(xx)*cos(xx))*w[i];
+	    }
+	    double int_gausslegimproved = 0.;
+	    for ( int i = 0;  i < n; i++){
+	    int_gausslegimproved += s[i]*int_function(r[i]);     
+	    }
+	    
+	    cout << "Gaussian-Legendre improved quad = " << int_gausslegimproved << endl;
+	    
+	    alf = 2.0;
+	    n = 10;
+	    /*
+	    gauss_laguerre(xgl,wgl, n, alf);
+	    cout << "x[0]: " << xgl[0] << endl;
+	    cout << "x[1]: " << xgl[1] << endl;
+	    cout << "x[2]: " << xgl[2] << endl;
+	    
+	    
+	    double int_gausslag = 0.0;
+	    for ( int i = 1;  i <= n; i++){
+	    int_gausslag += wgl[i]*int_function(xgl[i])*exp(xgl[i]);
+	    }
+	    
+	    cout << "Gaussian-Laguerre quad = " << int_gausslag << endl;
+	  */
+	  counter ++;
+	} // end if
+ 
+    } // end N loop
+  for(counter = 0; counter < 5; counter ++)
     {
-      mat H(N,N);
-      mat eigvecs(N,N);
-      vec eigvals(N);
-      
-      for(i=0; i<N; i++)
-	{      
-	  for(j=i; j<N; j++)
-	    {
-	      H(i,j) = Hij_l(i,j,l,rmin,rmax,max_step,nu);
-	    }
-	  for(j=0; j<i; j++)
-	    {
-	      H(i,j) = H(j,i);
-	    }
-	}
-
-      eig_sym(eigvals, eigvecs, H);
-      
-      output(N, H, eigvecs, eigvals, rmin, rmax, max_step, l,nu);
+      for (int ii = 0; ii<20; ii++)
+	{
+	  cout << Moreeigvals(counter,ii) << " ";
+	} 
+      cout << endl;
     }
   
-  double integ = 0.0;
-  double step = (rmax-rmin)/max_step;
-  // cout << "step: " << step << endl;
-  nu = 1.0;
-  // cout << "N: " << N << " l: " << l << " Norm: " << integ << endl;
-  for(double r=rmin; r<=rmax; r+=step)
-    {
-      integ += r*r*radiallogs(N, l, r, nu)*radiallogs(N, l, r, nu)*step;  
-      //cout << "r: " << r << " integ: " << integ << endl;
-      //cout << r << " " << radiallogs(N, l, r, nu) << endl;
-    }
-   
-  cout << "N: " << N << " l: " << l << " Norm: " << integ << endl;
-  
-  int n = 10;
-  double a,b,alf;
-  double *x = new double [n];
-  double *w = new double [n];
-  double *xgl = new double [n+1];
-  double *wgl = new double [n+1];
-  //   set up the mesh points and weights
-  gauleg(a, b,x,w, n);
-  //   set up the mesh points and weights and the power of x^alf
-  alf = 1.0;
-  gauss_laguerre(xgl,wgl, n, alf);
-  
-  a = 0.0;
-  b = 100.0; 
-  
-  double int_gausslag = 0.0;
-  for ( int i = 1;  i <= n; i++){
-    int_gausslag += wgl[i]*int_function(xgl[i]);
-  }
 
-  cout << "Gaussian-Laguerre quad = " << int_gausslag << endl;
 
-  delete [] x;
-  delete [] w;
-  delete [] xgl;
-  delete [] wgl;
   lepageplot.close();
   lerror.close();
   Nerror.close();
@@ -140,6 +200,7 @@ int main()
   eigs.close();
   ham.close();
   return 0;
+    
 } // end main()
 
 void output(int N, mat H, mat eigvecs, vec eigvals, double rmin,
@@ -162,7 +223,11 @@ void output(int N, mat H, mat eigvecs, vec eigvals, double rmin,
   
   error = theory(0) - eigvals(0);
   relerror = fabs(error/theory(0));
-  // cout << eigvals(0) << endl;
+  // print b vs ground state energy
+  cout.precision(3);
+  cout << 1.0/sqrt(2.0*nu) << " ";
+  cout.precision(9);
+  cout << eigvals(0) << endl;
   // Nerror << nu << " " << relerror << endl;
   Nerror << nu << " " << eigvals(0) << endl;
   lerror << log10(nu) << " " << log10(relerror) << endl;
@@ -240,9 +305,9 @@ double Hij_l(int i, int j, int l, double rmin, double rmax, int max_step,
 	     double nu)
 {
   int k;
-  double H, T, V; // T = <T>, V = <V>
-  double rstep,r;
-
+  double H, T, V; // T = <T>, V = <V> 
+  
+  
   //nu = 8.0;  // this is the nu from the shell model, only used for <T>
   H = 0.0;
   T = 0.0;
@@ -266,8 +331,64 @@ double Hij_l(int i, int j, int l, double rmin, double rmax, int max_step,
   // simpson method of integrating psi_i*V*psi_j
   V = simp(rmin, rmax, max_step, i, j, l, 0.5*nu);
 
+  // Improved Gauss-Legendre for integrating psi*V*psi
+ 
+  /*
+  int n = 400;
+  double xx;
+  double *x = new double [n];
+  double *w = new double [n];
+  double *r = new double [n];
+  double *s = new double [n];
+  //   set up the mesh points and weights
+  /*
+  gauleg(-1.0, 1.0,x,w, n);
+  double pi_4 = acos(-1.0)*0.25;
+  for ( int ii = 0;  ii < n; ii++){
+    xx=pi_4*(x[ii]+1.0); 
+    r[ii]= tan(xx);
+    s[ii]=pi_4/(cos(xx)*cos(xx))*w[ii];
+    // cout << "ii:  "<< ii << " x: " << x[ii] << " r: " << r[ii] << " s: " << s[ii] << endl;
+  }
+
+  double int_gausslegimproved = 0.;
+  for ( int kk = 0;  kk < n; kk++){
+    int_gausslegimproved += s[kk]*func(i,j,l,r[kk],nu); 
+    if(kk%100==0)
+      {
+	cout << "i: " << i << "j: " << j << " kk:  "<< kk  << " r: " << r[kk] << " s: " << s[kk] << " func: " << func(i,j,l,r[kk],nu)  << endl;
+      }
+  }
+  
+  
+  gauleg(0.0, 20.0,x,w, n);
+  double int_gaussleg = 0.;
+  
+  for ( int kk = 0;  kk < n; kk++){
+    //int_gaussleg += w[kk]*func(i,j,l,x[kk],nu); 
+    if(kk%100==0)
+      {
+	cout << "i: " << i << "j: " << j << " kk:  "<< kk  << " r: " << r[kk] << " w: " << w[kk] << " func: " << func(i,j,l,x[kk],nu)  << endl;
+      }
+  }
+
+  cout << "Simpmtxele: " << V << endl;
+  cout << "QuadEle: " << int_gaussleg << endl;
+  //double func(int i, int j, int l, double r, double nu)
+  
+  //V = int_gaussleg; 
+ */
+  
   H = T + V;
+  
+  
+  // delete [] x;
+  //  delete [] w;
+  //  delete [] r;
+  //  delete [] s;
+    
   return H;
+
   
 } // end Hij
 
@@ -500,7 +621,7 @@ void gauss_laguerre(double *x, double *w, int n, double alf)
 }
 // end function gaulag
 
-double int_function(double u)
+double int_function(double r)
 {
   double nu = 1.0;
   double N = 5;
@@ -508,7 +629,7 @@ double int_function(double u)
   double value;
   //u = r*r;
 
-  value = radiallogs(N, l, sqrt(u), nu)*radiallogs(N, l, sqrt(u), nu)*exp(-nu*u);
+  value = -r*radiallogs(N, l, r, nu)*radiallogs(N, l, r, nu);
  
   return value;
 } // end of function to evaluate
