@@ -31,15 +31,12 @@ typedef struct {
 
 double norm(int n, int l, double b) { //generates the normalization factor for the HO basis
     double a = log( pow(2,n + l + 2) );
-    double c = log( FACT((unsigned)n));
+    double c = log( FACT((unsigned)n) );
     double d = log( sqrt(M_PI) );
     double f = log( pow(b,3) );
     double e = log( DFACT( (unsigned)(2*n + 2*l + 1)) );
     
     return sqrt( exp ( a + c - d - e - f ) );
-    
-    
-    //return sqrt( pow(2,n + l + 2) * FACT((unsigned)n) / (sqrt(M_PI) * DFACT( (unsigned)(2*n + 2*l + 1) * pow(b,3) ) ) );
 }
 
 double generate_basis(double r, int n, int l, double b) { //spherical HO basis
@@ -69,39 +66,37 @@ double Hij(double r, void *params) { //generates the integrand R_nl(r)*V(r)R_n'l
 
 double setMatrix(mat A, int dim, int Mdim, gsl_function *F, prms *P) { //set the matrix for the diagonalization
     
-    //double result, error = 1.e-8, abserr; //for the integrator
     double b = P->b;
     double l = P->l;
     vec eigval;
     mat eigvec;
-    //gsl_integration_workspace * w = gsl_integration_workspace_alloc(dim); //workspace needed for the intergator
-    gsl_integration_glfixed_table * w = gsl_integration_glfixed_table_alloc(dim);
+    
+    gsl_integration_glfixed_table * w = gsl_integration_glfixed_table_alloc(dim); //set the workspace for the integration
     
     for( int i = 0; i < Mdim; i++ ) {
         P->i = i;
         for ( int j = 0; j < Mdim; j++ ) {
             P->j = j;
-            //gsl_integration_qagiu(F, 1.e-3, error, error, dim, w, &result, &abserr);
-            //A(i,j) = result;
+            
             A(i,j) = gsl_integration_glfixed (F, 0., 50, w); //works better than quagiu integrator: gauss-legendre quadrature
             
-            
+                //set the matrix elements for the kinetic energy
                 if(i == j) {
                     A(i,j) += 0.5/(b * b) * (2*i + l + 3./2.);
                 } else if(i == (j - 1) ){
-                    A(i,j) += 0.5/(b * b) * sqrt(j * (j + l + 0.5) );
+                    A(i,j) += 0.5/(b * b) * sqrt( j * (j + l + 0.5) );
                 } else if (i == (j + 1) ){
-                    A(i,j) += 0.5/(b * b) * sqrt(i * (i + l + 0.5) );
+                    A(i,j) += 0.5/(b * b) * sqrt( i * (i + l + 0.5) );
                 }
 
         }
     }
     
-    eig_sym(eigval, eigvec, A);
+    eig_sym(eigval, eigvec, A); //diagonalize the matrix
 
-    //gsl_integration_workspace_free(w);
+    gsl_integration_glfixed_table_free(w);
     
-    return eigval(0);
+    return eigval(0); //return the first eigenvalue
 
 }
 

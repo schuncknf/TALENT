@@ -15,7 +15,7 @@ DETAILS:
 /*
  INCLUSIONS
 */
-#include <stdio.h>
+#include <iostream>
 #include <armadillo>
 //#include "Integrator.h" //or whatever we will call it
 //#include "HoBasis.h" //as before
@@ -29,19 +29,26 @@ using namespace arma; //for the armadillo library
  STRUCTURES
 */
 typedef struct {
+    //nothing inside for Coulomb potential
+} potStruct; //structure for the potential data
+
+typedef struct {
+    potStruct *pS; //potential structure, needed in order to use the potential as a GSL function inside Vij
     int i; //main quantum number for the first function
     int j; //main quantum number for the second function
     int l; //angular momentum for the first function
     int l2; //angular momentum for the second function
     double b; //frequency dependent variable
-} prms;
+} matElstruct; //structure for the matrix element generator
 
 /*
     FUNCTIONS
 */
 //----------------------------------------------------------------------------------------------------------------------------------
-double potential(double r) {
+double potential(double r, void *params) {
     //Coulomb potential in natural units
+
+    potStruct *Ps = (potStruct *)params; //casting of the void pointer to potStruct
     
     return -(1./r);
 }
@@ -62,7 +69,7 @@ double Vij(double r, void *params) {
     y = generate_basis(r, i, l, b); //obtain the value of the basis function for the different values of i and j
     z = generate_basis(r, j, l, b);
     
-    return y * z * r * r * potential(r); //r^2 because of the jacobian of spherical coordinates
+    return y * z * r * r * potential(r, p->pS); //r^2 because of the jacobian of spherical coordinates
     //explicitely ignoring spherical harmonics in case of l=0, has to be fixed in different cases
 }
 
