@@ -30,11 +30,11 @@ typedef struct {
 //----------------------------------------------------------------------------------------------------------------------------------
 
 double norm(int n, int l, double b) { //generates the normalization factor for the HO basis
-    double a = (double)(n + l + 2.) * log( 2 );
+    double a = log( pow(2,n + l + 2) );
     double c = log( FACT((unsigned)n) );
-    double d = 0.5 * log( M_PI );
-    double f = 3. * log( b );
-    double e = log( DFACT((unsigned)(2*n + 2*l + 1)) );
+    double d = log( sqrt(M_PI) );
+    double f = log( pow(b,3) );
+    double e = log( DFACT( (unsigned)(2*n + 2*l + 1)) );
     
     return sqrt( exp ( a + c - d - e - f ) );
 }
@@ -66,39 +66,37 @@ double Hij(double r, void *params) { //generates the integrand R_nl(r)*V(r)R_n'l
 
 double setMatrix(mat A, int dim, int Mdim, gsl_function *F, prms *P) { //set the matrix for the diagonalization
     
-    //double result, error = 1.e-8, abserr; //for the integrator
     double b = P->b;
     double l = P->l;
     vec eigval;
     mat eigvec;
-    //gsl_integration_workspace * w = gsl_integration_workspace_alloc(dim); //workspace needed for the intergator
-    gsl_integration_glfixed_table * w = gsl_integration_glfixed_table_alloc(dim);
+    
+    gsl_integration_glfixed_table * w = gsl_integration_glfixed_table_alloc(dim); //set the workspace for the integration
     
     for( int i = 0; i < Mdim; i++ ) {
         P->i = i;
         for ( int j = 0; j < Mdim; j++ ) {
             P->j = j;
-            //gsl_integration_qagiu(F, 1.e-3, error, error, dim, w, &result, &abserr);
-            //A(i,j) = result;
+            
             A(i,j) = gsl_integration_glfixed (F, 0., 50, w); //works better than quagiu integrator: gauss-legendre quadrature
             
-            
+                //set the matrix elements for the kinetic energy
                 if(i == j) {
-                    A(i,j) += 0.5 * 1./(b * b) * (2*i + l + 3./2.);
+                    A(i,j) += 0.5/(b * b) * (2*i + l + 3./2.);
                 } else if(i == (j - 1) ){
-                    A(i,j) += 0.5 * 1./(b * b) * sqrt(j * (j + l + 0.5) );
+                    A(i,j) += 0.5/(b * b) * sqrt( j * (j + l + 0.5) );
                 } else if (i == (j + 1) ){
-                    A(i,j) += 0.5 * 1./(b * b) * sqrt(i * (i + l + 0.5) );
+                    A(i,j) += 0.5/(b * b) * sqrt( i * (i + l + 0.5) );
                 }
 
         }
     }
     
-    eig_sym(eigval, eigvec, A);
+    eig_sym(eigval, eigvec, A); //diagonalize the matrix
 
-    //gsl_integration_workspace_free(w);
+    gsl_integration_glfixed_table_free(w);
     
-    return eigval(0);
+    return eigval(0); //return the first eigenvalue
 
 }
 
@@ -106,8 +104,11 @@ double setMatrix(mat A, int dim, int Mdim, gsl_function *F, prms *P) { //set the
 int main() {
     
     double x, integ, energy;
-    int j, dim = 150, Mdim;
-    vec eng(30);    
+    int j, dim = 250, Mdim;
+    vec eng(20);
+    vec MatrixDim;
+        MatrixDim << 2 << 5 << 10 << 20 << 50 << endr;
+    vec EnCalc(5);
     FILE *pt;
     
     prms P;
@@ -118,27 +119,36 @@ int main() {
     cout<<"F(3)= "<<F(3.)<<endl;
 
     P.l = 0.;
+<<<<<<< HEAD
     P.b = 0.5;function
     
     for( x = 0; x < 10; x += 0.01 ) {
         printf("%g \t %g\n", x, generate_basis(x, 19, 0, 0.5));
     }
 
+=======
+>>>>>>> 1a234d072d04f251cb7a6efb39387fc59247caa0
     
+    Mdim = 2;
     
+        pt = fopen("HydrogenAtom.txt","w");
+        fprintf(pt, "b \t N = 2 \t\t N = 5 \t\t N = 10 \t\t N = 20 \t\t N = 50\n");
     
-    
-    /*
-    for (Mdim = 10; Mdim <= 80; Mdim+=1 ) {
-        for(P.b = 0.05; P.b < 3; P.b += 0.05 ) {
-            mat A(Mdim,Mdim,fill::zeros);
-            energy = setMatrix(A, dim, Mdim, &F, &P);
-            j = (int)(P.b*10 - 1);
-            eng(j) = energy;
+        for(P.b = 0.1; P.b <= 2.1; P.b += 0.1 ) {
+            
+            for( j = 0; j < 5; j ++ ) {
+                
+                Mdim = MatrixDim(j);
+                mat A(Mdim,Mdim,fill::zeros);
+                energy = setMatrix(A, dim, Mdim, &F, &P);
+                EnCalc(j) = energy;
+                
+               // j = (int)(P.b*10 - 1);
+               // eng(j) = energy;
         }
-    
-        fprintf(pt,"%d \t %g\n",Mdim,eng.min());
-    } */
+            
+            fprintf(pt, "%g \t %.9f \t %.9f \t %.9f \t %.9f \t %.9f\n", P.b, EnCalc(0), EnCalc(1), EnCalc(2), EnCalc(3), EnCalc(4));
+    }
     
     fclose(pt);
     

@@ -92,3 +92,22 @@ double Quad::integrate( double (*f)(double,void*), void* f_params){ // Gauss Lag
 	}
 	return res;
 }
+
+double Quad::integrate( double (*f)(double,double,void*), void* f_params){
+	assert(kind==5);
+	double res=0;
+	for (int i=0; i<nt;i++){
+		for (int j=0;j<nt;j++){
+			const double ft = f(knots[i],knots[j],f_params);
+			if (fabs(ft)>0.){
+				const int sign = std::signbit(ft) ? -1 : 1;
+				/**
+				 * over/under flow unsafe version
+				 * res+= weights[i]*weights[j]*f(knots[i],f_params)*exp(knots[i])*pow(knots[i],-alpha)*exp(knots[j])*pow(knots[j],-alpha)
+				*/
+				res += sign*exp( log( weights[i]*weights[j]*fabs(ft) ) + knots[i] - alpha*log(knots[i]) + knots[j] - alpha*log(knots[j]) );
+			}
+		}
+	}
+	return res;
+}
