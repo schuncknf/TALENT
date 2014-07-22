@@ -19,7 +19,7 @@ using namespace arma; //for the armadillo library
 typedef struct {
     int i; //main quantum number for the first function
     int j; //main quantum number for the second function
-    int l; //angular momentum for the first function
+    int l; //angular momentum for the first functionfunction
     int l2; //angular momentum for the second function
     double b; //frequency dependent variable
 } prms;
@@ -115,9 +115,10 @@ int main() {
     
     F.function = Hij;
     F.params = &P;
+    cout<<"F(3)= "<<F(3.)<<endl;
 
     P.l = 0.;
-    P.b = 0.5;
+    P.b = 0.5;function
     
     for( x = 0; x < 10; x += 0.01 ) {
         printf("%g \t %g\n", x, generate_basis(x, 19, 0, 0.5));

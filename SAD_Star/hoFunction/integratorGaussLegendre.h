@@ -4,8 +4,12 @@
 #include<string>
 #include<iostream>
 #include<fstream>
+#include<sstream>
 #include<vector>
 #include<stdexcept>
+#include<map>
+
+//#include<gsl/gsl_integration.h>
 
 using namespace std;
 
@@ -17,7 +21,7 @@ public:
     IntegratorGaussLegendre();
     ~IntegratorGaussLegendre();
 
-    void readTables(string weightFile, string abscissaFile);
+    void readTables(string tabDir);
     void setOrder(int n);
 
     template<class T>
@@ -28,17 +32,16 @@ public:
 
 private:
     int order_;
-    vector<vector<double> > weights_;
-    vector<vector<double> > abscissa_;
-    void readTab(string file, vector<vector<double> >& data);
-
+    map<int, vector<double> > weights_;
+    map<int, vector<double> > abscissa_;
+    void readTab(const string& file, map<int, vector<double> >& data, int n);
 };
 
 
 //------------------------------------------------------------------------------
 template<class T>
 double IntegratorGaussLegendre::integrate(T& func, double a, double b) const{
-    if(order_> weights_.size() || order_>abscissa_.size() || order_<2){
+    if(weights_.count(order_)<1 || abscissa_.count(order_)<1 ){
         throw logic_error( (string("in ")+__FILE__+" "+__FUNCTION__+", table unavailable for this order").c_str());
     }
 
@@ -57,7 +60,7 @@ double IntegratorGaussLegendre::integrate(T& func, double a, double b) const{
 //------------------------------------------------------------------------------
 template<class T>
 double IntegratorGaussLegendre::integrate0ToInf(T& func) const{
-    if(order_> weights_.size() || order_>abscissa_.size() || order_<2){
+    if(weights_.count(order_)<1 || abscissa_.count(order_)<1 ){
         throw logic_error( (string("in ")+__FILE__+" "+__FUNCTION__+", table unavailable for this order").c_str());
     }
 

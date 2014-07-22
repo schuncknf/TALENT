@@ -6,7 +6,7 @@
 
 // Unit tests
 #include "integratorGaussLegendreTest.h"
-//#include "integratorGaussLegendreGSLTest.h"
+#include "integratorGaussLegendreGSLTest.h"
 #include "integratorGaussLaguerreTest.h"
 #include "sphericalhofuncTest.h"
 

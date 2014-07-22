@@ -75,15 +75,8 @@ double hoProdTest(double r, SphericalHOFunc& func, int n1, int n2){
 BOOST_AUTO_TEST_CASE( orthonormal2Test )
 {
     IntegratorGaussLaguerre integrator;
-    integrator.readTables( "../gen_laguerre/gauss-laguerre_n20_w.txt", "../gen_laguerre/gauss-laguerre_n20_x.txt", 20);
-    integrator.readTables( "../gen_laguerre/gauss-laguerre_n100_w.txt", "../gen_laguerre/gauss-laguerre_n100_x.txt", 100);
-    integrator.readTables( "../gen_laguerre/gauss-laguerre_n150_w.txt", "../gen_laguerre/gauss-laguerre_n150_x.txt", 150);
-    integrator.readTables( "../gen_laguerre/gauss-laguerre_n200_w.txt", "../gen_laguerre/gauss-laguerre_n200_x.txt", 200);
-    integrator.readTables( "../gen_laguerre/gauss-laguerre_n500_w.txt", "../gen_laguerre/gauss-laguerre_n500_x.txt", 500);
-    integrator.readTables( "../gen_laguerre/gauss-laguerre_n1000_w.txt", "../gen_laguerre/gauss-laguerre_n1000_x.txt", 1000);
-    integrator.readTables( "../gen_laguerre/gauss-laguerre_n2000_w.txt", "../gen_laguerre/gauss-laguerre_n2000_x.txt", 2000);
-    integrator.readTables( "../gen_laguerre/gauss-laguerre_n5000_w.txt", "../gen_laguerre/gauss-laguerre_n5000_x.txt", 5000);
-    integrator.setOrder(2000);
+    integrator.readTables( "../gen_laguerre");
+    integrator.setOrder(1000);
 
     SphericalHOFunc funcR;
     funcR.setB(0.5);
@@ -91,7 +84,7 @@ BOOST_AUTO_TEST_CASE( orthonormal2Test )
 
     double cumulError= 0;
 
-    int nMax= 40;
+    int nMax= 20;
     for(int n1=0; n1<nMax; n1++){
         for(int n2= 0; n2< nMax; n2++){
             auto integrand= bind(hoProdTest, placeholders::_1, funcR, n1, n2);

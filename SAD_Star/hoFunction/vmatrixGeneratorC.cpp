@@ -7,7 +7,6 @@
 
 #include "sphericalhofunc.h"
 #include "integratorGaussLaguerre.h"
-#include "integratorGaussLaguerre.h"
 
 
 
@@ -102,10 +101,8 @@ double calcElement(int n1, int n2, IntegratorGaussLaguerre& integrator, Spherica
 //------------------------------------------------------------------------------
 void generateMatrix(mat &A, int nMax, SphericalHOFunc& rFunc) {
     IntegratorGaussLaguerre integrator;
-    integrator.readTables("../gen_laguerre/gauss-laguerre_n100_x.txt", "../gen_laguerre/gauss-laguerre_n100_w.txt", 100);
-    integrator.readTables( "../gen_laguerre/gauss-laguerre_n1000_w.txt", "../gen_laguerre/gauss-laguerre_n1000_x.txt", 1000);
-    integrator.readTables( "../gen_laguerre/gauss-laguerre_n2000_w.txt", "../gen_laguerre/gauss-laguerre_n2000_x.txt", 2000);
-    integrator.setOrder(1000);
+    integrator.readTables("../gen_laguerre");
+    integrator.setOrder(500);
 
     A.zeros(nMax,nMax);
     for(int i=0; i< nMax; i++){
@@ -119,7 +116,7 @@ void generateMatrix(mat &A, int nMax, SphericalHOFunc& rFunc) {
 //------------------------------------------------------------------------------
 int main (int argc, char* argv[]){
   mat A;
-  int nMax=30;
+  int nMax=20;
 
   for(double b=0.1; b<2.; b+= 0.1){
       SphericalHOFunc rFunc;

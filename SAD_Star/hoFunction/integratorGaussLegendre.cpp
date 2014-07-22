@@ -19,10 +19,28 @@ void IntegratorGaussLegendre::setOrder(int n){
 }
 
 
+
 //------------------------------------------------------------------------------
-void IntegratorGaussLegendre::readTables(string weightFile, string abscissaFile){
-    this->readTab(weightFile, weights_);
-    this->readTab(abscissaFile, abscissa_);
+void IntegratorGaussLegendre::readTables(string tableDir){
+    int nMax=5e4;
+    for(int n=2; n<nMax; n++){
+        ostringstream weightFile;
+        weightFile<<tableDir<<"/gauss-legendre_n"<<n<<"_w.txt";
+        ifstream wInput(weightFile.str().c_str());
+
+        ostringstream abscissaFile;
+        abscissaFile<<tableDir<<"/gauss-legendre_n"<<n<<"_x.txt";
+        ifstream xInput(abscissaFile.str().c_str());
+
+        if(wInput && xInput){
+            this->readTab(weightFile.str(), weights_, n);
+            this->readTab(abscissaFile.str(), abscissa_, n);
+        }
+
+        wInput.close();
+        xInput.close();
+    }
+
 }
 
 
@@ -32,29 +50,18 @@ void IntegratorGaussLegendre::readTables(string weightFile, string abscissaFile)
  * @param file
  * @param data
  */
-void IntegratorGaussLegendre::readTab(string file, vector<vector<double> > & data){
+void IntegratorGaussLegendre::readTab(const string& file, map<int, vector<double> >& data, int n){
   ifstream input(file.c_str());
   if(!input){
       throw invalid_argument(string("in ")+__FILE__+", "+__FUNCTION__+", file not found");
   }
 
-  data.resize(0);
-
   string word;
-  int n=1;
   vector<double> valVec;
   while(! input.eof()){
       input>>word;
-
-      if(word[0] == '$'){
-          data.push_back(valVec);
-          n++;
-          valVec.clear();
-      }
-      else if(word.size() > 40 || word[0] =='0'){
-          double val= std::atof(word.c_str());
-          valVec.push_back(val);
-      }
-
+      double val= std::atof(word.c_str());
+      valVec.push_back(val);
   } //end while
+  data[n]= valVec;
 }

@@ -2,7 +2,7 @@
 
 
 //------------------------------------------------------------------------------
-IntegratorGaussLaguerre::IntegratorGaussLaguerre(): order_(2), weights_(1e5), abscissa_(1e5)
+IntegratorGaussLaguerre::IntegratorGaussLaguerre(): order_(2)
 {
 }
 
@@ -20,9 +20,26 @@ void IntegratorGaussLaguerre::setOrder(int n){
 
 
 //------------------------------------------------------------------------------
-void IntegratorGaussLaguerre::readTables(string weightFile, string abscissaFile, int n){
-    this->readTab(weightFile, weights_, n);
-    this->readTab(abscissaFile, abscissa_, n);
+void IntegratorGaussLaguerre::readTables(string tableDir){
+    int nMax=5e4;
+    for(int n=2; n<nMax; n++){
+        ostringstream weightFile;
+        weightFile<<tableDir<<"/gauss-laguerre_n"<<n<<"_w.txt";
+        ifstream wInput(weightFile.str().c_str());
+
+        ostringstream abscissaFile;
+        abscissaFile<<tableDir<<"/gauss-laguerre_n"<<n<<"_x.txt";
+        ifstream xInput(abscissaFile.str().c_str());
+
+        if(wInput && xInput){
+            this->readTab(weightFile.str(), weights_, n);
+            this->readTab(abscissaFile.str(), abscissa_, n);
+        }
+
+        wInput.close();
+        xInput.close();
+    }
+
 }
 
 
@@ -32,7 +49,7 @@ void IntegratorGaussLaguerre::readTables(string weightFile, string abscissaFile,
  * @param file
  * @param data
  */
-void IntegratorGaussLaguerre::readTab(string file, vector<vector<double> > & data, int n){
+void IntegratorGaussLaguerre::readTab(const string& file, map<int, vector<double> >& data, int n){
   ifstream input(file.c_str());
   if(!input){
       throw invalid_argument(string("in ")+__FILE__+", "+__FUNCTION__+", file not found");
@@ -45,5 +62,5 @@ void IntegratorGaussLaguerre::readTab(string file, vector<vector<double> > & dat
       double val= std::atof(word.c_str());
       valVec.push_back(val);
   } //end while
-  data.at(n)= valVec;
+  data[n]= valVec;
 }

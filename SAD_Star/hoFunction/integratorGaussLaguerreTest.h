@@ -18,11 +18,7 @@ struct IntegratorGaussLaguerreFixture{
   
     IntegratorGaussLaguerreFixture()
     {
-        integrator_.readTables("../gen_laguerre/gauss-laguerre_n20_w.txt", "../gen_laguerre/gauss-laguerre_n20_x.txt", 20);
-        integrator_.readTables("../gen_laguerre/gauss-laguerre_n100_w.txt", "../gen_laguerre/gauss-laguerre_n100_x.txt", 100);
-        integrator_.readTables("../gen_laguerre/gauss-laguerre_n150_w.txt", "../gen_laguerre/gauss-laguerre_n150_x.txt", 150);
-        integrator_.readTables("../gen_laguerre/gauss-laguerre_n200_w.txt", "../gen_laguerre/gauss-laguerre_n200_x.txt", 200);
-        integrator_.readTables("../gen_laguerre/gauss-laguerre_n500_w.txt", "../gen_laguerre/gauss-laguerre_n500_x.txt", 500);
+        integrator_.readTables("../gen_laguerre");
     }
  
     ~IntegratorGaussLaguerreFixture(){

@@ -17,7 +17,7 @@ struct IntegratorGaussLegendreFixture{
   
     IntegratorGaussLegendreFixture()
     {
-        integrator_.readTables("lgvalues-weights.php", "lgvalues-abscissa.php");
+        integrator_.readTables("../gen_legendre");
     }
  
     ~IntegratorGaussLegendreFixture(){
