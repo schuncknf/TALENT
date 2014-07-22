@@ -8,14 +8,16 @@ subroutine calculate_interaction(hbaromega,nmax,fname)
   ! nmax is max basis state
   implicit none
   
-  integer,parameter :: ngauss = 500
+  integer,parameter :: ngauss = 100
   integer :: nmax, qmax,i,j,k,l,n
+  integer :: s1,s2,s3,s4
   real(8),dimension(ngauss) ::  wrr,rr
   real(8) :: omega,oscl,hbaromega
   character(*) :: fname 
   
-  omega = hbaromega*1.519295  ! divide by hbar
-  oscl =sqrt(6.3/omega)  ! inverse length parameter 
+  !omega = hbaromega  ! divide by hbar
+  oscl =sqrt(197.325*197.325/938.9059/hbaromega) ! inverse length parameter 
+  print*, oscl
    
   ! get quadrature mesh and weights 
   call gauss_legendre(0.d0, 20.d0/oscl, rr, wrr, ngauss ) 
@@ -25,12 +27,32 @@ subroutine calculate_interaction(hbaromega,nmax,fname)
   qmax = (nmax + 1)*2 - 1   ! total number of states minus 1 
     
   do i = 0,qmax
+     print*, i
      do j = i+1,qmax
-        do k = 0,qmax
+      
+        print*, i,j
+        do k = i,qmax
            do l = k+1,qmax 
-  
-              write(37,*) Minn_matrix_element(i,j,k,l,oscl,rr,wrr,ngauss)
+              !print*, i,j,k,l
+      
+                s1 = mod(i,2) 
+                s2 = mod(j,2)
+        
+                if (s1==s2) then 
+                   write(37,*) 0.d0
+                   cycle
+                end if
+              s3 = mod(k,2) 
+              s4 = mod(l,2) 
+             
+              if (s3==s4) then 
+                 write(37,*) 0.d0
+                 cycle
+              end if 
               
+              write(37,*) Minn_matrix_element(i,j,k,l,oscl,rr,wrr,ngauss)
+            !  print*, Minn_matrix_element(0,1,0,1,oscl,rr,wrr,ngauss)
+             ! -4.473
   end do; end do; end do; end do
   
   close(37)
@@ -57,7 +79,7 @@ real(8) function Minn_matrix_element(q1,q2,q3,q4,oscl,rr,wrr,ng)
   ! odd refers to spin down, even to spin up
   implicit none 
 
-  real(8), parameter :: VR =200.00d0 , VS = 91.85d0
+  real(8), parameter :: VR = 200.00d0 , VS = 91.85d0
   real(8), parameter :: kapR = 1.487d0,kapS = 0.465d0 
   real(8) :: oscl
   integer :: q1,q2,q3,q4,ng
@@ -77,12 +99,25 @@ real(8) function Minn_matrix_element(q1,q2,q3,q4,oscl,rr,wrr,ng)
   n3 = q3/2
   n4 = q4/2
   
-  Minn_matrix_element = (VR*gaussian_integral(n1,n2,n3,n4,oscl,rr,wrr,ng,kapR) + &
+  if (kd(s1,s3)*kd(s2,s4) == 1) then
+     if (kd(s1,s4)*kd(s2,s3) == 1 )  then 
+        Minn_matrix_element = 0.d0 
+     else 
+  Minn_matrix_element = 0.5d0*(VR*gaussian_integral(n1,n2,n3,n4,oscl,rr,wrr,ng,kapR) - &
        VS * gaussian_integral(n1,n2,n3,n4,oscl,rr,wrr,ng,kapS) + &
-       VR*gaussian_integral(n1,n2,n4,n3,oscl,rr,wrr,ng,kapR) + &
-       VS * gaussian_integral(n1,n2,n4,n3,oscl,rr,wrr,ng,kapS) ) &
-       * ( kd(s1,s3)*kd(s2,s4) - kd(s1,s4)*kd(s2,s3) )
-
+       VR * gaussian_integral(n1,n2,n4,n3,oscl,rr,wrr,ng,kapR) - &
+       VS * gaussian_integral(n1,n2,n4,n3,oscl,rr,wrr,ng,kapS) )
+     end if 
+     
+  else if (kd(s1,s3)*kd(s2,s4) == 1) then
+     Minn_matrix_element = -0.5d0*(VR*gaussian_integral(n1,n2,n3,n4,oscl,rr,wrr,ng,kapR) - &
+       VS * gaussian_integral(n1,n2,n3,n4,oscl,rr,wrr,ng,kapS) + &
+       VR * gaussian_integral(n1,n2,n4,n3,oscl,rr,wrr,ng,kapR) - &
+       VS * gaussian_integral(n1,n2,n4,n3,oscl,rr,wrr,ng,kapS) )
+  else 
+     Minn_matrix_element = 0.d0 
+  end if 
+  
 end function 
 !========================================================================
 real(8) function overlap_integral(n1,n2,n3,n4,oscl,rr,wrr,ng)
@@ -99,7 +134,7 @@ real(8) function overlap_integral(n1,n2,n3,n4,oscl,rr,wrr,ng)
            do i=1,ng 
               do j = 1, ng
 
-         int_sum=int_sum-wrr(i)*wrr(j)*rr(i)*rr(i)*rr(j)*rr(j)* &
+         int_sum=int_sum+wrr(i)*wrr(j)*rr(i)*rr(i)*rr(j)*rr(j)* &
               Rnl(n1,0,oscl,rr(i))*Rnl(n2,0,oscl,rr(j)) * &
               Rnl(n3,0,oscl,rr(i))*Rnl(n4,0,oscl,rr(j))
               end do 
@@ -124,11 +159,11 @@ real(8) function gaussian_integral(n1,n2,n3,n4,oscl,rr,wrr,ng,mu)
            do i=1,ng 
               do j = 1, ng
 
-         int_sum=int_sum-wrr(i)*wrr(j)*rr(i)*rr(j)* &
+         int_sum=int_sum+wrr(i)*wrr(j)*rr(i)*rr(j)* &
               Rnl(n1,0,oscl,rr(i))*Rnl(n2,0,oscl,rr(j)) * &
               Rnl(n3,0,oscl,rr(i))*Rnl(n4,0,oscl,rr(j)) * &
-              (exp( -(rr(i)*rr(i) + rr(j)*rr(j) + 2*rr(i)*rr(j))/mu ) - &
-              exp( -(rr(i)*rr(i) + rr(j)*rr(j) - 2*rr(i)*rr(j))/mu ) ) * 0.25d0 * mu
+              (exp( -(rr(i)*rr(i) + rr(j)*rr(j) - 2*rr(i)*rr(j))*mu ) - &
+              exp( -(rr(i)*rr(i) + rr(j)*rr(j) + 2*rr(i)*rr(j))*mu ) ) * 0.25d0 / mu
          
         
               end do 

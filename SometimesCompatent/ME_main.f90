@@ -2,6 +2,6 @@ program main
   use ME_minn
   implicit none 
 
-  call calculate_interaction(1.d0,10,'hw1.0_n10') 
+  call calculate_interaction(10.d0,10,'hw10_n10') 
 
 end program
