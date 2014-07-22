@@ -1,4 +1,4 @@
-This directory contains tools to generate the abscissa and weigths for the gauss-laguerre quadrature.
+This directory contains tools to generate the abscissa and weigths for the gauss-legendre quadrature.
 
 Files:
 ------
