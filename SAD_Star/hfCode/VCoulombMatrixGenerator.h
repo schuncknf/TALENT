@@ -78,6 +78,7 @@ void kineticMatEl(mat *A, matElStruct *mES) {
     double b = mES->b;
     int i = mES->i;
     int j = mES->j;
+    int l = mES->l;
 
         if(i == j) {
             A(i,j) += 0.5/(b * b) * (2*i + l + 3./2.);
