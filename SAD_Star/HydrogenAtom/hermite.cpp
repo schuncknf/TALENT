@@ -102,8 +102,9 @@ double setMatrix(mat A, int dim, int Mdim, gsl_function *F, prms *P) { //set the
     //gsl_integration_workspace_free(w);
     
     return eigval(0);
-
 }
+
+
 
 
 int main() {
