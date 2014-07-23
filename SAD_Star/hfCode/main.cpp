@@ -11,6 +11,7 @@
 
 using namespace std;
 using namespace arma;
+using namespace VCoulombMatrixGenerator;
 
 
 
