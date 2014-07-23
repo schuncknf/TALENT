@@ -1,4 +1,8 @@
-program HF
+module Hartree_Fock
+
+contains
+
+subroutine HF(n_max,A,fname)
 
 implicit none
 
@@ -7,11 +11,7 @@ integer :: n_max, k, mu, nu, i, j, l, info, N, A
 real (8), allocatable, dimension (:) :: E, E_prev, work
 real (8), allocatable, dimension(:,:) :: h, t, delta, gamma, rho, rho_prev, D, test
 real (8), allocatable, dimension(:,:,:,:) :: v  
-character (7) :: fname
-
-fname='hw10_n9'
-n_max=20
-A=2
+character (*) :: fname
 
 allocate (D(n_max,n_max),rho(n_max,n_max),rho_prev(n_max,n_max),test(n_max,n_max))
 allocate (h(n_max,n_max),t(n_max,n_max),v(n_max,n_max,n_max,n_max))
@@ -241,4 +241,6 @@ print*, sum_HF, sum_HF_2
 
 !print*, test
 
-end program HF
+end subroutine HF
+
+end module
