@@ -52,7 +52,8 @@ do i = 1, n_max
    end do 
 end do 
 
-print*, v_elem(1,2,3,2,V,Rmax,n_max)
+close(37)
+close(39) 
 
 !======================
 !Toy matrix elements

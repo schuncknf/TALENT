@@ -8,7 +8,7 @@ subroutine calculate_interaction(hbaromega,nmax,fname)
   ! nmax is max basis state
   implicit none
   
-  integer,parameter :: ngauss = 70
+  integer,parameter :: ngauss = 64
   real(8),parameter :: hc = 197.32891, mnuc = 938.9059
   integer :: nmax, qmax,i,j,k,l,n
   integer :: s1,s2,s3,s4
