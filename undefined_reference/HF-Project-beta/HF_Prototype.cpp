@@ -9,6 +9,7 @@ using namespace arma;
 #include "Physics.cpp"
 #include "quadrature.hpp"
 #include "States.h"
+#include "HF_Phys.h"
 
 int main()
 {
@@ -18,6 +19,8 @@ int main()
 
     unsigned int max_iterations = 50;
     double conv_treshold = 1e-5;
+
+    Quad quad("quad/glqi_32.bin");
 
     States states(N_basis, system);
 
