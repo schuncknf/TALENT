@@ -1,0 +1,27 @@
+This program calculates the ground state of a fictitious l=0 only
+neutron drop system.  
+
+
+hf.cpp
+	This is the main body of the program.  
+harmonic_oscillator.cpp
+	get HO wavefunction from this routine
+gauss_legendre.c
+	Program used to integrate, ripped from the interenet
+functions.cpp
+	This program contains only a diagonalization routine
+hffunctions.cpp
+	This program contains relevent for the hartree-fock routine
+minnesota.cpp
+	This program contains the matrix elements for minnesota potential
+	in a harmonic oscillator.
+
+
+My program depends on armadillo/lapack/blas gsl libraries.  Also, the header file
+gnuplot_i.hpp gives access to a gnuplot terminal within cpp.  I have included it in 
+my project directory, but the program will not execute if gnuplot is not installed.
+
+Upon running it will request a b, n1,n2 to check orthonormality upon. It will output
+the result of this calculation for this.  After it will calculate the ground and first 
+excited state for the hydrogen and plot just the ground state to the screen.  It will
+also save the resulting graphs under gsvariation.ps and excitedvariation.ps.
