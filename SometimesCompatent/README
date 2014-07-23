@@ -1,5 +1,34 @@
 Nathan, Fernando, Fabrizio 
+=====================================================================
+HARTREE FOCK: S-WAVE MINNESOTA POTENTIAL
+=====================================================================
+from this directory: 
 
+! to compile : 
+make
+
+! to run: 
+
+./run_HF 2 4 10 
+	 
+arguments:  (A , n , hw ) 
+	 A - number of particles
+	 n - 2*n = Nshell_max
+	 hw - trap frequency
+
+Source files: ME_minn.f90 , Hartree_Fock.f90 , main.f90  
+
+This code will calculate the matrix elements if they are not there. 
+If they are there, it will skip that and just run HF. 
+ 	 
+NOTE: For some reason Fernando's computer does not like to run HF after
+ computing the matrix elements. If yours also does not like to do this, 
+just run the executable a second time, and hopefully it will cooperate. 
+
+
+===================================================================
+HYDROGEN MOLECULE
+===================================================================
 USING GAUSS-LEGENDRE QUADRATURE WITH 800 POINTS 
 
 compile: gfortran -o run_hyd CoulombOscRelMe.f90 -L/user/local/lib/ -llapack -lblas 

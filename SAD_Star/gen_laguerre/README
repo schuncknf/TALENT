@@ -1,1 +1,18 @@
-http://people.sc.fsu.edu/~jburkardt/cpp_src/gen_laguerre_rule/gen_laguerre_rule.html
+This directory contains tools to generate the abscissa and weigths for the gauss-laguerre quadrature.
+
+Files:
+------
+
+- laguerre_rule.cpp : main source file
+- laguerre_rule.sh: Script that compile the source and output a.out
+- genFile.sh: script that creates the abscissa and weights for a range of orders.
+
+Usage:
+------
+- compile the source
+./laguerre_rule.sh
+
+- edit the genFile.sh to change the parameters (order bounds, file names...)
+
+- launch the genFile:
+./genFile
