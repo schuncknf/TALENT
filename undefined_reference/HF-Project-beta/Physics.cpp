@@ -1,8 +1,8 @@
 #include "quadrature.hpp"
 #include "ho.hpp"
-#include "States.cpp"
+#include "States.h"
 
-double T_cinetik(int i,int j, int N_basis, double* parm) {return (i==j)?1:0;}
+double T(int i,int j,void* parm) {return (i==j)? (2.*i+1.5) :0; }
 double V_coulomb(int i,int j,int k,int l, int N_basis, double* parm) {return 0;}
 double Random_rho(int i,int j, int N_basis, double* parm) {return 0;} 
 
