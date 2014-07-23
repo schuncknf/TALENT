@@ -26,10 +26,11 @@ subroutine calculate_interaction(hbaromega,nmax,fname)
 
   qmax = (nmax + 1)*2 - 1   ! total number of states minus 1 
   
+  print*, hbaromega, qmax
   do i = 0,qmax
      do j = i+1,qmax
       
-        do k = i,qmax
+        do k = 0,qmax
            do l = k+1,qmax 
         
               write(37,*) Minn_matrix_element(i,j,k,l,oscl,rr,wrr,ngauss)

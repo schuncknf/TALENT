@@ -15,7 +15,7 @@ program main
   
   read(Astr,'(I5)') A
   read(nmaxstr,'(I5)') nmax
-  read(hwstr,'(f12.7)') hw 
+  read(hwstr,'(f4.0)') hw 
   
   hwstr = adjustl(hwstr) 
   nmaxstr = adjustl(nmaxstr) 
