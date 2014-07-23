@@ -1,0 +1,18 @@
+m1body.f90
+   T+1-body potential matrix
+
+v2body.f90
+   2-body minnesota interaction matrix
+
+meanfields.f90
+   INITIAL:    calculate T, V matrix; initialize density and energy
+   TMEAN:      Tr[T.rho]
+   MEANFIELD:  calculate mean field and H matrix
+   RHOMAT:     calculate rho matrix  
+
+iter.f90
+   REORDR:     arrange eigen values and vectors into correct order
+   HFDIAG:     diagonalize h matrix
+   energy_new: update energy
+   iters:      do iterations
+

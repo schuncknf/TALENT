@@ -18,17 +18,21 @@ int main(int argc, char* argv[] ){
 	}
 	Quad q(argv[1]); // quadrature instance, call this with q.integrate( double f(double,void*) ) to integrate	
 	test_various_integrands(q);
-	test_orthonormality(q);
+	//test_orthonormality(q);
 }
 
 
 /** here we make use of the nice lambda functions introduced in c++11 */
 void test_various_integrands(Quad& q){
-	std::cout << " (0,inf) exp(-x)               = " << std::setw(10) << std::setprecision(6) << q.integrate( [](double x,void* p){ return exp(-x); },NULL) << " exact = 1 " << std::endl;
-	std::cout << " (0,inf) x*exp(-x)             = " << std::setw(10) << std::setprecision(6) << q.integrate( [](double x,void* p){ return x*exp(-x);},NULL) << " exact = 1 " << std::endl;
-	std::cout << " (0,inf) 1/6*x^3*exp(-x)       = " << std::setw(10) << std::setprecision(6) << q.integrate( [](double x,void* p){ return 1./6.*x*x*x*exp(-x); },NULL) << " exact = 1 " << std::endl;
-	std::cout << " (0,inf) 2./sqrt(pi)*exp(-x^2) = " << std::setw(10) << std::setprecision(6) << q.integrate( [](double x,void* p){ return 2./sqrt(M_PI)*exp(-x*x); },NULL) << " exact = 1 " << std::endl;
-	
+	std::cout << std::fixed;
+	std::cout << " (0,inf) exp(-x)               = " << std::setw(12) << std::setprecision(10) << q.integrate( [](double x,void* p){ return exp(-x); },NULL) << " exact = 1 " << std::endl;
+	std::cout << " (0,inf) x*exp(-x)             = " << std::setw(12) << std::setprecision(10) << q.integrate( [](double x,void* p){ return x*exp(-x);},NULL) << " exact = 1 " << std::endl;
+	std::cout << " (0,inf) 1/6*x^3*exp(-x)       = " << std::setw(12) << std::setprecision(10) << q.integrate( [](double x,void* p){ return 1./6.*x*x*x*exp(-x); },NULL) << " exact = 1 " << std::endl;
+	std::cout << " (0,inf) 2./sqrt(pi)*exp(-x^2) = " << std::setw(12) << std::setprecision(10) << q.integrate( [](double x,void* p){ return 2./sqrt(M_PI)*exp(-x*x); },NULL) << " exact = 1 " << std::endl;
+	std::cout << "\n\n";
+	std::cout << " 4./pi*(0,inf)(0,inf) exp(-x*x-y*y)         = " << std::setw(12) << std::setprecision(10) << q.integrate( [](double x, double y,void* p){ return 4./M_PI*exp(-x*x-y*y); },NULL) << " exact = 1" << std::endl;
+	std::cout << " 4.*(0,inf)(0,inf) x*y*exp(-x*x-y*y)        = " << std::setw(12) << std::setprecision(10) << q.integrate( [](double x, double y,void* p){ return 4.*x*y*exp(-x*x-y*y); },NULL) << " exact = 1" << std::endl;
+	std::cout << " 4.*(0,inf)(0,inf) sin(x)*sin(y)*exp(-x-y)  = " << std::setw(12) << std::setprecision(10) << q.integrate( [](double x, double y,void* p){ return 4.*sin(x)*sin(y)*exp(-x-y); },NULL) << " exact = 1" << std::endl;
 }
 
 void test_orthonormality(Quad& q){

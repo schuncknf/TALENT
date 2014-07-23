@@ -1,0 +1,10 @@
+# number of particles
+2
+# number of single-particle states
+4
+# legend for single-particle states j=spin
+# nr  n    l   2j   2j_z   energy (spacing = 1)
+1     0    0    1    -1    0.0
+2     0    0    1     1    0.0
+3     1    0    1    -1    1.0
+4     1    0    1     1    1.0
