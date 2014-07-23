@@ -1,9 +1,9 @@
-//#include <stdio.h>
-#include "base.h"
-//#include <lapacke.h>
+#include <stdio.h>
+#include <math.h>
 #include "eigen.h"
 #include "potential.h"
 #include "solver.h"
+#include "param.h"
 #define EPS 1e-12
 #define MAXITN 30
 
@@ -13,20 +13,6 @@ int N_all; // dimension of the base space
 // sets the diagonal matrix N_all x N_all with
 // 1 on the first N_occ diagonal elements
 // 0 elsewhere
-
-/*void solve_eig(eig_t input, int N)
-{
-  int err, nfound;
-  err = LAPACKE_dsyevr(LAPACK_COL_MAJOR, 'V', 'A', 'U', N, input.a[0], input.Nmax, 0., 0.,
-                       0, 0, 0., &nfound, input.lam, input.eigvec[0], input.Nmax, input.isup);
-  if (err < 0)
-    fprintf(stderr, "eigen/solve_eig: LAPACKE_dsysevr returned error %d\n", err);
-  if (nfound < N)
-    fprintf(stderr, "eigen/solve_eig: number of eigenvalues is lower than N (%d < %d)\n",
-            nfound, N);
-}
-*/
-
 
 double **init_rho(int N_occ)
 {
@@ -74,7 +60,7 @@ for (i = 0; i < N_all; i++){
 		for (k = 0; k < N_occ; k++)
 		{
 		//if (i == j && i < N_occ) 
-		rho[i][j] += hamilt.eigvec[k][i]*hamilt.eigvec[k][j];
+		rho[i][j] += hamilt.eigvec[i][k]*hamilt.eigvec[j][k];
 		}//rho[i][[j] C convention
 	}
 	}
@@ -94,7 +80,7 @@ for (i = 0; i < N_all; i++) {
   for (j = 0; j < N_all; j++)
     res += Vacbd[i][j].t * rho[j][i];
 }
-return 0.5 * res;
+return 2. * 0.5 * res;
 }
 
 eig_t solve_HF(Vab_t **Vacbd, int N_dim, int N_occ)
@@ -108,13 +94,14 @@ eig_t solve_HF(Vab_t **Vacbd, int N_dim, int N_occ)
   double ** rho = init_rho(N_occ);
   E_old = 1.;
   E = 0.;
-  while (fabs(E - E_old) > EPS || i < MAXITN) {
+  
+  while (fabs(E - E_old) > EPS && i < MAXITN) {
     make_hamilt(hamilt, rho, Vacbd);
     solve_eig(hamilt); // eigen.c
     calc_rho(hamilt, rho, N_occ);
     E_old = E;
     E = calc_E(hamilt, rho, Vacbd, N_occ);
-    printf("iteration %d: E = %lf\n", i, E);
+    printf("iteration %d: E = %f  \n", i, E);
     i++;
   }
   printf("E = %lf\n", E);
