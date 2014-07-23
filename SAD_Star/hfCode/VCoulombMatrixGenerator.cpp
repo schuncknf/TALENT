@@ -34,28 +34,12 @@ DETAILS:
 using namespace arma; //for the armadillo library
 using namespace VCoulombMatrixGenerator;
 
-/*
- STRUCTURES
-*/
-typedef struct {
-    //nothing inside;
-} potStruct;
-
-typedef struct {
-    potStruct *pS;
-    int i; //main quantum number for the first function
-    int j; //main quantum number for the second function
-    int l; //angular momentum for the first function
-    int l2; //angular momentum for the second function
-    double b; //frequency dependent variable
-} matElStruct;
-
 
 /*
     FUNCTIONS
 */
 //----------------------------------------------------------------------------------------------------------------------------------
-double potential(double r, void *params) {
+double VCoulombMatrixGenerator::potential(double r, void *params) {
     //Coulomb potential in natural units
 
    // potStruct *pS = (potStruct *)params;
@@ -64,7 +48,7 @@ double potential(double r, void *params) {
 }
 
 //----------------------------------------------------------------------------------------------------------------------------------
-double Vij(double r, void *params) {
+double VCoulombMatrixGenerator::Vij(double r, void *params) {
     //generates the integrand R_nl(r)*V(r)R_n'l'(r) using the function potential
     
     matElStruct *p = (matElStruct *)params; //casting of the params pointer to a prms structure
@@ -88,7 +72,7 @@ double Vij(double r, void *params) {
 
 
 //----------------------------------------------------------------------------------------------------------------------------------
-void addKinMatEl(mat& A, matElStruct *mES) {
+void VCoulombMatrixGenerator::addKinMatEl(mat& A, matElStruct *mES) {
 
     double b = mES->b;
     int i = mES->i;

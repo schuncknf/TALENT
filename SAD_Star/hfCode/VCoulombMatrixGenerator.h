@@ -22,6 +22,27 @@ using namespace arma;
 
 // Declarations
 namespace VCoulombMatrixGenerator{
+
+/*
+ STRUCTURES
+*/
+typedef struct {
+    //nothing inside;
+} potStruct;
+
+typedef struct {
+    potStruct *pS;
+    int i; //main quantum number for the first function
+    int j; //main quantum number for the second function
+    int l; //angular momentum for the first function
+    int l2; //angular momentum for the second function
+    double b; //frequency dependent variable
+} matElStruct;
+
+
+  double potential(double r, void *params);
+  double Vij(double r, void *params);
+  void addKinMatEl(mat& A, matElStruct *mES);
   void setMatrix(mat& A, int Mdim, double b);
 }
 

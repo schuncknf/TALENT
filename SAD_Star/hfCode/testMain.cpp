@@ -8,7 +8,11 @@
 #include "integratorGaussLegendreTest.h"
 #include "integratorGaussLegendreGSLTest.h"
 #include "integratorGaussLaguerreTest.h"
+
+
+// Other tests
 #include "sphericalhofuncTest.h"
+#include "VMinnesotaMatrixGeneratorTest.h"
 
 
 

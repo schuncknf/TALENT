@@ -27,8 +27,9 @@ private:
     double hoRadial (int n, int l, double r);
     double norm (int n, int l);
     double b_;
+    double logb_;
     double logFac(int n);
-    double logDoubleFac(int n);
+//    double logDoubleFac(int n);
 };
 
 #endif // SPHERICALHOFUNC_H
