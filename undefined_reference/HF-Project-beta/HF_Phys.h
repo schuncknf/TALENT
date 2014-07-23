@@ -33,7 +33,7 @@ class physical_world
 
         // this function will fill T and V then make a guess for the initial density
         physical_world(int N_basis, int N_particles, double (*fill_V)(int, int, int, int, States&, Quad&, void*),
-                       double (*fill_T)(int, int, void*), void* parameters);
+                       double (*fill_T)(int, int, void*), void* parameters, States& states, Quad& quad);
 };
 
 
