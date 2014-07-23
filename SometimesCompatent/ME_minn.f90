@@ -9,55 +9,31 @@ subroutine calculate_interaction(hbaromega,nmax,fname)
   implicit none
   
   integer,parameter :: ngauss = 70
+  real(8),parameter :: hc = 197.32891, mnuc = 938.9059
   integer :: nmax, qmax,i,j,k,l,n
   integer :: s1,s2,s3,s4
   real(8),dimension(ngauss) ::  wrr,rr
-  real(8) :: omega,oscl,hbaromega,cx(0:800)
+  real(8) :: omega,oscl,hbaromega
   character(*) :: fname 
     
-  
   !omega = hbaromega  ! divide by hbar
-  oscl =sqrt(197.33*197.33/938.9059/hbaromega) ! inverse length parameter 
+  oscl =sqrt(hc*hc/mnuc/hbaromega) ! inverse length parameter 
    
   ! get quadrature mesh and weights 
   call gauss_legendre(0.d0, 30.d0/oscl, rr, wrr, ngauss ) 
  
   open(unit= 37,file = fname//'_twobody.dat') 
 
- qmax = (nmax + 1)*2 - 1   ! total number of states minus 1 
-  !   goto 12
+  qmax = (nmax + 1)*2 - 1   ! total number of states minus 1 
+  
   do i = 0,qmax
-     print*, i,'ass'
      do j = i+1,qmax
       
-        print*, i,j
         do k = i,qmax
            do l = k+1,qmax 
-              !print*, i,j,k,l
-      
-                s1 = mod(i,2) 
-                s2 = mod(j,2)
         
-                if (s1==s2) then 
-                   write(37,*) 0.d0
-                   cycle
-                end if
-              s3 = mod(k,2) 
-              s4 = mod(l,2) 
-             
-              if (s3==s4) then 
-                 write(37,*) 0.d0
-                 cycle
-              end if 
-              
               write(37,*) Minn_matrix_element(i,j,k,l,oscl,rr,wrr,ngauss)
-             ! print*, Minn_matrix_element(12,13,12,13,oscl,rr,wrr,ngauss)
-             ! print*, Minn_matrix_element(2,17,2,17,oscl,rr,wrr,ngauss)
-       !       print*, Minn_matrix_element(0,1,1,2,oscl,rr,wrr,ngauss)
-        !      print*, Minn_matrix_element(0,1,2,1,oscl,rr,wrr,ngauss)
-        !      print*, Minn_matrix_element(1,0,3,0,oscl,rr,wrr,ngauss)
-        !      print*, 'fuck'
-             ! print*, 19/2, 12/2
+   
   end do; end do; end do; end do
 
   
@@ -147,7 +123,6 @@ real(8) function overlap_integral(n1,n2,n3,n4,oscl,rr,wrr,ng)
        
           overlap_integral = int_sum
    
-
 end function
 !==============================================
 real(8) function gaussian_integral(n1,n2,n3,n4,oscl,rr,wrr,ng,mu)
@@ -208,7 +183,7 @@ end function
     real (8) :: cx(0:n)
     integer:: i
     real (8), INTENT(IN) ::  x
-    !print*, 'a'
+   
     if ( alpha <= -1.0D+00 ) THEN
        write ( *, '(a)' ) ' '
        write ( *, '(a)' ) 'LAGUERRE_GENERAL - Fatal error!'
@@ -229,7 +204,7 @@ end function
             + ( real (   - i + 1, kind = 8 ) - alpha     ) * cx(i-2) ) &
             / real (     i,     kind = 8 )
     end do
-    !print*, 'a2'
+   
   end subroutine laguerre_general
 !========================================================
 subroutine gauss_legendre(x1, x2, x, w, n)
@@ -289,7 +264,7 @@ real(8) function dfac(r)
    end do 
   
   dfac = tot
-  !print*, 'b2'
+  
 end function
 !============================
 real(8) function fac(r) 
@@ -299,7 +274,7 @@ real(8) function fac(r)
   integer :: r,i
   real(8) :: tot 
   
-  !print*, 'c'
+  
   tot = 0.0
   
   do i = 1,r
@@ -307,7 +282,7 @@ real(8) function fac(r)
   end do 
   
   fac = tot
- ! print*, 'c2'
+ 
 end function
 !=============================
 real(8) function Vpot(r)  
