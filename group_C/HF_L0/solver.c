@@ -2,6 +2,7 @@
 #include <math.h>
 #include "solver.h"
 #include "param.h"
+#include "check.h"
 #define EPS 1e-12
 #define MAXITN 30
 
@@ -85,6 +86,7 @@ eig_t solve_HF(Vab_t **Vacbd, int N_dim, int N_occ)
     make_hamilt(hamilt, rho, Vacbd);
     solve_eig(hamilt); // eigen.c
     calc_rho(hamilt, rho, N_occ);
+	check_rho(rho, N_all);
     E_old = E;
     E = calc_E(hamilt, rho, Vacbd, N_occ);
     printf("iteration %d: E = %f\n", i, E);
