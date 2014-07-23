@@ -8,26 +8,26 @@ subroutine calculate_interaction(hbaromega,nmax,fname)
   ! nmax is max basis state
   implicit none
   
-  integer,parameter :: ngauss = 100
+  integer,parameter :: ngauss = 70
   integer :: nmax, qmax,i,j,k,l,n
   integer :: s1,s2,s3,s4
   real(8),dimension(ngauss) ::  wrr,rr
-  real(8) :: omega,oscl,hbaromega
+  real(8) :: omega,oscl,hbaromega,cx(0:800)
   character(*) :: fname 
+    
   
   !omega = hbaromega  ! divide by hbar
-  oscl =sqrt(197.325*197.325/938.9059/hbaromega) ! inverse length parameter 
-  print*, oscl
+  oscl =sqrt(197.33*197.33/938.9059/hbaromega) ! inverse length parameter 
    
   ! get quadrature mesh and weights 
-  call gauss_legendre(0.d0, 20.d0/oscl, rr, wrr, ngauss ) 
+  call gauss_legendre(0.d0, 30.d0/oscl, rr, wrr, ngauss ) 
  
   open(unit= 37,file = fname//'_twobody.dat') 
-  
-  qmax = (nmax + 1)*2 - 1   ! total number of states minus 1 
-    
+
+ qmax = (nmax + 1)*2 - 1   ! total number of states minus 1 
+  !   goto 12
   do i = 0,qmax
-     print*, i
+     print*, i,'ass'
      do j = i+1,qmax
       
         print*, i,j
@@ -51,9 +51,15 @@ subroutine calculate_interaction(hbaromega,nmax,fname)
               end if 
               
               write(37,*) Minn_matrix_element(i,j,k,l,oscl,rr,wrr,ngauss)
-            !  print*, Minn_matrix_element(0,1,0,1,oscl,rr,wrr,ngauss)
-             ! -4.473
+             ! print*, Minn_matrix_element(12,13,12,13,oscl,rr,wrr,ngauss)
+             ! print*, Minn_matrix_element(2,17,2,17,oscl,rr,wrr,ngauss)
+       !       print*, Minn_matrix_element(0,1,1,2,oscl,rr,wrr,ngauss)
+        !      print*, Minn_matrix_element(0,1,2,1,oscl,rr,wrr,ngauss)
+        !      print*, Minn_matrix_element(1,0,3,0,oscl,rr,wrr,ngauss)
+        !      print*, 'fuck'
+             ! print*, 19/2, 12/2
   end do; end do; end do; end do
+
   
   close(37)
   
@@ -62,7 +68,7 @@ subroutine calculate_interaction(hbaromega,nmax,fname)
      do j = i , qmax
         
         if (i == j) then 
-           n = i/2
+           n = i/2 
            write(37,*)  (2*n + 1.5d0) * hbaromega
         else 
            write(37,*) 0.d0
@@ -109,7 +115,7 @@ real(8) function Minn_matrix_element(q1,q2,q3,q4,oscl,rr,wrr,ng)
        VS * gaussian_integral(n1,n2,n4,n3,oscl,rr,wrr,ng,kapS) )
      end if 
      
-  else if (kd(s1,s3)*kd(s2,s4) == 1) then
+  else if (kd(s1,s4)*kd(s2,s3) == 1) then
      Minn_matrix_element = -0.5d0*(VR*gaussian_integral(n1,n2,n3,n4,oscl,rr,wrr,ng,kapR) - &
        VS * gaussian_integral(n1,n2,n3,n4,oscl,rr,wrr,ng,kapS) + &
        VR * gaussian_integral(n1,n2,n4,n3,oscl,rr,wrr,ng,kapR) - &
@@ -128,7 +134,6 @@ real(8) function overlap_integral(n1,n2,n3,n4,oscl,rr,wrr,ng)
   integer:: n1, n2, n3, n4, i, j, ng
   real(8) :: oscl_r, int_sum, xr, xp, z, factor1, factor2,oscl
   real(8),dimension(ng) :: rr, wrr
-  real(8) :: cx(0:200)
 
            int_sum = 0.d0
            do i=1,ng 
@@ -152,33 +157,33 @@ real(8) function gaussian_integral(n1,n2,n3,n4,oscl,rr,wrr,ng,mu)
   integer:: n1, n2, n3, n4, i, j, ng
   real(8) :: oscl_r, int_sum, xr, xp, z, factor1, factor2,oscl
   real(8),dimension(ng) :: rr, wrr
-  real(8) :: cx(0:200),mu
+  real(8) :: mu
 
             int_sum = 0.d0
 !$OMP PARALLEL DO PRIVATE(i,j) SHARED(rr,wrr,oscl,n1,n2,n3,n4) REDUCTION(+:int_sum)             
            do i=1,ng 
-              do j = 1, ng
+              do j = 1,ng
 
          int_sum=int_sum+wrr(i)*wrr(j)*rr(i)*rr(j)* &
               Rnl(n1,0,oscl,rr(i))*Rnl(n2,0,oscl,rr(j)) * &
               Rnl(n3,0,oscl,rr(i))*Rnl(n4,0,oscl,rr(j)) * &
               (exp( -(rr(i)*rr(i) + rr(j)*rr(j) - 2*rr(i)*rr(j))*mu ) - &
-              exp( -(rr(i)*rr(i) + rr(j)*rr(j) + 2*rr(i)*rr(j))*mu ) ) * 0.25d0 / mu
+              exp( -(rr(i)*rr(i) + rr(j)*rr(j) + 2*rr(i)*rr(j))*mu ) )
          
         
               end do 
-           enddo
+           end do
 !$OMP END PARALLEL DO          
-          gaussian_integral = int_sum
+          gaussian_integral = int_sum * 0.25d0 / mu
    
 
 end function
 !==============================================
 real(8) function Rnl(n,l,oscl,r) 
-  
+  ! verified. This works DFWI 
   implicit none 
   
-  real(8),parameter :: pi = 3.14159
+  real(8),parameter :: pi = 3.14159265359d0
   real(8) :: factor2,oscl,r,xi,cx(0:800)
   integer :: n,l
   
