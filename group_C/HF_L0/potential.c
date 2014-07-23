@@ -5,11 +5,11 @@
 #include "potential.h"
 #include "solver.h"
 #include "param.h"
-#include "gauher.h"
+#include "gaulag.h"
 #include "sho.h"
 
 //#include "base.h"
-#define GLNODES 64
+#define GLNODES 128
 
 double T_me(double hw, int n1, int n2, int l)
 {
@@ -26,7 +26,7 @@ void V_me(Vab_t **temp, int N, double hw)
   mw = hw / H2M;
 //  gaulag_init(GLNODES, 1., 0.07 / sqrt(mw));
   // use gl.x[i] and gl.w[i]
-  gauher_init(GLNODES, 1. / sqrt(mw));
+  gaulag_init(GLNODES, 1., 0.07 / sqrt(mw));
   halfint = (double*)malloc(GLNODES * sizeof(double));
   for (a = 0; a < N; a++) {
     for (b = 0; b < N; b++) {
@@ -41,41 +41,58 @@ void V_me(Vab_t **temp, int N, double hw)
     for (b = 0; b <= a; b++){
       for (i = 0; i < GLNODES; i++) {
         halfint[i] = 0.;  // i: r2
-        r2 = gh.x[i];
+        r2 = gl.x[i];
         for (j = 0; j < GLNODES; j++) {  // j: r1
-          r1 = gh.x[j];
+          r1 = gl.x[j];
           rm2 = (r1-r2)*(r1-r2);
           rp2 = (r1+r2)*(r1+r2);
-          halfint[i] += gh.w[j] * r1 * sho_wf(r1,mw, a,0) * sho_wf(r1,mw,b,0)
+          halfint[i] += gl.w[j] * r1 * sho_wf(r1,mw, a,0) * sho_wf(r1,mw,b,0)
                           * (V0r*(exp(-kR*rm2)-exp(-kR*rp2))/(8*kR)
                            - V0s*(exp(-kS*rm2)-exp(-kS*rp2))/(8*kS));
         }
       }
-      for (c = 0; c < N; c++){
-        for (d = 0; (d <= c); d++){
+      for (c = 0; c <= a; c++){
+        for (d = 0; (d <= c) && ((a != c) || (d <= b)); d++){
           sum = 0.;
           for (i = 0; i < GLNODES; i++) {
-            r2 = gh.x[i];
-            sum += gh.w[i] * halfint[i] * r2 * sho_wf(r2,mw, c,0) * sho_wf(r2,mw,d,0);
+            r2 = gl.x[i];
+            sum += gl.w[i] * halfint[i] * r2 * sho_wf(r2,mw, c,0) * sho_wf(r2,mw,d,0);
           }
           temp[a][b].V_cd[c][d] += sum;
           temp[a][d].V_cd[c][b] += sum;  // exchange term
           if (a != b) {
-            temp[b][a].V_cd[c][d] += sum;
+            temp[b][a].V_cd[c][d] += sum; // symmetry a<->b
             temp[b][d].V_cd[c][a] += sum;
           }
           if (c != d) {
-            temp[a][b].V_cd[d][c] += sum;
+            temp[a][b].V_cd[d][c] += sum; // symmetry c<->d
             temp[a][c].V_cd[d][b] += sum;
             if (a != b) {
-              temp[b][a].V_cd[d][c] += sum;
+              temp[b][a].V_cd[d][c] += sum; // symmetry (a<->b),(c<->d)
               temp[d][a].V_cd[b][c] += sum;
+            }
+          }
+          if ((a != c) || (b != d)) {  // symmetry (ab)<->(cd)
+            temp[c][d].V_cd[a][b] += sum;
+            temp[c][b].V_cd[a][d] += sum;
+            if (c != d) {
+              temp[d][c].V_cd[a][b] += sum;
+              temp[d][b].V_cd[a][c] += sum;
+            }
+            if (a != b) {
+              temp[c][d].V_cd[b][a] += sum;
+              temp[c][a].V_cd[b][d] += sum;
+              if (c != d) {
+                temp[d][c].V_cd[b][a] += sum;
+                temp[b][c].V_cd[d][a] += sum;
+              }
             }
           }
         }
       }
     }
   }
+  free(halfint);
 }
 
 Vab_t **create_V(int N, double hw)
