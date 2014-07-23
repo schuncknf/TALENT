@@ -8,52 +8,35 @@ subroutine calculate_interaction(hbaromega,nmax,fname)
   ! nmax is max basis state
   implicit none
   
-  integer,parameter :: ngauss = 100
+  integer,parameter :: ngauss = 70
+  real(8),parameter :: hc = 197.32891, mnuc = 938.9059
   integer :: nmax, qmax,i,j,k,l,n
   integer :: s1,s2,s3,s4
   real(8),dimension(ngauss) ::  wrr,rr
   real(8) :: omega,oscl,hbaromega
   character(*) :: fname 
-  
+    
   !omega = hbaromega  ! divide by hbar
-  oscl =sqrt(197.325*197.325/938.9059/hbaromega) ! inverse length parameter 
-  print*, oscl
+  oscl =sqrt(hc*hc/mnuc/hbaromega) ! inverse length parameter 
    
   ! get quadrature mesh and weights 
-  call gauss_legendre(0.d0, 20.d0/oscl, rr, wrr, ngauss ) 
+  call gauss_legendre(0.d0, 30.d0/oscl, rr, wrr, ngauss ) 
  
   open(unit= 37,file = fname//'_twobody.dat') 
-  
+
   qmax = (nmax + 1)*2 - 1   ! total number of states minus 1 
-    
+  
+  print*, hbaromega, qmax
   do i = 0,qmax
-     print*, i
      do j = i+1,qmax
       
-        print*, i,j
-        do k = i,qmax
+        do k = 0,qmax
            do l = k+1,qmax 
-              !print*, i,j,k,l
-      
-                s1 = mod(i,2) 
-                s2 = mod(j,2)
         
-                if (s1==s2) then 
-                   write(37,*) 0.d0
-                   cycle
-                end if
-              s3 = mod(k,2) 
-              s4 = mod(l,2) 
-             
-              if (s3==s4) then 
-                 write(37,*) 0.d0
-                 cycle
-              end if 
-              
               write(37,*) Minn_matrix_element(i,j,k,l,oscl,rr,wrr,ngauss)
-            !  print*, Minn_matrix_element(0,1,0,1,oscl,rr,wrr,ngauss)
-             ! -4.473
+   
   end do; end do; end do; end do
+
   
   close(37)
   
@@ -62,7 +45,7 @@ subroutine calculate_interaction(hbaromega,nmax,fname)
      do j = i , qmax
         
         if (i == j) then 
-           n = i/2
+           n = i/2 
            write(37,*)  (2*n + 1.5d0) * hbaromega
         else 
            write(37,*) 0.d0
@@ -109,7 +92,7 @@ real(8) function Minn_matrix_element(q1,q2,q3,q4,oscl,rr,wrr,ng)
        VS * gaussian_integral(n1,n2,n4,n3,oscl,rr,wrr,ng,kapS) )
      end if 
      
-  else if (kd(s1,s3)*kd(s2,s4) == 1) then
+  else if (kd(s1,s4)*kd(s2,s3) == 1) then
      Minn_matrix_element = -0.5d0*(VR*gaussian_integral(n1,n2,n3,n4,oscl,rr,wrr,ng,kapR) - &
        VS * gaussian_integral(n1,n2,n3,n4,oscl,rr,wrr,ng,kapS) + &
        VR * gaussian_integral(n1,n2,n4,n3,oscl,rr,wrr,ng,kapR) - &
@@ -128,7 +111,6 @@ real(8) function overlap_integral(n1,n2,n3,n4,oscl,rr,wrr,ng)
   integer:: n1, n2, n3, n4, i, j, ng
   real(8) :: oscl_r, int_sum, xr, xp, z, factor1, factor2,oscl
   real(8),dimension(ng) :: rr, wrr
-  real(8) :: cx(0:200)
 
            int_sum = 0.d0
            do i=1,ng 
@@ -142,7 +124,6 @@ real(8) function overlap_integral(n1,n2,n3,n4,oscl,rr,wrr,ng)
        
           overlap_integral = int_sum
    
-
 end function
 !==============================================
 real(8) function gaussian_integral(n1,n2,n3,n4,oscl,rr,wrr,ng,mu)
@@ -152,33 +133,33 @@ real(8) function gaussian_integral(n1,n2,n3,n4,oscl,rr,wrr,ng,mu)
   integer:: n1, n2, n3, n4, i, j, ng
   real(8) :: oscl_r, int_sum, xr, xp, z, factor1, factor2,oscl
   real(8),dimension(ng) :: rr, wrr
-  real(8) :: cx(0:200),mu
+  real(8) :: mu
 
             int_sum = 0.d0
 !$OMP PARALLEL DO PRIVATE(i,j) SHARED(rr,wrr,oscl,n1,n2,n3,n4) REDUCTION(+:int_sum)             
            do i=1,ng 
-              do j = 1, ng
+              do j = 1,ng
 
          int_sum=int_sum+wrr(i)*wrr(j)*rr(i)*rr(j)* &
               Rnl(n1,0,oscl,rr(i))*Rnl(n2,0,oscl,rr(j)) * &
               Rnl(n3,0,oscl,rr(i))*Rnl(n4,0,oscl,rr(j)) * &
               (exp( -(rr(i)*rr(i) + rr(j)*rr(j) - 2*rr(i)*rr(j))*mu ) - &
-              exp( -(rr(i)*rr(i) + rr(j)*rr(j) + 2*rr(i)*rr(j))*mu ) ) * 0.25d0 / mu
+              exp( -(rr(i)*rr(i) + rr(j)*rr(j) + 2*rr(i)*rr(j))*mu ) )
          
         
               end do 
-           enddo
+           end do
 !$OMP END PARALLEL DO          
-          gaussian_integral = int_sum
+          gaussian_integral = int_sum * 0.25d0 / mu
    
 
 end function
 !==============================================
 real(8) function Rnl(n,l,oscl,r) 
-  
+  ! verified. This works DFWI 
   implicit none 
   
-  real(8),parameter :: pi = 3.14159
+  real(8),parameter :: pi = 3.14159265359d0
   real(8) :: factor2,oscl,r,xi,cx(0:800)
   integer :: n,l
   
@@ -203,7 +184,7 @@ end function
     real (8) :: cx(0:n)
     integer:: i
     real (8), INTENT(IN) ::  x
-    !print*, 'a'
+   
     if ( alpha <= -1.0D+00 ) THEN
        write ( *, '(a)' ) ' '
        write ( *, '(a)' ) 'LAGUERRE_GENERAL - Fatal error!'
@@ -224,7 +205,7 @@ end function
             + ( real (   - i + 1, kind = 8 ) - alpha     ) * cx(i-2) ) &
             / real (     i,     kind = 8 )
     end do
-    !print*, 'a2'
+   
   end subroutine laguerre_general
 !========================================================
 subroutine gauss_legendre(x1, x2, x, w, n)
@@ -284,7 +265,7 @@ real(8) function dfac(r)
    end do 
   
   dfac = tot
-  !print*, 'b2'
+  
 end function
 !============================
 real(8) function fac(r) 
@@ -294,7 +275,7 @@ real(8) function fac(r)
   integer :: r,i
   real(8) :: tot 
   
-  !print*, 'c'
+  
   tot = 0.0
   
   do i = 1,r
@@ -302,7 +283,7 @@ real(8) function fac(r)
   end do 
   
   fac = tot
- ! print*, 'c2'
+ 
 end function
 !=============================
 real(8) function Vpot(r)  

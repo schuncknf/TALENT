@@ -1,6 +1,6 @@
 TARGET=main
 TESTTARGET= testMain
-OFILES=sphericalhofunc.o integratorGaussLegendre.o integratorGaussLaguerre.o integratorGaussLegendreGSL.o VCoulombMatrixGenerator.o
+OFILES=sphericalhofunc.o integratorGaussLegendre.o integratorGaussLaguerre.o integratorGaussLegendreGSL.o VCoulombMatrixGenerator.o VMinnesotaMatrixGenerator.o
 
 CPPFLAGS=-Wall -g -std=c++0x -O3
 MPICC=g++
