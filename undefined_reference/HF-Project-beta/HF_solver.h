@@ -32,7 +32,9 @@ class solver
         void PHYSICAL_rho_to_h();
         void SYSTEM_h_to_rho();
 
-        void Calc_conv_par();
+        double Calc_conv_par();
+        void alternative_rho();
+        void run_iteration();
 };
 
 #endif

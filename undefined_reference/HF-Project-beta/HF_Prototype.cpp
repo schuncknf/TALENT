@@ -13,12 +13,12 @@ using namespace arma;
 
 int main()
 {
-    int N_basis = 8;
+    int N_basis = 4;
     int N_particles = 2;
     int system = 0;
 
     unsigned int max_iterations = 50;
-    double conv_treshold = 1e-5;
+    double conv_treshold = 1e-10;
 
     Quad quad("quad/glqi_32.bin");
 

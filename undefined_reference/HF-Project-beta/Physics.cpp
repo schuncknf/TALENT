@@ -15,9 +15,9 @@ double fV_neutrondrop(double r1,double r2, void* param){
 	double mu=1.0;
 	double b =1.0; // double check that expression below is correct!
 	struct fV_neutrondrop_params p = * (struct fV_neutrondrop_params *) param;
-	return  HO::wfn_radial(p.n1,0,0,b)*HO::wfn_radial(p.n2,0,0,b)
+    return  HO::wfn_radial(p.n1,0,r1,b)*HO::wfn_radial(p.n2,0,r2,b)
 		*r1*r2*0.5*exp( - mu*(r1*r1+r2*r2) )*sinh(2.*r1*r2)
-		*HO::wfn_radial(p.n3,0,0,b)*HO::wfn_radial(p.n4,0,0,b);
+        *HO::wfn_radial(p.n3,0,r1,b)*HO::wfn_radial(p.n4,0,r2,b);
 }
 
 double V_neutrondrop(int a,int b,int c, int d,States& states,Quad& q, void* param){
