@@ -3,6 +3,8 @@
 
 #include <armadillo>
 #include <cmath>
+#include "quadrature.hpp"
+#include "States.h"
 
 class physical_world
 {
@@ -30,10 +32,8 @@ class physical_world
         double T(int i1,int j1)                      {return T_internal(i1, j1);}
 
         // this function will fill T and V then make a guess for the initial density
-        physical_world(int N_basis, int N_particles, double (*fill_V)(int, int, int, int, int, void*),
-                       double (*fill_T)(int, int, int, void*), 
-                       double (*guess_rho)(int, int, int, void*), 
-                       void* parameters);
+        physical_world(int N_basis, int N_particles, double (*fill_V)(int, int, int, int, States&, Quad&, void*),
+                       double (*fill_T)(int, int, void*), void* parameters);
 };
 
 

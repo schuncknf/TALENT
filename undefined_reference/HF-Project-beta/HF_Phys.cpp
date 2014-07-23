@@ -3,16 +3,14 @@
 #include "HF_Phys.h"
 
 // this function will fill T and V then make a guess for the initial density
-physical_world::physical_world(int N_basis, int N_particles, double (*fill_V)(int, int, int, int, int, void*),
-                               double (*fill_T)(int, int, int, void*),
-                               double (*guess_rho)(int, int, int, void*),
-                               void* parameters);
+physical_world::physical_world(int N_basis, int N_particles, double (*fill_V)(int, int, int, int, States&, Quad&, void*),
+                               double (*fill_T)(int, int, void*), void* parameters)
 {
     N_part = N_particles;
     N_max      = N_basis;                           // Set all to zero
-    T_internal = zeros<mat>(N_max,N_max);
-    V_internal = zeros<mat>(N_max,N_max);
-    rho        = zeros<mat>(N_max,N_max);
+    T_internal = arma::zeros<mat>(N_max,N_max);
+    V_internal = arma::zeros<mat>(N_max*N_max,N_max*N_max);
+    rho        = arma::eye<mat>(N_max,N_max);
 
     /*** This is the most general matrix change definition if we know some symmetries****/
     for(int i1; i1<N_max; i1++)
