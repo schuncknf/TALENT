@@ -5,11 +5,11 @@
 #include "potential.h"
 #include "solver.h"
 #include "param.h"
-#include "gaulag.h"
+#include "gauher.h"
 #include "sho.h"
 
 //#include "base.h"
-#define GLNODES 256
+#define GLNODES 64
 
 double T_me(double hw, int n1, int n2, int l)
 {
@@ -22,64 +22,73 @@ double T_me(double hw, int n1, int n2, int l)
 void V_me(Vab_t **temp, int N, double hw)
 {
   int a,b,c,d, i, j;
-  double r1, r2, *halfint, oscb, rm2, rp2, sum;
-  oscb = paramb / sqrt(hw);
-  gaulag_init(GLNODES, 1., 0.07 * oscb);
+  double r1, r2, *halfint, mw, rm2, rp2, sum;
+  mw = hw / H2M;
+//  gaulag_init(GLNODES, 1., 0.07 / sqrt(mw));
   // use gl.x[i] and gl.w[i]
-   halfint = (double*)malloc(GLNODES * sizeof(double));
-  for (a = 0; a < N; a++){
-    for (b = 0; b < N; b++){
-      for(c = 0; c < N; c++){
-	for (d = 0; d < N; d++){
-	  temp[a][b].V_cd[c][d]=0.0;
-	}
+  gauher_init(GLNODES, 1. / sqrt(mw));
+  halfint = (double*)malloc(GLNODES * sizeof(double));
+  for (a = 0; a < N; a++) {
+    for (b = 0; b < N; b++) {
+      for(c = 0; c < N; c++) {
+        for (d = 0; d < N; d++)
+          temp[a][b].V_cd[c][d] = 0.0;
       }
     }
   }
   
   for (a = 0; a < N; a++){
-    for (b = 0; b < N; b++){
+    for (b = 0; b <= a; b++){
       for (i = 0; i < GLNODES; i++) {
-	halfint[i] = 0.;  // i: r2
-	r2 = gl.x[i];
-	for (j = 0; j < GLNODES; j++) {  // j: r1
-	  r1 = gl.x[j];
-	  rm2 = (r1-r2)*(r1-r2);
-	  rp2 = (r1+r2)*(r1+r2);
-	  	  halfint[i] += gl.w[j] * r1 * sho_wf(r1,oscb, a,0) * sho_wf(r1,oscb,b,0)
-	    * (V0r*(exp(-kR*rm2)-exp(-kR*rp2))/(8*kR) - V0s*(exp(-kS*rm2)-exp(-kS*rp2))/(8*kS));
-	}
+        halfint[i] = 0.;  // i: r2
+        r2 = gh.x[i];
+        for (j = 0; j < GLNODES; j++) {  // j: r1
+          r1 = gh.x[j];
+          rm2 = (r1-r2)*(r1-r2);
+          rp2 = (r1+r2)*(r1+r2);
+          halfint[i] += gh.w[j] * r1 * sho_wf(r1,mw, a,0) * sho_wf(r1,mw,b,0)
+                          * (V0r*(exp(-kR*rm2)-exp(-kR*rp2))/(8*kR)
+                           - V0s*(exp(-kS*rm2)-exp(-kS*rp2))/(8*kS));
+        }
       }
-      for(c = 0; c < N; c++){
-	
-	for (d = 0; d < N; d++){
-	  sum = 0.;
-	  for (i = 0; i < GLNODES; i++) {
-	    r2 = gl.x[i];
-	    sum += gl.w[i] * halfint[i] * r2 * sho_wf(r2,oscb, c,0) * sho_wf(r2,oscb,d,0);
-	  }
-	  temp[a][b].V_cd[c][d]+=sum;
-	  temp[a][d].V_cd[c][b]+=sum;
-	}
+      for (c = 0; c < N; c++){
+        for (d = 0; (d <= c); d++){
+          sum = 0.;
+          for (i = 0; i < GLNODES; i++) {
+            r2 = gh.x[i];
+            sum += gh.w[i] * halfint[i] * r2 * sho_wf(r2,mw, c,0) * sho_wf(r2,mw,d,0);
+          }
+          temp[a][b].V_cd[c][d] += sum;
+          temp[a][d].V_cd[c][b] += sum;  // exchange term
+          if (a != b) {
+            temp[b][a].V_cd[c][d] += sum;
+            temp[b][d].V_cd[c][a] += sum;
+          }
+          if (c != d) {
+            temp[a][b].V_cd[d][c] += sum;
+            temp[a][c].V_cd[d][b] += sum;
+            if (a != b) {
+              temp[b][a].V_cd[d][c] += sum;
+              temp[d][a].V_cd[b][c] += sum;
+            }
+          }
+        }
       }
-    }	
-  
+    }
   }
-  
-  return ;
 }
 
 Vab_t **create_V(int N, double hw)
 {
-int i, j;
-Vab_t **temp;
+  int i, j;
+  Vab_t **temp;
 
-if (N <= 0) {
+  if (N <= 0) {
     fprintf(stderr, "create_Vab: creation of Vab zero size (no allocation)\n");
     exit(1);
   }  
 
- temp = (Vab_t**) malloc(N*sizeof(Vab_t*));
+  temp = (Vab_t**) malloc(N*sizeof(Vab_t*));
  
   if (temp == NULL) {
     fprintf(stderr, "Vab/create_Vab: failed allocation of row pointer of V[%d]\n", N);
@@ -91,21 +100,19 @@ if (N <= 0) {
     free(temp);
     exit(1);
   }
-  for (i = 1; i < N; i++){
+  for (i = 1; i < N; i++)
     temp[i] = temp[0] + i * N;
-  }
 
   for (i = 0; i < N; i++){
-	for (j = 0; j< N; j++){	  
-	  temp[i][j].N_l = N;
-	  temp[i][j].V_cd = alloc_matrix(N, N);
-	  temp[i][j].t = T_me(hw, i, j, 0);
-	  
-	  if ((temp[i][j].V_cd == NULL)){
-	    fprintf(stderr, "create_Vab: failed allocation of V[%d][%d].V_cd", i, j);
-	    exit(1);
-	  }	
-	}
+    for (j = 0; j < N; j++){
+      temp[i][j].N_l = N;
+      temp[i][j].t = T_me(hw, i, j, 0);
+      temp[i][j].V_cd = alloc_matrix(N, N);
+      if ((temp[i][j].V_cd == NULL)) {
+        fprintf(stderr, "create_Vab: failed allocation of V[%d][%d].V_cd", i, j);
+        exit(1);
+      }
+    }
   }
   V_me(temp, N, hw);
   return temp;
