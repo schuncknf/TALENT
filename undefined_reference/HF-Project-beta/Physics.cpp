@@ -2,9 +2,11 @@
 #include "ho.hpp"
 #include "States.h"
 
-double T(int i,int j,void* parm) {return (i==j)? ((i - i%2)+1.5) :0; }
-double V_coulomb(int i,int j,int k,int l, int N_basis, double* parm) {return 0;}
-double Random_rho(int i,int j, int N_basis, double* parm) {return 0;} 
+// double V_coulomb(int i,int j,int k,int l, int N_basis, double* parm) {return 0;}
+
+
+
+double T_full_HO(int i,int j,States& states,void* parm) { double *wb = (double*)parm; return (i==j)? *wb*((2*states.state_matrix(i,0))+1.5) :0; }
 
 struct fV_neutrondrop_params {
     int n1, n2, n3, n4;

@@ -1,25 +1,23 @@
-module Hartree_Fock
-
-contains
-
-subroutine HF(n_max,A,fname)
+program HF
 
 implicit none
 
 real (8) :: omega, sum_v, sum_d, tol, sum_E, sum_HF, sum_HF_2
-integer :: n_max, k, mu, nu, i, j, l, info, N, A , Rmax, p,q
-real (8), allocatable, dimension (:) :: E, E_prev, work
-real (8), allocatable, dimension(:,:) :: h, t, delta, gamm, rho, rho_prev, D, test
-real (8), allocatable, dimension(:,:) :: v  
+integer :: n_max, l_max k, mu, nu, i, j, l, info, N, A, Rmax, p,q
+real (8), allocatable, dimension (:) :: E, E_prev, work !This dimension may change
+real (8), allocatable, dimension(:,:,:) :: h, gamm, rho, test !I think gamm wont be necessary
+real (8), allocatable, dimension(:,:) :: v, t, D
 character (*) :: fname
+
+(n_max,l_max,A,fname)
 
 Rmax = n_max*(n_max-1)/2
 
-allocate (D(n_max,n_max),rho(n_max,n_max),rho_prev(n_max,n_max),test(n_max,n_max))
-allocate (h(n_max,n_max),t(n_max,n_max),v(Rmax,Rmax))
-allocate (gamm(n_max,n_max), E(n_max), work(10*n_max), E_prev(n_max))
+allocate (D(n_max,n_max),rho(l_max,n_max,n_max),test(l_max,n_max,n_max))
+allocate (h(l_max,n_max,n_max),t(n_max,n_max),v(Rmax,Rmax))
+allocate (gamm(l_max,n_max,n_max), E(n_max), work(10*n_max), E_prev(n_max))
 
-!Some read comands for the Nathan matrix elements
+!Some read comands for the matrix elements
 !==============================
 
 open(unit = 39, file = fname//'_onebody.dat') 
@@ -35,38 +33,73 @@ end do
 
 open(unit = 37, file = fname//'_twobody.dat') 
 
+p = 1
 do i = 1, n_max
    do j = i+1, n_max 
       
-      
-      do k = i,n_max
+      q = 1
+      do k = 1,n_max
          do l = k+1,n_max
-
-              p = (i-1) * n_max  - i*(i-1)/2 + j - i
-              q = (k-1) * n_max  - k*(k-1)/2 + l - k
+      
             read(37,*) v(p,q) 
-            V(q,p) = V(p,q) 
-    
+            q = q+ 1
             
          end do
       end do
-      
+      p = p+ 1
    end do 
 end do 
 
 close(37)
 close(39) 
 
+!======================
+!Toy matrix elements
+
+!~ do i=1,n_max
+
+!~    if (i.lt.(n_max/2+1)) then
+
+!~        t(i,i)=1.0d0
+!~    else
+	
+!~ 	   t(i,i)=2.0d0
+	   
+!~    end if
+    
+!~ end do
+
+!~ do i=1,n_max
+!~   do k=1,n_max
+    
+!~     if (i.lt.(n_max/2+1) .and. k.lt.(n_max/2+1)) then
+    
+!~      v(i,k,i,k)=-2.5d0
+!~      v(k,i,i,k)=-v(i,k,i,k)
+!~      v(i,k,k,i)=-v(i,k,i,k)
+!~      
+!~     else
+    
+!~      v(i,k,i,k)=0.5d0
+!~      v(k,i,i,k)=-v(i,k,i,k)
+!~      v(i,k,k,i)=-v(i,k,i,k)
+     
+!~     end if
+    
+!~   end do 
+!~ end do      
+
+
+!===========================
 !Initial condition
 
 do i=1,A
 
-	rho(i,i)=1
-    rho_prev(i,i)=1
+	rho(:,i,i)=1
+    rho_prev(:,i,i)=1
     
 end do
 
-!initial density matrix
 do mu=1,n_max
    do nu=1,n_max
    
@@ -102,7 +135,6 @@ do while (sum_E.gt.tol)
      
    D=h
  
-   ! recalculate density matrix
    do mu=1,n_max
       do nu=1,n_max   
       
@@ -120,25 +152,18 @@ do while (sum_E.gt.tol)
      end do 
    end do
    
-<<<<<<< HEAD
    rho = rho_prev
 !~    rho=0.5d0*(rho+rho_prev)
      
-=======
-    rho = rho_prev
-!   rho=0.5d0*(rho+rho_prev) linear combinations
- 
-    !recalculate gamm 
->>>>>>> 7c5bbb0ab80c3a8c3202465b0ff27aa796eea2d8
   do mu=1,n_max    
      do nu=1,n_max
       
       sum_v=0.0d0
       
       do k=1,n_max 
-        do l=1,n_max
+        do p=1,n_max
         
-          sum_v= sum_v + v_elem(mu,k,nu,l,v,Rmax,n_max)*rho(l,k)
+          sum_v= sum_v + v_elem(mu,k,nu,p,v,Rmax,n_max)*rho(p,k)
 
         end do
       end do
@@ -181,9 +206,9 @@ end do
 
 do i=1,A
    do k=1,n_max
-     do l=1,n_max
+     do p=1,n_max
      
-         sum_HF= sum_HF + t(k,l)*D(l,i)*D(k,i)
+         sum_HF= sum_HF + t(k,p)*D(p,i)*D(k,i)
 
      end do
    end do
@@ -193,8 +218,6 @@ sum_HF=0.5d0*sum_HF
 
 sum_HF_2=0.0d0
  
-
-! calculate final hf energy
  do k = 1,A
 
    sum_HF_2 = sum_HF_2 + E(k) 
@@ -202,9 +225,9 @@ sum_HF_2=0.0d0
 end do 
 
 do k = 1, n_max
-   do l = 1,n_max 
+   do p = 1,n_max 
    
-      sum_HF_2 = sum_HF_2 - 0.5*rho(k,l)*gamm(l,k) 
+      sum_HF_2 = sum_HF_2 - 0.5*rho(k,p)*gamm(p,k) 
    
    end do 
 end do 
@@ -269,4 +292,4 @@ real(8) function v_elem(px,qx,rx,sx,V,x,M)
 end function
 !================
 
-end module
+end program
