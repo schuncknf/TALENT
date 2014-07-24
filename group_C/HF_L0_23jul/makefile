@@ -1,10 +1,10 @@
-CC	= gcc
+CC	= g++
+#CC	= gcc
 CFLAGS	= -O3 -Wall -ansi -pedantic
-LDFLAGS	= -L/usr/local/lib/ -lgsl -lgslcblas -lm
-#LDFLAGS	= -llapacke -llapack -lblas -lm -Wno-deprecated 
+#LDFLAGS	= -L/usr/local/lib/ -lgsl -lgslcblas -lm
+LDFLAGS	= -llapacke -llapack -lblas -lm -Wno-deprecated 
 EXEC	= run
-DEPS	= param.h eigen.h solver.h potential.h gaulag.h sho.h
-#DEPS	= param.h eigen.h solver.h potential.h gaulag.h lapacke.h sho.h
+DEPS	= param.h eigen.h solver.h potential.h gaulag.h lapacke.h sho.h
 SRC	= main.cc eigen.cc solver.cc potential.cc gaulag.cc sho.cc
 OBJ	= $(SRC:.c=o.)
 

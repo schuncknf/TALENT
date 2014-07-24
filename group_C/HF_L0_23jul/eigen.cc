@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-//#include "lapacke.h"
+#include "lapacke.h"
 #include "eigen.h"
 
 // allocation of m x n matrix. Use it then as a[i][j], but fortran needs *a or a[0]
@@ -67,7 +67,7 @@ void free_eig(eig_t temp)
   free(temp.isup);
 }
 
-/*void solve_eig(eig_t input, int N)
+void solve_eig(eig_t input, int N)
 {
   int err, nfound;
   err = LAPACKE_dsyevr(LAPACK_COL_MAJOR, 'V', 'A', 'U', N, input.a[0], input.Nmax, 0., 0.,
@@ -77,4 +77,4 @@ void free_eig(eig_t temp)
   if (nfound < N)
     fprintf(stderr, "eigen/solve_eig: number of eigenvalues is lower than N (%d < %d)\n",
             nfound, N);
-}*/
+}

@@ -1,25 +1,26 @@
-program HF
+module Hartree_Fock
+
+contains
+
+subroutine HF(n_max,A,fname)
 
 implicit none
 
-real (8) :: omega, sum_v, sum_d, tol, sum_E,sm
-integer :: n_max, n1, n2, k, mu, nu, i, j, l, p ,info,Abody
-integer , allocatable, dimension(:) :: contract
-real (8), allocatable, dimension (:) :: E, E_prev,work
-real (8), allocatable, dimension(:,:) :: h, t, delta, gamma
-real (8), allocatable, dimension(:,:) :: D, rho, rho_prev 
+real (8) :: omega, sum_v, sum_d, tol, sum_E, sum_HF, sum_HF_2
+integer :: n_max, k, mu, nu, i, j, l, info, N, A 
+real (8), allocatable, dimension (:) :: E, E_prev, work
+real (8), allocatable, dimension(:,:) :: h, t, delta, gamma, rho, rho_prev, D, test
 real (8), allocatable, dimension(:,:,:,:) :: v  
+character (*) :: fname
 
-
-n_max=22
-Abody = 2
-
-allocate (D(n_max,n_max),rho(n_max,n_max),rho_prev(n_max,n_max))
+allocate (D(n_max,n_max),rho(n_max,n_max),rho_prev(n_max,n_max),test(n_max,n_max))
 allocate (h(n_max,n_max),t(n_max,n_max),v(n_max,n_max,n_max,n_max))
-allocate (gamma(n_max,n_max), E(n_max),work(10*n_max),E_prev(n_max))
+allocate (gamma(n_max,n_max), E(n_max), work(10*n_max), E_prev(n_max))
 
 !Some read comands for the Nathan matrix elements
 !==============================
+
+open(unit = 39, file = fname//'_onebody.dat') 
 
 do i=1,n_max
    do j=i,n_max
@@ -30,7 +31,8 @@ do i=1,n_max
    end do
 end do      
 
-V = 0.d0
+open(unit = 37, file = fname//'_twobody.dat') 
+
 do i=1,n_max
    do j=i+1,n_max
      do k=i,n_max
@@ -49,54 +51,88 @@ do i=1,n_max
      end do 
    end do
 end do  
-print*, 'read input',v(1,2,1,2),v(12,13,12,13)
-!===========================
 
+
+!======================
+!Toy matrix elements
+
+!~ do i=1,n_max
+
+!~    if (i.lt.(n_max/2+1)) then
+
+!~        t(i,i)=1.0d0
+!~    else
+	
+!~ 	   t(i,i)=2.0d0
+	   
+!~    end if
+    
+!~ end do
+
+!~ do i=1,n_max
+!~   do k=1,n_max
+    
+!~     if (i.lt.(n_max/2+1) .and. k.lt.(n_max/2+1)) then
+    
+!~      v(i,k,i,k)=-2.5d0
+!~      v(k,i,i,k)=-v(i,k,i,k)
+!~      v(i,k,k,i)=-v(i,k,i,k)
+!~      
+!~     else
+    
+!~      v(i,k,i,k)=0.5d0
+!~      v(k,i,i,k)=-v(i,k,i,k)
+!~      v(i,k,k,i)=-v(i,k,i,k)
+     
+!~     end if
+    
+!~   end do 
+!~ end do      
+
+
+!===========================
 !Initial condition
 
-sum_v=0.0d0
-tol=1.0d-8
+do i=1,A
 
-D(:,:)=0.0d0
-rho(:,:)=0.0d0
-rho_prev(:,:)=0.0d0
-
-do n1=1,n_max
-
-    D(n1,n1)=1.0d0
+	rho(i,i)=1
+    rho_prev(i,i)=1
     
 end do
-  
-do n1=1,Abody
 
-    rho(n1,n1)=1.d0
-    rho_prev(n1,n1)=1.d0
+do mu=1,n_max
+   do nu=1,n_max
    
-end do
-
-do n1=1,n_max
-   do n2=1,n_max
+   sum_v=0.0d0
    
-      sum_v = 0.d0
-      do k=1,Abody
+      do k=1,A
 
-        sum_v= sum_v + v(n1,k,n2,k)
+        sum_v= sum_v + v(mu,k,nu,k)
 
       end do
  
-    gamma(n1,n2)=sum_v   
-    !h(n1,n2)=t(n1,n2)+ gamma(n1,n2)
-   
+    gamma(mu,nu)=sum_v   
+       
    end do
 end do 
-h = t + gamma
+
+h=t+gamma
+
 !====================================
+!HF loops
 
-sum_E = 10.
-do while (sum_E .gt. tol)    
+tol=1.0d-8
+sum_E=1.0d0
+N=0
 
+print*, 'Energy condition < E-8'
+
+do while (sum_E.gt.tol)
+   
+   N=N+1
+        
    call dsyev('V','U',n_max,h,n_max,E,work,10*n_max,info)    
-    
+     
    D=h
  
    do mu=1,n_max
@@ -104,10 +140,10 @@ do while (sum_E .gt. tol)
       
         sum_d=0.0d0
       
-        do k=1,Abody
+        do k=1,A
         
-!         sum_d = sum_d + D(mu,k)*conjg(D(nu,k))
-          sum_d = sum_d +D(mu,k)*D(nu,k)
+!~          sum_d = sum_d + D(mu,k)*conjg(D(nu,k))
+          sum_d = sum_d + D(mu,k)*D(nu,k)
           
         end do
         
@@ -116,58 +152,95 @@ do while (sum_E .gt. tol)
      end do 
    end do
    
-  ! rho=0.5d0*(rho+rho_prev)
-   
- rho = rho_prev   
-!sm = 0.d0 
-!do i = 1, 20
-!   sm = sm + rho(i,i)
-!end do 
-!print*, sm
+!~    rho = rho_prev
+   rho=0.5d0*(rho+rho_prev)
+     
   do mu=1,n_max    
      do nu=1,n_max
       
       sum_v=0.0d0
       
       do k=1,n_max 
-        do p=1,n_max
+        do l=1,n_max
         
-          sum_v= sum_v + v(mu,k,nu,p)*rho(p,k)
+          sum_v= sum_v + v(mu,k,nu,l)*rho(l,k)
+
         end do
       end do
  
-      gamma(mu,nu) = sum_v 
+      gamma(mu,nu) = sum_v  
     
      end do
   end do  
   
-  h = t + gamma
+  h=t+gamma
+  
+!~   test=maxval(rho*rho-rho)
   
   sum_E=0.0d0
   
+!~   sum_E=sum(test)
+   
   do k=1,n_max
-  
-     sum_E = sum_E + abs(E(k)-E_prev(k))/n_max
+
+   sum_E = sum_E + abs(E(k)-E_prev(k))/n_max
   
   end do   
 
   E_prev=E
-  print*, sum_e,E(1)
+
+!~   print*, E,E_prev
+
+ print*, sum_E
+ 
+
 end do      
 
-sum_E = 0.d0 
+sum_HF=0.0d0
 
-do k = 1, Abody
-   sum_E = sum_E + E(k) 
+do i=1,A
+
+	sum_HF= sum_HF + E(i)
+
+end do
+
+do i=1,A
+   do k=1,n_max
+     do l=1,n_max
+     
+         sum_HF= sum_HF + t(k,l)*D(l,i)*D(k,i)
+
+     end do
+   end do
+end do    
+
+sum_HF=0.5d0*sum_HF
+
+sum_HF_2=0.0d0
+ 
+ do k = 1,A
+
+   sum_HF_2 = sum_HF_2 + E(k) 
+   
 end do 
 
 do k = 1, n_max
-   do p = 1,n_max 
-      sum_E = sum_E - 0.5*rho(k,p)*gamma(p,k) 
+   do l = 1,n_max 
+   
+      sum_HF_2 = sum_HF_2 - 0.5*rho(k,l)*gamma(l,k) 
+   
    end do 
 end do 
+   
+print*, 'steps'
+print*, N
+    
+print*, 'E_HF'
+print*, sum_HF, sum_HF_2
 
-print*, 'E_GS'
-print*, sum_E
 
-end program HF
+!print*, test
+
+end subroutine HF
+
+end module

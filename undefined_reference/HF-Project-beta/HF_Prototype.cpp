@@ -5,33 +5,29 @@
 using namespace std;
 using namespace arma;
 
-#include"HF_solver.cpp"
-#include"Physics.cpp"
-
+#include "HF_solver.h"
+#include "Physics.cpp"
+#include "quadrature.hpp"
+#include "States.h"
+#include "HF_Phys.h"
 
 int main()
 {
-double parameters[4] = {1,2,3,4};
-Physical_world HF(10, V_coulomb, T_cinetik, Random_rho, parameters);
+    int N_basis = 8;
+    int N_particles = 5;
+    int system = 5;
+    double b  = 0.491043896; // remember b = sqrt(m omega /hbar) hbar omega = 10 MeV, m=938.9059
+    double hw = 10;
+    
+    unsigned int max_iterations = 50;
+    double conv_treshold = 1e-10;
 
-// in this function you should put the potentials that you want to youse in this code!
+    Quad quad("quad/glqi_32.bin");
 
+    States states(N_basis, system);
 
-while (convergence_check(&HF)) 
-{
-PHYSICAL_rho_to_h(&HF);
-SYSTEM_h_to_rho(&HF);
+    physical_world Whatever(N_basis, N_particles, V_neutrondrop, T_full_HO, &hw, states, quad, b);
+    solver HF_solver(&Whatever, max_iterations, conv_treshold);
+
+    return 0;
 }
-
-cout << HF.e << endl;
-
-return 0;
-}
-
-
-
-
-
-
-
-

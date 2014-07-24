@@ -7,7 +7,7 @@
 #include "param.h"
 #include <stdio.h>
 #include <math.h>
-//#include "lapacke.h"
+#include "lapacke.h"
 #define EPS 1e-12
 #define MAXITN 30
 
@@ -112,14 +112,14 @@ eig_t solve_HF(Vab_t **Vacbd, int N_dim, int N_occ)
   double ** rho = init_rho(N_occ);
   E_old = 1.;
   E = 0.;
-printf ("Initializing rho...\n");
-  while (fabs(E - E_old) > EPS || i < MAXITN) {
+  
+  while (fabs(E - E_old) > EPS && i < MAXITN) {
     make_hamilt(hamilt, rho, Vacbd);
- //   solve_eig(hamilt,N_all); // eigen.c
+    solve_eig(hamilt,N_all); // eigen.c
     calc_rho(hamilt, rho, N_occ);
     E_old = E;
     E = calc_E(hamilt, rho, Vacbd, N_occ);
-    printf("iteration %d: E = %f\n", i, E);
+    printf("iteration %d: E = %f  \n", i, E);
     i++;
   }
   printf("E = %lf\n", E);
