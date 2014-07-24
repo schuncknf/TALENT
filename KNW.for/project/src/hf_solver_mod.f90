@@ -16,13 +16,13 @@ CONTAINS
   INTEGER :: num_part
   REAL(kind=r_kind) :: e_fermi, mixing, E_HF
 
-  b = 2.0_r_kind !maby have default value based on mass
+  b = 1.0_r_kind !maby have default value based on mass
   hbaromega = 10.0_r_kind
-  iteration_max = 100
+  iteration_max = 20
   tol = 1e-5_r_kind
   num_part = 2
   lmax = 0
-  !nmax = 10
+  !nmax = 1
   nmax = 4
 
 
@@ -31,6 +31,9 @@ CONTAINS
 
   CALL init_Ho_basis(nmax,lmax,b,hbaromega) !b is not used if hbaromega is supplied
   !CALL init_Ho_basis(nmax,lmax,b)
+
+  WRITE(*,*) 'hbarc = ',hbarc
+  WRITE(*,*) 'neuron mass = ',mnc2
   
   CALL hf_init
   CALL hf_init_dens(num_part) !generates initial density matrix

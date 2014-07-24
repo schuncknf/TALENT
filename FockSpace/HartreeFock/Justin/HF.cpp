@@ -108,15 +108,19 @@ int main(int argc, char * argv[])
   cout << "mtxN " << mtxN << endl;
 
   cout << "States with Quantum number n,l,j,jz,E: " << endl;
+  int counter = 0;
   for( auto& v:psiVec)
     {
-      cout << v.n << " " << v.l << " " << v.j << " " << v.jz << " " << v.E << endl;
+      cout << counter << " " << v.n << " " << v.l << " " << v.j << " " << v.jz << " " << v.E << endl;
+      counter++;
     }
 
   cout << "Matrix Elements with i,j,k,l,V: " << endl;
-  for( auto& v:vecV)
-    {
-      cout << v.i << " " << v.j << " " << v.k << " " << v.l << " " << v.vEle << endl;
+  counter = 0;
+  for( auto& iterV:vecV)
+    {      
+      // cout << counter << " " << iterV.i << " " << iterV.j << " " << iterV.k << " " << iterV.l << " " << iterV.vEle << endl;
+      counter++;
     }
 
 
@@ -131,14 +135,14 @@ int main(int argc, char * argv[])
   cout << "Beep Boop!" << endl;
   int iteration = 0;
   int iterationMAX = 100;
-  double threshhold = 1e-4;
+  double threshhold = 1e-6;
   while( iteration < iterationMAX)
     {
       cout << "iteration = " << iteration << endl;
       // Here we construct h_alpha,beta
       for( int alpha = 0; alpha < nStates; alpha++)
 	{
-	  for( int beta = 0; beta < nStates; beta++)
+	  for( int beta = alpha; beta < nStates; beta++)
 	    {
 	      hamiltonian(alpha,beta) = onebody(alpha,beta,psiVec) +
 	    twobody(alpha,beta,nStates,Dmtx,vecV);
@@ -152,7 +156,7 @@ int main(int argc, char * argv[])
       
       cout << "DIAG HAM?!?: " << endl << eigenvalues << endl;
       
-      Dmtx = trans(Dmtx);
+      // Dmtx = trans(Dmtx);
       
       cout << "Final gs energy: " << eigenvalues(0) << endl;
 
@@ -193,23 +197,16 @@ double twobody( int alpha, int beta, int nStates, mat Dmtx,
 
 double mtxElement( int alpha, int nu, int beta, int mu, 
 		   vector<interactionEle> vecV)
-{
-  double search = 0.0;
-  double V_abcd = 0.0;
-  double V_abdc = 0.0;
+{  
   for( auto& v:vecV)
     {
       if(alpha==v.i && nu==v.j && beta==v.k && mu==v.l)
 	{
-	  V_abcd = v.vEle;	  
-	}
-      if(alpha==v.i && nu==v.j && beta==v.l && mu==v.k)
-	{
-	  V_abdc = v.vEle;	  
-	}
-    }
-  search = V_abcd - V_abdc;
-  return search;
+	  return v.vEle;	  
+	}    
+    }  
+  cout << "NOT SUPPOSED TO BE HERE!" << endl;
+  return -1;
 } // end mtxElement
 
 double densityMtxEle( int mu, int nu, mat Dmtx)
@@ -217,7 +214,7 @@ double densityMtxEle( int mu, int nu, mat Dmtx)
   double sum = 0.0;
   for( int ii = 0; ii < int(sqrt(Dmtx.size())); ii++) // future trouble probs
     {
-      sum = Dmtx(mu,ii)*Dmtx(nu,ii);
+      sum += Dmtx(mu,ii)*Dmtx(nu,ii);
     } // end ii loop
   return sum;
 } // end densityMtx
@@ -288,7 +285,7 @@ void inputMTX(char* mtxFile, int& mtxEleNum,
     {
       filemtxElements.ignore(1000,'\n');
     }
-  
+ 
   filemtxElements >> mtxEleNum;
 
   int i,j,k,l;
@@ -298,7 +295,7 @@ void inputMTX(char* mtxFile, int& mtxEleNum,
     {         
       //E1 = 0; // Can play with sp energy here, E1=0 for degen 
       // subtract one here so indexing starts with 0.
-      interactionEle temp(i-1,j-1,k-1,l-1,vElement);    
+      interactionEle temp(i,j,k,l,vElement);    
       mtxEleVector.push_back( temp );    
       filemtxElements.ignore(100,'\n');      
     }     

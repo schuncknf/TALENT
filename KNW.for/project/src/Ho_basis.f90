@@ -365,7 +365,7 @@ CONTAINS
           IF(l==0 .and. jindex==1) CYCLE
           j2 = 2*l + (-1)**jindex
           DO n1 = 0,Ho_nmax
-             Etot = Etot + Ho_hbaromega*(2*n1+l+1.5_r_kind)*(j2+1)*density_matrix(l,jindex,n1,n1)
+             Etot = Etot + Ho_hbaromega*(2.0_r_kind*n1+l+1.5_r_kind)*(j2+1)*density_matrix(l,jindex,n1,n1)
 
 !!$             WRITE(*,*) 'n1=',n1,'density_matrix(l,jindex,n1,n1) = ',density_matrix(l,jindex,n1,n1)
 
@@ -489,10 +489,12 @@ CONTAINS
        Ho_b = hbarc/sqrt(hbaromega*mnc2)
     END IF
        
-    
-
+    WRITE(*,*) 'IN init_Ho_basis'
+    WRITE(*,*) 'mnc2 = ',mnc2
+    WRITE(*,*) 'hbarc = ',hbarc
     WRITE(*,*) 'Ho_b = ',Ho_b
     WRITE(*,*) 'Ho_hbaromega = ',Ho_hbaromega
+    WRITE(*,*) 'init_Ho_basis, done'
 
 
 
@@ -543,11 +545,21 @@ CONTAINS
        
 
      Ho_two_body_matel = (0.0_r_kind,0.0_r_kind)
-     CALL calculate_two_body_matels(kappa_R,0.5_r_kind*V_0R)
-     CALL calculate_two_body_matels(kappa_S,0.5_r_kind*V_0S)
 
      !should give 0,1,and 2 based on orthogonality of radial wfs
-     !CALL calculate_two_body_matels(1e-5_r_kind,1.0_r_kind)
+     !CALL calculate_two_body_matels_GL(1e-5_r_kind,1.0_r_kind)
+     
+     CALL calculate_two_body_matels_GL(kappa_R,0.5_r_kind*V_0R)
+     CALL calculate_two_body_matels_GL(kappa_S,0.5_r_kind*V_0S)
+
+!!$     Ho_two_body_matel = (0.0_r_kind,0.0_r_kind)
+!!$      
+!!$
+!!$     CALL calculate_two_body_matels(kappa_R,0.5_r_kind*V_0R)
+!!$     CALL calculate_two_body_matels(kappa_S,0.5_r_kind*V_0S)
+!!$
+!!$     !should give 0,1,and 2 based on orthogonality of radial wfs
+!!$     !CALL calculate_two_body_matels(1e-5_r_kind,1.0_r_kind)
 
 
   END SUBROUTINE hf_init
@@ -580,7 +592,7 @@ CONTAINS
 
     
 
-    n = 80
+    n = 100
     alpha = 0.0_r_kind
 
     WRITE(*,*) 'Calculating matix elements'
@@ -613,23 +625,23 @@ CONTAINS
              DO n3 = 0,Ho_nmax
                 DO n4 = 0,Ho_nmax
 
-                   !for debug
-                   WRITE(*,*) 'n1=',n1,'n2=',n2,'n3=',n3,'n4=',n4
-                   
-
-                    norm = 0.0_r_kind
-                    CALL RadHO_poly(n1,0,1.0_r_kind,sqrt(grid_points_GLag),wf_1,n)
-                    CALL RadHO_poly(n2,0,1.0_r_kind,sqrt(grid_points_GLag),wf_2,n)
-                     DO II = 1,n
-                        xII = sqrt(grid_points_GLag(II))
-                        norm = norm + grid_weights_GLag(II)*xII*wf_1(II)*wf_2(II)                       
-
-                     END DO
-                     norm = norm/2.0
-                     !norm = Ho_b**3/2.0*norm
-                     WRITE(*,*) 'norm n1,n2 =',norm
-
-                     !end for debug
+!!$                   !for debug
+!!$                   WRITE(*,*) 'n1=',n1,'n2=',n2,'n3=',n3,'n4=',n4
+!!$                   
+!!$
+!!$                    norm = 0.0_r_kind
+!!$                    CALL RadHO_poly(n1,0,1.0_r_kind,sqrt(grid_points_GLag),wf_1,n)
+!!$                    CALL RadHO_poly(n2,0,1.0_r_kind,sqrt(grid_points_GLag),wf_2,n)
+!!$                     DO II = 1,n
+!!$                        xII = sqrt(grid_points_GLag(II))
+!!$                        norm = norm + grid_weights_GLag(II)*xII*wf_1(II)*wf_2(II)                       
+!!$
+!!$                     END DO
+!!$                     norm = norm/2.0
+!!$                     !norm = Ho_b**3/2.0*norm
+!!$                     WRITE(*,*) 'norm n1,n2 =',norm
+!!$
+!!$                     !end for debug
                    
                    CALL RadHO_poly(n1,0,1.0,scaled_gp,wf_1,n)
                    CALL RadHO_poly(n3,0,1.0,scaled_gp,wf_3,n)
@@ -653,9 +665,16 @@ CONTAINS
                          
                          !WRITE(*,*) 'II = ',II,'JJ = ',JJ,'xII = ',xII,'xJJ = ',xJJ 
                          
-                         matel = matel + grid_weights_GLag(II)*grid_weights_GLag(JJ)&
+!!$                         matel = matel + grid_weights_GLag(II)*grid_weights_GLag(JJ)&
+!!$                              *(wf_1(II)*wf_3(II)*wf_2(JJ)*wf_4(JJ) + wf_1(II)*wf_4(II)*wf_2(JJ)*wf_3(JJ))&
+!!$                              *(EXP(2.0_r_kind*Ho_b**2*mu*xII*xJJ)-EXP(-2.0_r_kind*Ho_b**2*mu*xII*xJJ))   
+
+                         matel = matel + EXP(LOG(grid_weights_GLag(II)*grid_weights_GLag(JJ)) + 2.0_r_kind*Ho_b**2*mu*xII*xJJ)*(wf_1(II)*wf_3(II)*wf_2(JJ)*wf_4(JJ) + wf_1(II)*wf_4(II)*wf_2(JJ)*wf_3(JJ))  - grid_weights_GLag(II)*grid_weights_GLag(JJ)&
                               *(wf_1(II)*wf_3(II)*wf_2(JJ)*wf_4(JJ) + wf_1(II)*wf_4(II)*wf_2(JJ)*wf_3(JJ))&
-                              *(EXP(2.0_r_kind*Ho_b**2*mu*xII*xJJ)-EXP(-2.0_r_kind*Ho_b**2*mu*xII*xJJ))                    
+                              *EXP(-2.0_r_kind*Ho_b**2*mu*xII*xJJ)
+
+
+                       
 
                          
 !!$                         !
@@ -691,7 +710,7 @@ CONTAINS
           DO n3 = 0,Ho_nmax
              DO n4 = 0,Ho_nmax
                 
-                WRITE(*,'(4I2,2F14.4)') n1,n2,n3,n4,REAL(Ho_two_body_matel(l,jindex,n1,n2,n3,n4),kind=r_kind),AIMAG(Ho_two_body_matel(l,jindex,n1,n2,n3,n4))
+                WRITE(*,'(4I2,2F20.14)') n1,n2,n3,n4,REAL(Ho_two_body_matel(l,jindex,n1,n2,n3,n4),kind=r_kind),AIMAG(Ho_two_body_matel(l,jindex,n1,n2,n3,n4))
 
              END DO
           END DO
@@ -701,6 +720,187 @@ CONTAINS
 
 
   END SUBROUTINE calculate_two_body_matels
+
+
+
+  
+
+
+
+
+   SUBROUTINE calculate_two_body_matels_GL(mu,V_0)
+    IMPLICIT NONE
+
+    REAL(kind=r_kind), intent(in) :: mu, V_0
+
+    INTEGER :: n
+    
+
+    REAL(kind=r_kind), ALLOCATABLE :: wf_1(:), wf_3(:)
+    REAL(kind=r_kind), ALLOCATABLE :: wf_2(:), wf_4(:)
+    REAL(kind=r_kind), ALLOCATABLE :: scaled_gp(:)
+    INTEGER :: II, JJ
+    INTEGER :: l, jindex
+
+    INTEGER :: n1,n2,n3,n4
+    COMPLEX(kind=r_kind) :: matel
+
+    
+
+    INTEGER :: term
+    INTEGER, parameter :: no_terms = 1
+    REAL(kind=r_kind) :: prefactor(no_terms)
+    
+    
+    REAL(kind=r_kind) :: xII,xJJ,pf,norm
+
+    
+
+    n = 100
+    
+    
+    WRITE(*,*) 'Calculating matix elements'
+
+    IF(.not. is_init_grid_GL .or. grid_size_GL /= n) THEN
+       WRITE(*,*) 'Initializing grid'
+       CALL init_grid_GL(n)
+       WRITE(*,*) '  Done'
+    END IF
+
+    ALLOCATE(wf_1(n),wf_2(n),wf_3(n),wf_4(n),scaled_gp(n))
+
+    !only s-wave implemented
+    l = 0
+    jindex = 0
+
+    !scaling   
+    prefactor = (/ pi**2/16.0_r_kind/(4.0_r_kind*mu) /)
+    prefactor = V_0*prefactor
+    
+    
+    WRITE(*,*) 'Perfoming sums'
+
+    WRITE(*,*) 'mu = ',mu,'V_0 = ',V_0,'Ho_b = ', Ho_b
+
+    scaled_gp = tan(pi/4.0_r_kind*(grid_points_GL+1.0_r_kind))
+  
+    DO term = 1,no_terms
+       pf = prefactor(term)
+       DO n1 = 0,Ho_nmax
+          DO n2 = 0,Ho_nmax
+             DO n3 = 0,Ho_nmax
+                DO n4 = 0,Ho_nmax
+!!$
+!!$                   !for debug
+!!$                   WRITE(*,*) 'n1=',n1,'n2=',n2,'n3=',n3,'n4=',n4
+!!$                   
+!!$
+!!$                    norm = 0.0_r_kind
+!!$                    CALL RadHO(n1,0,Ho_b,scaled_gp,wf_1,n)
+!!$                    CALL RadHO(n2,0,Ho_b,scaled_gp,wf_2,n)
+!!$                     DO II = 1,n
+!!$                        xII = scaled_gp(II) ! tan(pi*grid_points_GL(II)/2.0_r_kind)
+!!$                        norm = norm + grid_weights_GL(II)*(xII**2+1.0_r_kind)&
+!!$                             *xII**2*wf_1(II)*wf_2(II)       
+!!$
+!!$                        !norm = norm + grid_weights_GL(II)*(xII**2+1.0_r_kind)*EXP(-xII)
+!!$
+!!$                        !xJJ = pi/4.0_r_kind*(grid_points_GL(II)+1.0_r_kind)
+!!$                        !norm = norm + grid_weights_GL(II)/(cos(xJJ)**2)*EXP(-xII)
+!!$
+!!$                     END DO
+!!$                     norm = pi*norm/4.0_r_kind
+!!$                     !norm = Ho_b**3/2.0*norm
+!!$                     WRITE(*,*) 'norm n1,n2 =',norm
+!!$
+!!$                     !end for debug
+                   
+                   CALL RadHO(n1,0,Ho_b,scaled_gp,wf_1,n)
+                   CALL RadHO(n3,0,Ho_b,scaled_gp,wf_3,n)
+                   CALL RadHO(n2,0,Ho_b,scaled_gp,wf_2,n)
+                   CALL RadHO(n4,0,Ho_b,scaled_gp,wf_4,n)
+
+!!$                   wf_1 = 0.0
+!!$                   wf_2 = 0.0
+!!$                   wf_3 = 0.0
+!!$                   wf_4 = 0.0
+                   
+                   matel = (0.0_r_kind,0.0_r_kind) 
+
+
+                  
+
+                   DO II = 1,n
+                      DO JJ = 1,n
+                         xII = scaled_gp(II)
+                         xJJ = scaled_gp(JJ)
+
+
+
+                         matel = matel + grid_weights_GL(II)*grid_weights_GL(JJ)*(xII**2+1.0_r_kind)*(xJJ**2+1.0_r_kind)&
+                              *(wf_1(II)*wf_3(II)*wf_2(JJ)*wf_4(JJ) + wf_1(II)*wf_4(II)*wf_2(JJ)*wf_3(JJ))&
+                              *xII*xJJ*(EXP(-mu*(xII**2+xJJ**2)+2.0_r_kind*mu*xII*xJJ)-EXP(-mu*(xII**2+xJJ**2)-2.0_r_kind*mu*xII*xJJ))
+
+
+
+
+                         !EXP(-mu*(xII**2+xJJ**2))*(EXP(2*mu*xII*xJJ)-EXP(-2*mu*xII*xJJ))
+
+
+
+                         
+!!$                         !
+!!$                         WRITE(*,*) xII,grid_weights_GLag(II),xJJ,grid_weights_GLag(JJ),2.0_r_kind*Ho_b**2*mu*xII*xJJ
+!!$                         WRITE(*,*) matel
+!!$                         WRITE(*,*) pf*matel
+!!$                         !
+                         
+
+                      END DO
+                   END DO
+                   
+!!$                   !for debug
+!!$                   WRITE(*,*) 'matel =',matel,'Ho_two_body_matel(l,jindex,n1,n2,n3,n4)=',Ho_two_body_matel(l,jindex,n1,n2,n3,n4)
+!!$                   STOP
+!!$                   !end for debug
+                   
+                   Ho_two_body_matel(l,jindex,n1,n2,n3,n4) = Ho_two_body_matel(l,jindex,n1,n2,n3,n4) +  pf*matel
+                   !Ho_two_body_matel(l,jindex,n1,n2,n3,n4) =  pf*matel
+                   
+                END DO
+             END DO
+          END DO
+       END DO
+    END DO
+
+    WRITE(*,*) 'Done'
+
+    OPEN(unit=1,file='matels_hf.dat')
+
+    WRITE(1,*) 'Two-body matrix elements'
+    
+    DO n1 = 0,Ho_nmax!MIN(1,Ho_nmax)
+       DO n2 = 0,Ho_nmax!MIN(1,Ho_nmax)
+          DO n3 = 0,Ho_nmax!MIN(1,Ho_nmax)
+             DO n4 = 0,Ho_nmax!MIN(1,Ho_nmax)
+                
+                WRITE(1,'(4I2,2F20.12)') n1,n2,n3,n4,REAL(Ho_two_body_matel(l,jindex,n1,n2,n3,n4),kind=r_kind),AIMAG(Ho_two_body_matel(l,jindex,n1,n2,n3,n4))
+
+             END DO
+          END DO
+       END DO
+    END DO
+
+    CLOSE(1)
+
+
+  END SUBROUTINE calculate_two_body_matels_GL
+
+
+
+
+
+
 
 
 
@@ -1108,25 +1308,25 @@ CONTAINS
   Subroutine LaguerreL2(n, l, RVEC, FVEC, FVEC_S, dimr) 
     IMPLICIT NONE
     INTEGER :: n,l,Ik,II, dimr
-    DOUBLE PRECISION :: RVEC(dimr), FVEC(dimr),FVEC_S(dimr),bin,alpha
-    DOUBLE PRECISION :: L0(dimr), L1(dimr)
+    REAL(kind=r_kind) :: RVEC(dimr), FVEC(dimr),FVEC_S(dimr),bin,alpha
+    REAL(kind=r_kind) :: L0(dimr), L1(dimr)
 
     IF(n.lt.0) THEN
-       FVEC   = 0.D0
-       FVEC_S = 0.D0
+       FVEC   = 0.0_r_kind
+       FVEC_S = 0.0_r_kind
        RETURN
     END IF
 
-    alpha = l + 0.5d0
+    alpha = l + 0.5_r_kind
     
-    L1 = 0.d0; FVEC = 1.d0;
+    L1 = 0.0_r_kind; FVEC = 1.0_r_kind;
     DO ii = 1 , n 
        L0 = L1
        L1 = FVEC
-       FVEC = ((2.d0 * ii- 1.d0 + alpha- RVEC)* L1- (ii- 1.d0 + alpha)* L0)/ dble(ii)
+       FVEC = ((2.0_r_kind * ii- 1.0_r_kind + alpha- RVEC)* L1- (ii- 1.0_r_kind + alpha)* L0)/ REAL(ii,kind=r_kind)
     END DO
   
-    FVEC_S = sign(1.D0,FVEC)
+    FVEC_S = sign(1.0_r_kind,FVEC)
     !Commented away statement below I want the value not the log /Daniel W
     !FVEC   = log(abs(FVEC)) 
     !End Comment /Daniel W
@@ -1159,19 +1359,19 @@ CONTAINS
   Subroutine RadHO(n, l, b, RVEC, FVEC, dimr)
     IMPLICIT NONE
     INTEGER :: n,l,dimr
-    DOUBLE PRECISION :: nR,lR,b, RVEC(dimr), FVEC(dimr), FVEC_S(dimr), FVECtmp(dimr), lnfac
-    nR = DBLE(n) 
-    lR = DBLE(l)
+    REAL(kind=r_kind) :: nR,lR,b, RVEC(dimr), FVEC(dimr), FVEC_S(dimr), FVECtmp(dimr), lnfac
+    nR = REAL(n,kind=r_kind) 
+    lR = REAL(l,kind=r_kind)
     CALL LaguerreL2(n, l, (RVEC/b)**2, FVEC, FVEC_S, dimr)
      
     ! gamma(n+1) = n!
     IF (n == 0) THEN
-      lnfac = 0d0
+      lnfac = 0.0_r_kind
     ELSE
-      lnfac = gammln(nR+1d0)
+      lnfac = gammln(nR+1.0_r_kind)
     END IF
 
-   FVEC = SQRT(2d0/b**3)* EXP(0.5d0* ( lnfac - gammln(nR+lR+1.5d0) ) )* (RVEC/b)**l* EXP(-RVEC**2/2/b**2)* FVEC 
+   FVEC = SQRT(2.0_r_kind/b**3)* EXP(0.5_r_kind* ( lnfac - gammln(nR+lR+1.5_r_kind) ) )* (RVEC/b)**l* EXP(-RVEC**2/2.0_r_kind/b**2)* FVEC 
    
   END Subroutine RadHO
 
