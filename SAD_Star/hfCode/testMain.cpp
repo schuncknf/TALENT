@@ -8,6 +8,7 @@
 #include "integratorGaussLegendreTest.h"
 #include "integratorGaussLegendreGSLTest.h"
 #include "integratorGaussLaguerreTest.h"
+#include "hfSolverTest.h"
 
 
 // Other tests
