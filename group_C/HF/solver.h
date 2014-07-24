@@ -4,7 +4,7 @@
 #include "potential.h"
 
 typedef struct {
-  int Nocc;
+  int Nocc;  // number of occupied levels in given l,j
   double **rh;
 } rho_t;  // will be used as rho_t rho[i1][i2] (i -> (l,j); i=0..Ni-1)
 

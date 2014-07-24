@@ -4,14 +4,14 @@
 // the type Vab_t will store the matrix elements of t_ab and antisymmetrized
 // v_acbd.
 typedef struct {
-  double t;
-  double **V_cd;
+  double t;   // one-body (harmonic oscillator) part of the interaction
+  double **V_cd;  // the part of V_acbd to be traced with rho[c][d]
 } Vab_t;
 
 // the index i1,i2 of the submatrices in Vj1j2[i1][i2].V_ab[a][b].V_cd[c][d]
 // where j_a=j_b=j1, l_a=l_b=l1, j_c=j_d=j2, l_c=l_d=l2
 // is calculated according to i = l + j - 0.5, so l = (int)(i+1)/2
-// and j = 
+// and j = i - l + 0.5
 
 typedef struct {
   int _2l1;
