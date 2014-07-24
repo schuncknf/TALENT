@@ -35,64 +35,28 @@ end do
 
 open(unit = 37, file = fname//'_twobody.dat') 
 
-p = 1
 do i = 1, n_max
    do j = i+1, n_max 
       
-      q = 1
-      do k = 1,n_max
-         do l = k+1,n_max
       
+      do k = i,n_max
+         do l = k+1,n_max
+
+              p = (i-1) * n_max  - i*(i-1)/2 + j - i
+              q = (k-1) * n_max  - k*(k-1)/2 + l - k
             read(37,*) v(p,q) 
-            q = q+ 1
+            V(q,p) = V(p,q) 
+    
             
          end do
       end do
-      p = p+ 1
+      
    end do 
 end do 
 
 close(37)
 close(39) 
 
-!======================
-!Toy matrix elements
-
-!~ do i=1,n_max
-
-!~    if (i.lt.(n_max/2+1)) then
-
-!~        t(i,i)=1.0d0
-!~    else
-	
-!~ 	   t(i,i)=2.0d0
-	   
-!~    end if
-    
-!~ end do
-
-!~ do i=1,n_max
-!~   do k=1,n_max
-    
-!~     if (i.lt.(n_max/2+1) .and. k.lt.(n_max/2+1)) then
-    
-!~      v(i,k,i,k)=-2.5d0
-!~      v(k,i,i,k)=-v(i,k,i,k)
-!~      v(i,k,k,i)=-v(i,k,i,k)
-!~      
-!~     else
-    
-!~      v(i,k,i,k)=0.5d0
-!~      v(k,i,i,k)=-v(i,k,i,k)
-!~      v(i,k,k,i)=-v(i,k,i,k)
-     
-!~     end if
-    
-!~   end do 
-!~ end do      
-
-
-!===========================
 !Initial condition
 
 do i=1,A
@@ -102,6 +66,7 @@ do i=1,A
     
 end do
 
+!initial density matrix
 do mu=1,n_max
    do nu=1,n_max
    
@@ -137,6 +102,7 @@ do while (sum_E.gt.tol)
      
    D=h
  
+   ! recalculate density matrix
    do mu=1,n_max
       do nu=1,n_max   
       
@@ -154,9 +120,16 @@ do while (sum_E.gt.tol)
      end do 
    end do
    
+<<<<<<< HEAD
    rho = rho_prev
 !~    rho=0.5d0*(rho+rho_prev)
      
+=======
+    rho = rho_prev
+!   rho=0.5d0*(rho+rho_prev) linear combinations
+ 
+    !recalculate gamm 
+>>>>>>> 7c5bbb0ab80c3a8c3202465b0ff27aa796eea2d8
   do mu=1,n_max    
      do nu=1,n_max
       
@@ -220,6 +193,8 @@ sum_HF=0.5d0*sum_HF
 
 sum_HF_2=0.0d0
  
+
+! calculate final hf energy
  do k = 1,A
 
    sum_HF_2 = sum_HF_2 + E(k) 

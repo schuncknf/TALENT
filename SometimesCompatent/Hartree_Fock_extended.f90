@@ -1,8 +1,4 @@
-module Hartree_Fock_extended
-
-contains
-
-subroutine HF(n_max,l_max,A,fname)
+program HF
 
 implicit none
 
@@ -12,6 +8,8 @@ real (8), allocatable, dimension (:) :: E, E_prev, work !This dimension may chan
 real (8), allocatable, dimension(:,:,:) :: h, gamm, rho, test !I think gamm wont be necessary
 real (8), allocatable, dimension(:,:) :: v, t, D
 character (*) :: fname
+
+(n_max,l_max,A,fname)
 
 Rmax = n_max*(n_max-1)/2
 
@@ -294,4 +292,4 @@ real(8) function v_elem(px,qx,rx,sx,V,x,M)
 end function
 !================
 
-end module
+end program

@@ -30,7 +30,7 @@ subroutine calculate_interaction(hbaromega,nmax,fname)
   do i = 0,qmax
      do j = i+1,qmax
       
-        do k = 0,qmax
+        do k = i,qmax
            do l = k+1,qmax 
         
               write(37,*) Minn_matrix_element(i,j,k,l,oscl,rr,wrr,ngauss)

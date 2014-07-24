@@ -1,0 +1,70 @@
+SHELL=/bin/sh
+
+# This file contains a set of rules used by the "make" command.
+#   This makefile $(MAKEFILE) tells "make" how the executable $(COMMAND) 
+#   should be generated from the source files $(SRCS) and the header files 
+#   $(HDRS) via the object files $(OBJS); type the command:
+#        "make -f make_program"
+#   where make_program should be replaced by the name of the makefile.
+# 
+# To remove the OBJS files; type the command:
+#        "make -f make_program clean"
+#
+# To create a zip archive with name $(COMMAND).zip containing this 
+#   makefile and the SRCS and HDRS files, type the command:
+#        "make -f make_program zip"
+ 
+# The name of this makefile
+MAKEFILE= make_HF
+
+# The command you type to run the program (executable name)
+COMMAND=  HF
+
+# Here are the C++ (or whatever) source files to be compiled, with \'s as
+#  continuation lines.  If you get a "missing separator" error pointing 
+#  to a line here, make sure that each \ has NO spaces following it.
+SRCS= \
+HF.cpp \
+#harmonic_oscillator.cpp 
+
+# Header files (if any) here
+HDRS= \
+
+###########################################################################
+# Commands and options for compiling
+########################################################################### 
+OBJS= $(addsuffix .o, $(basename $(SRCS)))
+ 
+CC= g++
+CFLAGS=  -g -O3
+WARNFLAGS= -Werror -Wall -W -Wshadow -fno-common
+MOREFLAGS= -ansi -pedantic -Wpointer-arith -Wcast-qual -Wcast-align \
+           -Wwrite-strings -fshort-enums 
+LDFLAGS= -lgsl -lgslcblas 
+ 
+###########################################################################
+# Instructions to compile and link -- allow for different dependencies
+########################################################################### 
+ 
+$(COMMAND): $(OBJS) $(HDRS) $(MAKEFILE) 
+	$(CC) -o $(COMMAND) $(OBJS) $(LDFLAGS) $(LIBS)
+                 
+HF.o : HF.cpp $(MAKEFILE) 
+	$(CC) $(CFLAGS) $(WARNFLAGS)  -c HF.cpp -o HF.o
+                 
+#harmonic_oscillator.o : harmonic_oscillator.cpp $(MAKEFILE) 
+#	$(CC) $(CFLAGS) $(WARNFLAGS)  -c harmonic_oscillator.cpp -o harmonic_oscillator.o
+ 
+##########################################################################
+# Additional tasks 
+##########################################################################
+ 
+clean:
+	rm -f $(OBJS)
+  
+zip:
+	zip -r $(COMMAND).zip $(MAKEFILE) $(SRCS) $(HDRS)
+
+##########################################################################
+# End of makefile 
+##########################################################################
