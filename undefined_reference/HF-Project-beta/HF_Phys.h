@@ -9,6 +9,13 @@
 class physical_world
 {
     private:
+
+        struct SPQN{
+            unsigned n;
+            int sigma; //-1 is spin down, 1 is spin up
+            void print() { std::cout<< "[spqn] n=" << n << " sigma = " << sigma << std::endl; }
+        };
+
         // Those are the matrix stored (i dont what the main to see those, they can be stored in different way)
         arma::mat V_internal;
         arma::mat T_internal;
@@ -32,8 +39,8 @@ class physical_world
         double T(int i1,int j1)                      {return T_internal(i1, j1);}
 
         // this function will fill T and V then make a guess for the initial density
-        physical_world(int N_basis, int N_particles, double (*fill_V)(int, int, int, int, States&, Quad&, void*),
-                       double (*fill_T)(int, int, void*), void* parameters, States& states, Quad& quad);
+        physical_world(int N_basis, int N_particles, double (*fill_V)(int, int, int, int, States&, Quad&, double, void*),
+                       double (*fill_T)(int, int, void*), void* parameters, States& states, Quad& quad, double b);
 };
 
 

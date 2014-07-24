@@ -13,9 +13,19 @@ solver::solver(physical_world * pass_object, unsigned int max_iterations, double
     conv_treshold = treshold;
 
     int Nbasis = physical_object->N_max;
+    int Nparticles = physical_object->N_part;
 
     h = arma::zeros<mat>(Nbasis,Nbasis);
-    rho = arma::eye<mat>(Nbasis,Nbasis);
+
+//    rho = (double) Nparticles / (double) Nbasis * arma::eye<mat>(Nbasis,Nbasis);
+
+    rho = arma::zeros<mat>(Nbasis,Nbasis);
+
+    for(unsigned int i = 0; i < Nparticles; i++)
+    {
+        rho(i,i) = 1.;
+    }
+
     e = arma::ones<vec>(Nbasis);
 
     run_iteration();
@@ -32,6 +42,8 @@ void solver::PHYSICAL_rho_to_h()
 {
     int Nbasis = physical_object->N_max;
 
+    rho.print("rho");
+
     for(int i1 = 0; i1 < Nbasis; i1++)
     for(int i2 = 0; i2 < Nbasis; i2++)
     {
@@ -41,6 +53,8 @@ void solver::PHYSICAL_rho_to_h()
         for(int j2 = 0; j2 < Nbasis; j2++)
             h(i1,i2) += physical_object->V(i1,j2,i2,j1) * rho(j1,j2);
     }
+
+    h.print("h:");
 }
 
 void solver::SYSTEM_h_to_rho()

@@ -21,3 +21,8 @@ main.o: main.f90
 
 Hartree_Fock.o: Hartree_Fock.f90 
 	${FC} -c Hartree_Fock.f90 ${LIBS} 
+
+clean: 
+	rm *.o
+	rm *.mod
+	rm ${p1} 
