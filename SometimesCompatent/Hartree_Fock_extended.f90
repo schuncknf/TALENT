@@ -1,25 +1,25 @@
-module Hartree_Fock
+module Hartree_Fock_extended
 
 contains
 
-subroutine HF(n_max,A,fname)
+subroutine HF(n_max,l_max,A,fname)
 
 implicit none
 
 real (8) :: omega, sum_v, sum_d, tol, sum_E, sum_HF, sum_HF_2
-integer :: n_max, k, mu, nu, i, j, l, info, N, A , Rmax, p,q
-real (8), allocatable, dimension (:) :: E, E_prev, work
-real (8), allocatable, dimension(:,:) :: h, t, delta, gamm, rho, rho_prev, D, test
-real (8), allocatable, dimension(:,:) :: v  
+integer :: n_max, l_max k, mu, nu, i, j, l, info, N, A, Rmax, p,q
+real (8), allocatable, dimension (:) :: E, E_prev, work !This dimension may change
+real (8), allocatable, dimension(:,:,:) :: h, gamm, rho, test !I think gamm wont be necessary
+real (8), allocatable, dimension(:,:) :: v, t, D
 character (*) :: fname
 
 Rmax = n_max*(n_max-1)/2
 
-allocate (D(n_max,n_max),rho(n_max,n_max),rho_prev(n_max,n_max),test(n_max,n_max))
-allocate (h(n_max,n_max),t(n_max,n_max),v(Rmax,Rmax))
-allocate (gamm(n_max,n_max), E(n_max), work(10*n_max), E_prev(n_max))
+allocate (D(n_max,n_max),rho(l_max,n_max,n_max),test(l_max,n_max,n_max))
+allocate (h(l_max,n_max,n_max),t(n_max,n_max),v(Rmax,Rmax))
+allocate (gamm(l_max,n_max,n_max), E(n_max), work(10*n_max), E_prev(n_max))
 
-!Some read comands for the Nathan matrix elements
+!Some read comands for the matrix elements
 !==============================
 
 open(unit = 39, file = fname//'_onebody.dat') 
@@ -97,8 +97,8 @@ close(39)
 
 do i=1,A
 
-	rho(i,i)=1
-    rho_prev(i,i)=1
+	rho(:,i,i)=1
+    rho_prev(:,i,i)=1
     
 end do
 
@@ -163,9 +163,9 @@ do while (sum_E.gt.tol)
       sum_v=0.0d0
       
       do k=1,n_max 
-        do l=1,n_max
+        do p=1,n_max
         
-          sum_v= sum_v + v_elem(mu,k,nu,l,v,Rmax,n_max)*rho(l,k)
+          sum_v= sum_v + v_elem(mu,k,nu,p,v,Rmax,n_max)*rho(p,k)
 
         end do
       end do
@@ -208,9 +208,9 @@ end do
 
 do i=1,A
    do k=1,n_max
-     do l=1,n_max
+     do p=1,n_max
      
-         sum_HF= sum_HF + t(k,l)*D(l,i)*D(k,i)
+         sum_HF= sum_HF + t(k,p)*D(p,i)*D(k,i)
 
      end do
    end do
@@ -227,9 +227,9 @@ sum_HF_2=0.0d0
 end do 
 
 do k = 1, n_max
-   do l = 1,n_max 
+   do p = 1,n_max 
    
-      sum_HF_2 = sum_HF_2 - 0.5*rho(k,l)*gamm(l,k) 
+      sum_HF_2 = sum_HF_2 - 0.5*rho(k,p)*gamm(p,k) 
    
    end do 
 end do 
