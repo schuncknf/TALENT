@@ -1,0 +1,23 @@
+jm-scheme
+----------
+
+|phi(nljm)> = sum_nprime |nprime j l m><"|phi(nljm)>
+D_nnprime^lj = bra(")ket(phi("))
+
+< n1 l j m |h^HF| n3 l j m > = < n1 l j |h^HF| n3 l j > = h_n1n3^lj
+
+sum_n3 h_n1n3^lj D_n3nq^lj = e_nq^lj D_n1nq^lj
+
+h_n1n3^lj = delta_n1n3 (2n1 + l + 3/2) hbar omega + sum_n2n4lprimejprime < n1 l j n2 lprime jprime | V | n3 l j n4 lprime jprime > rho_n4n2^lprimejprime
+
+rho_n4n2^lprimejprime = sum_ni (2j_i + 1) D_n4ni^lprime jprime D_n2ni^lprimejprime^*
+
+<n1ljn2lprjpr|v|n3ljn4lprjpr> = 1/[(2j+1)(..)] sum_mmpr <n1ljmn2lprjprmpr|V|n3ljmn4lprjprmpr>
+
+truncation: e_max = 2n + l
+
+
+J-coupled scheme
+-----------------
+
+<n1ljn2lprjpr|V|n3ljn4lprjpr> = 1/[(2j + 1)(..)] sum_J (2J+1) <n1ljn2lprjprJ|V|n1ljn2lprjprJ>
