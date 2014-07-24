@@ -14,17 +14,10 @@ solver::solver(physical_world * pass_object, unsigned int max_iterations, double
 
     int Nbasis = physical_object->N_max;
     int Nparticles = physical_object->N_part;
-
     h = arma::zeros<mat>(Nbasis,Nbasis);
-
+    Init_rho(Nparticles,Nbasis);
 //    rho = (double) Nparticles / (double) Nbasis * arma::eye<mat>(Nbasis,Nbasis);
 
-    rho = arma::zeros<mat>(Nbasis,Nbasis);
-
-    for(unsigned int i = 0; i < Nparticles; i++)
-    {
-        rho(i,i) = 1.;
-    }
 
     e = arma::ones<vec>(Nbasis);
 
@@ -37,6 +30,11 @@ solver::~solver()
 
 }
 */
+void solver::Init_rho(int N_p,int Nbasis) { 
+  rho = arma::zeros<mat>(Nbasis,Nbasis);
+  for(int i=0;i< N_p; i++) 
+    rho(i,i)=1;
+}
 
 void solver::PHYSICAL_rho_to_h()
 {
@@ -77,26 +75,7 @@ void solver::SYSTEM_h_to_rho()
     D.print("eigenvectors:");
 
     // You need to keep the N lowest eigenvectors:
-    // (are they automatically ordered using the eig_sym function?)
     D.resize(Nbasis, Nparticles);
-
-    /* I think it's better to use transpose (= hermitian conjugation if complex
-     * and then multiply
-     * 
-     * alternative code:
-     * 
-
-    arma::mat Dstar = conj(D);
-
-    for(int i1; i1 < N; i1++)
-    for(int i2; i2 < N; i2++)
-    for(int i3; i3 < N; i3++)
-        rho(i1,i2) = D(i1,i3)*Dstar(i2,i3);
-
-     *
-     *
-     */
-
     rho = D*D.t();
 }
 
