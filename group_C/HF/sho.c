@@ -32,6 +32,7 @@ double sho_wf(double r, double mw, int n, int l)
   factor = mw;
   for (i = 3; i <= 2 * npl + 1; i += 2)
     factor *= 2 * mwr2 / i;
+  cur = 0.;
   last2 = sqrt(factor);
   if (l == npl)
     cur = last2;
