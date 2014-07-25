@@ -14,12 +14,12 @@ CONTAINS
   REAL(kind=r_kind) :: delta, tol
   INTEGER :: iteration, iteration_max
   INTEGER :: num_part
-  REAL(kind=r_kind) :: e_fermi, mixing, E_HF
+  REAL(kind=r_kind) :: e_fermi, mixing, E_HF, E_HF_v2
 
   b = 1.0_r_kind !maby have default value based on mass
   hbaromega = 10.0_r_kind
   iteration_max = 20
-  tol = 1e-5_r_kind
+  tol = 1e-15_r_kind
   num_part = 2
   lmax = 0
   !nmax = 1
@@ -41,7 +41,7 @@ CONTAINS
   
   WRITE(*,*) 'Mixing parameter = ',mixing
   WRITE(*,*) 'Starting iteration'
-  WRITE(*,'(A5,A14,A14,A14)') 'iter','E_HF','e_fermi','delta'
+  WRITE(*,'(A5,2A20,A14,A14)') 'iter','E_HF','E_HF_v2','e_fermi','delta'
   delta = 100.0_r_kind
   iteration = 1
   hf_iteration_loop : DO WHILE (iteration <= iteration_max .and. delta > tol)
@@ -55,10 +55,11 @@ CONTAINS
      CALL hf_update_density_matrix(mixing)
      
      CALL hf_total_energy(E_HF)
-     
-     !CALL hf_calculate_delta(delta)     
+     CALL hf_total_energy_v2(E_HF_v2)
 
-     WRITE(*,'(I5,3F14.6)') iteration, E_HF, e_fermi, delta
+     CALL hf_calculate_delta(delta)     
+
+     WRITE(*,'(I5,2F20.14,F14.6,E14.6)') iteration, E_HF,E_HF_v2, e_fermi, delta
     
      iteration = iteration + 1
      
