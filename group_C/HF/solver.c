@@ -120,7 +120,7 @@ eig_t *solve_HF(Vi1_t *V, int *N_occ)  // V[Ni][Ni], N_occ[Ni]
     n += (V[i]._2j1 + 1) * rho[i].Nocc;
   printf("(%d particles)\n", n);
   for (i = 0; i < Ni; i++) {
-    printf("l=%d, j=%.1lf:\n", V[i]._2l1 / 2, V[i]._2j1 * 0.5);
+    printf("l=%d, j=%.1lf:\n", V[i].l1, V[i]._2j1 * 0.5);
     for (n = 0; n < N_jl[i]; n++)
       printf("e%d = %lf\n", i, hamilt[i].lam[n]);
   }

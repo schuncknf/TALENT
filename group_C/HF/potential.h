@@ -9,8 +9,10 @@
 
 typedef struct {
   int N;  // number of states with given (l,j), = N_jl[i2]
-  int _2l2;  // 2*l2
+  int l2;    // l2
   int _2j2;  // 2*j2
+  int Lmin;  // abs(l1-l2)
+  int Lmax;  // l1+l2
   double **V_cd;  // the part of V_acbd to be contracted with rho[i2].rh[c][d]
 } Vi2_t;
 
@@ -21,7 +23,7 @@ typedef struct {
 
 typedef struct {
   int N;  // = N_jl[i1]
-  int _2l1;  // 2*l1
+  int l1;    // l1
   int _2j1;  // 2*j1
   Vab_t **V_ab;
 } Vi1_t;
@@ -35,5 +37,5 @@ int *N_jl;  // N_jl[i] will hold the number of basis states of the given j,l
 //    + sum_cd,i2  V[i1].V_ab[a][b].Vi2[i2].V_cd[c][d] * rho[i2].rh[c][d]
 // please set Ni and N_jl[Ni] before calling this function
 Vi1_t *create_V(double hw);
-void free_V(Vi1_t *temp);
+void free_V(Vi1_t *V);
 #endif
