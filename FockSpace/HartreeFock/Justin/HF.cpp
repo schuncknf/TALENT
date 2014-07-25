@@ -1,4 +1,6 @@
 /*
+  HARTREE-FOCK SOLVER. MOST DETAILS IN THE README
+
   compile with:
   g++ -o HF.exe HF.cpp -larmadillo -std=c++11
   run with:
@@ -20,6 +22,7 @@ using namespace arma;
 
 // structure to keep all of the sp data together
 // from the input file
+
 struct state
 {
   int n;
@@ -70,10 +73,6 @@ void inputSP(char* spFile, int& particleNum, int& spstateNum,
 	     vector<state>& statesVector);
 void inputMTX(char* mtxFile, int& mtxEleNum,
 	      vector<interactionEle>& mtxEleVector);
-double mtxElement( int alpha, int nu, int beta, int mu, 
-		   vector<interactionEle> vecV);
-double densityMtxEle( int mu, int nu, mat Dmtx);
-
 
 
 int main(int argc, char * argv[])
@@ -102,6 +101,7 @@ int main(int argc, char * argv[])
   cout << "nStates: " << nStates << endl;
   cout << "mtxN " << mtxN << endl;
 
+  // output all the sp states to check
   cout << "States with Quantum number n,l,j,jz,E: " << endl;
   int counter = 0;
   for( auto& v:psiVec)
@@ -110,6 +110,7 @@ int main(int argc, char * argv[])
       counter++;
     }
 
+  // output the mtx elements to check they were received properly
   cout << "Matrix Elements with i,j,k,l,V: " << endl;
   counter = 0;
   for( auto& iterV:vecV)
@@ -127,7 +128,7 @@ int main(int argc, char * argv[])
   mat TRANSFORM = zeros(nStates, nStates);
   mat densityMtx = zeros(nStates, nStates);
   mat h0Mtx = zeros(nStates, nStates);
-  double vMtx[nStates][nStates][nStates][nStates];
+  double v4Tensor[nStates][nStates][nStates][nStates];
   mat Dmtx = eye(nStates, nStates);
   vec eigenvalues = zeros(nStates, 1);
   vec eigenPrevious = zeros(nStates, 1);
@@ -138,29 +139,28 @@ int main(int argc, char * argv[])
   int iterationMAX = 100;
   double threshhold = 1e-12;
 
-  for( int ii = 0; ii < nStates; ii++)
+  // D matrix starts out as partially identity matrix
+  for( int ii = Nparticles; ii < nStates; ii++)
     {
-      for( int jj = Nparticles; jj < nStates; jj++)
-	{
-	  Dmtx(ii,jj) = 0.0; // project only N particles
-	}
+      Dmtx(ii,ii) = 0.0; // project only N particles	
     }
 
+  // load up sp matrix and store mtx elements in a 4D array
   for( int alpha = 0; alpha < nStates; alpha++)
     {
       h0Mtx(alpha,alpha) = psiVec[alpha].E;    
       for( int beta = 0; beta < nStates; beta++)
 	{
 	  double sum = 0.0;
-	  for( int mu = 0; mu < nStates; mu++)
+	  for( int gamma = 0; gamma < nStates; gamma++)
 	    {
-	      for( int nu = 0; nu < nStates; nu++)
+	      for( int delta = 0; delta < nStates; delta++)
 		{
 		  for( auto& v:vecV)
 		    {
-		      if(alpha==v.i && nu==v.j && beta==v.k && mu==v.l)
+		      if(alpha==v.i && beta==v.j && gamma==v.k && delta==v.l)
 			{
-			  vMtx[alpha][beta][mu][nu] = v.vEle;	  
+			  v4Tensor[alpha][beta][gamma][delta] = v.vEle;	  
 			}    
 		    } 
 		} // end nu
@@ -168,42 +168,55 @@ int main(int argc, char * argv[])
 	} // end beta
     } // end alpha
 
+  // create density matrix
   densityMtx = Dmtx*trans(Dmtx);
 
+  // print sp mtx and density mtx to check
   cout << "h0: " << endl << h0Mtx << endl;
-  cout << "rho: " << densityMtx << endl;
+  cout << "density matrix: " << endl << densityMtx << endl;
 
+  // put a cap on number of HF iterations
   while( iteration < iterationMAX)
     {
       cout << "iteration = " << iteration << endl;
+
+      // initialize hartree fock matrix
       hartreeFock = zeros(nStates,nStates);
-      // Here we construct h_alpha,beta
+      
       for( int alpha = 0; alpha < nStates; alpha++)
 	{
+	  // only need to loop over upper triangle
 	  for( int beta = alpha; beta < nStates; beta++)
 	    {
-	      double sum = 0.0;
+	      // sum adds up matrix element contributions
+	      double sum = 0.0; 
 	      for( int mu = 0; mu < nStates; mu++)
 		{
 		  for( int nu = 0; nu < nStates; nu++)
 		    {
-		      sum += mtxElement(alpha,nu,beta,mu,vecV)*densityMtxEle(mu,nu,Dmtx);
+		      sum += v4Tensor[alpha][nu][beta][mu]*densityMtx(mu,nu);
 		    } // end nu loop
 		} // end mu loop
 	      
 	      hartreeFock(alpha,beta) = sum;
 
+	      // single particle energies only on the diagonal
 	      if( alpha == beta ) hartreeFock(alpha,beta) += psiVec[alpha].E;
 	      	      
+	      // enforce hermiticity
 	      hartreeFock(beta, alpha) = hartreeFock(alpha, beta);
 	    } // end beta loop
 	} // end alpha loop
+
+      // print out hf mtx to check its form
       cout << "HF TIME: " << endl << hartreeFock << endl;
       
 
-
+      // diagonalize hf mtx
       eig_sym(eigenvalues, Dmtx, hartreeFock);
 
+      // transform is the sp mtx rotated into HF eigenbasis
+      // this is need to calculated energy
       TRANSFORM = trans(Dmtx)*h0Mtx*Dmtx;
 
       for( int ii = 0; ii < nStates; ii++)
@@ -213,6 +226,8 @@ int main(int argc, char * argv[])
 	      Dmtx(ii,jj) = 0.0; // project only N particles
 	    }
 	}
+
+
       cout << "Density: " << endl << densityMtx << endl;
       
       
@@ -232,7 +247,7 @@ int main(int argc, char * argv[])
       // Dmtx = trans(Dmtx);
       
       ENERGY = 0.0;
-
+      // one way of calculating energy
       for( int alpha = 0; alpha < nStates; alpha++)
 	{	      
 	  for( int beta = 0; beta < nStates; beta++)
@@ -242,7 +257,7 @@ int main(int argc, char * argv[])
 		{
 		  for( int delta = 0; delta < nStates; delta++)
 		    {
-		      ENERGY += 0.5*vMtx[alpha][beta][gamma][delta]*densityMtx(delta,beta)*densityMtx(gamma,alpha);
+		      ENERGY += 0.5*v4Tensor[alpha][beta][gamma][delta]*densityMtx(delta,beta)*densityMtx(gamma,alpha);
 		    } // end delta
 		} // end gamma
 	    } // end beta
@@ -254,7 +269,7 @@ int main(int argc, char * argv[])
 
       
 
-     
+      // another way of calculating energy
       for( int ii = 0; ii < Nparticles; ii++)
 	{
 	  ENERGY += TRANSFORM(ii,ii) + eigenvalues(ii);
@@ -277,30 +292,6 @@ int main(int argc, char * argv[])
   return 0;
 } // end main
 
-
-double mtxElement( int alpha, int nu, int beta, int mu, 
-		   vector<interactionEle> vecV)
-{  
-  for( auto& v:vecV)
-    {
-      if(alpha==v.i && nu==v.j && beta==v.k && mu==v.l)
-	{
-	  return v.vEle;	  
-	}    
-    }  
-  cout << "NOT SUPPOSED TO BE HERE!" << endl;
-  return -1;
-} // end mtxElement
-
-double densityMtxEle( int mu, int nu, mat Dmtx)
-{
-  double sum = 0.0;
-  for( int ii = 0; ii < int(sqrt(Dmtx.size())); ii++) // future trouble probs
-    {
-      sum += Dmtx(mu,ii)*Dmtx(nu,ii);      
-    } // end ii loop
-  return sum;
-} // end densityMtx
 
 // read in SP file info, (first argument is input, rest are output by ref)
 void inputSP(char* spFile, int& particleNum, int& spstateNum, 
