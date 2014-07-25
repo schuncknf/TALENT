@@ -98,7 +98,7 @@ for (i = 0; i < N_all; i++) {
   for (j = 0; j < N_all; j++)
     res += Vacbd[i][j].t * rho[j][i];
 }
-return 0.5 * res;
+return 2 * 0.5 * res;
 }
 
 eig_t solve_HF(Vab_t **Vacbd, int N_dim, int N_occ)

@@ -22,8 +22,9 @@ double T_me(double hw, int n1, int n2, int l)
 void V_me(Vab_t **temp, int N, double hw)
 {
   int a,b,c,d, i, j;
-  double r1, r2, *halfint, oscb, rm2, rp2, sum;
+  double r1, r2, *halfint, oscb, rm2, rp2, sum, mw;
   oscb = paramb / sqrt(hw);
+  mw = 1 / (oscb * oscb);
   gaulag_init(GLNODES, 1., 0.07 * oscb);
   // use gl.x[i] and gl.w[i]
    halfint = (double*)malloc(GLNODES * sizeof(double));
@@ -46,8 +47,8 @@ void V_me(Vab_t **temp, int N, double hw)
 	  r1 = gl.x[j];
 	  rm2 = (r1-r2)*(r1-r2);
 	  rp2 = (r1+r2)*(r1+r2);
-	  	  halfint[i] += gl.w[j] * r1 * sho_wf(r1,oscb, a,0) * sho_wf(r1,oscb,b,0)
-	    * ((exp(-kR*rm2)-exp(-kR*rp2))/(8*kR) + (exp(-kS*rm2)-exp(-kS*rp2))/(8*kS));
+          halfint[i] += gl.w[j] * r1 * sho_wf(r1,mw, a,0) * sho_wf(r1,mw,b,0)
+        * (V0r*(exp(-kR*rm2)-exp(-kR*rp2))/(8*kR) - Vos*(exp(-kS*rm2)-exp(-kS*rp2))/(8*kS));
 	}
       }
       for(c = 0; c < N; c++){
@@ -56,10 +57,10 @@ void V_me(Vab_t **temp, int N, double hw)
 	  sum = 0.;
 	  for (i = 0; i < GLNODES; i++) {
 	    r2 = gl.x[i];
-	    sum += gl.w[i] * halfint[i] * r2 * sho_wf(r2,oscb, c,0) * sho_wf(r2,oscb,d,0);
+        sum += gl.w[i] * halfint[i] * r2 * sho_wf(r2,mw, c,0) * sho_wf(r2,mw,d,0);
 	  }
 	  temp[a][b].V_cd[c][d]+=sum;
-	  temp[a][d].V_cd[c][b]-=0.5*sum;
+      temp[a][d].V_cd[c][b]+=sum;
 	}
       }
     }	
