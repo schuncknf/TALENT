@@ -16,13 +16,17 @@ DETAILS:
  INCLUSIONS
 */
 
+#include <vector>
 #include <armadillo>
 
+using namespace std;
 using namespace arma;
 
 // Declarations
 namespace VMinnesotaMatrixGenerator{
-  void fillHMatrix(mat& H, mat& density, mat& gamma, double b);
-  void calcGammaMat(mat& gamma, double b);
+  typedef vector<vector<vector<vector<double> > > > TwoBodyMat;
+
+  void fillHMatrix(mat& H, mat& density, vector<vector<vector<vector<double> > > >& Vabcd, double b);
+  void calc2BodyMat(vector<vector<vector<vector<double> > > >& Vabcd, double b);
 }
 

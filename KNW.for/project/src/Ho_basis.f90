@@ -42,6 +42,7 @@ MODULE Ho_basis
 
   type(hf_state), allocatable, protected :: hf_states_all(:) !1..total number of states
   REAL(kind=r_kind), allocatable, protected :: hf_energies_all(:)  
+  REAL(kind=r_kind), allocatable, protected :: hf_energies_all_old(:) 
   INTEGER, allocatable, protected :: hf_energies_all_sort(:)
 
   INTEGER, allocatable, protected :: fermi_index_hfbasis(:,:) !l,jindex
@@ -50,6 +51,7 @@ MODULE Ho_basis
 
  !Check the symmtetries of the two-body matrix elements, this form might be wrong. Should work in the case of l=0 j=0.5.
   COMPLEX(kind=r_kind), allocatable, protected :: hf_gamma(:,:,:,:)
+  INTEGER, protected :: hf_num_part_request
 
 CONTAINS
 
@@ -57,6 +59,29 @@ CONTAINS
 !!$  SUBROUTINE sort_hf
 !!$    
 !!$  END SUBROUTINE sort_hf
+
+  SUBROUTINE hf_calculate_delta(delta)
+    IMPLICIT NONE
+
+    REAL(kind=r_kind), intent(out) :: delta
+    
+    INTEGER :: II
+    REAL(kind=r_kind) :: e, e_old
+
+    delta = 0.0_r_kind
+
+     DO II = 0,Ho_size_all-1
+       e = hf_energies_all(II)
+       e_old = hf_energies_all_old(II)
+
+       delta = delta + ABS(e-e_old)/hf_num_part_request
+
+    END DO
+
+
+  END SUBROUTINE hf_calculate_delta
+  
+
   
 
   INTEGER FUNCTION Ho_degeneracy(l,jindex)
@@ -87,6 +112,10 @@ CONTAINS
     INTEGER :: particle_number, II, index !, fermi_index_tot
     INTEGER :: n,l,jindex
     REAL(kind=r_kind) :: e
+
+
+    hf_energies_all_old = hf_energies_all
+
 
     !stores information on the eigenvectors
     II = 0
@@ -197,6 +226,9 @@ CONTAINS
 
     INTEGER :: n1,n2
 
+    hf_num_part_request = N_request
+
+
     particle_number = 0
     
     N_major_max = 2*Ho_nmax + Ho_lmax
@@ -280,7 +312,8 @@ CONTAINS
           
           DO n1 = 0,Ho_nmax
              DO n2 = n1,Ho_nmax
-
+             !DO n2 = 0,Ho_nmax
+             
                 sum_occupied = zero_c
                 
 !!$                WRITE(*,*) 'Update density: n1=',n1,'n2=',n2
@@ -295,8 +328,8 @@ CONTAINS
 
 !!$                WRITE(*,*) 'Update density: sum_occupied = ',sum_occupied
                 
-                density_matrix(l,jindex,n1,n2) = mixing*density_matrix_old(l,jindex,n1,n2) + (1-mixing)*sum_occupied !Ho_degeneracy(l,jindex)*sum_occupied
-                density_matrix(l,jindex,n2,n1) = CONJG(density_matrix(l,jindex,n2,n1))
+                density_matrix(l,jindex,n1,n2) = mixing*density_matrix_old(l,jindex,n1,n2) + (1.0_r_kind-mixing)*sum_occupied !Ho_degeneracy(l,jindex)*sum_occupied
+                density_matrix(l,jindex,n2,n1) = CONJG(density_matrix(l,jindex,n1,n2))
                 
              END DO
           END DO
@@ -315,12 +348,17 @@ CONTAINS
     COMPLEX(kind=r_kind), parameter :: zero_c = (0.0_r_kind,0.0_r_kind)
     COMPLEX(kind=r_kind) :: Gamma
 
+
+    hf_hamiltonian = zero_c
+    hf_gamma = zero_c
+
     DO l=0,Ho_lmax
        DO jindex = 0,1
           IF(l==0 .and. jindex==1) CYCLE
           DO n1 = 0,Ho_nmax
              DO n2 = n1,Ho_nmax
-
+             !DO n2 = 0,Ho_nmax
+                
                 Gamma = zero_c
                 DO n3 = 0,Ho_nmax
                    DO n4 = 0,Ho_nmax 
@@ -340,11 +378,20 @@ CONTAINS
 
                 !hf_hamiltonian(l,jind,n1,n2) = Ho_one_body_matel(l,jind,n1,n2) + Gamma                
                 hf_hamiltonian(l,jindex,n1,n2) = Gamma 
-                hf_hamiltonian(l,jindex,n2,n1) = CONJG(hf_hamiltonian(l,jindex,n2,n1))
+                hf_hamiltonian(l,jindex,n2,n1) = CONJG(Gamma)!CONJG(hf_hamiltonian(l,jindex,n1,n2))
                 
 
              END DO
-             hf_hamiltonian(l,jindex,n1,n1) = hf_hamiltonian(l,jindex,n1,n1) + Ho_hbaromega*(2*n1+l+1.5_r_kind)
+            
+          END DO
+       END DO
+    END DO
+
+     DO l=0,Ho_lmax
+       DO jindex = 0,1
+          IF(l==0 .and. jindex==1) CYCLE
+          DO n1 = 0,Ho_nmax
+              hf_hamiltonian(l,jindex,n1,n1) = hf_hamiltonian(l,jindex,n1,n1) + Ho_hbaromega*(2*n1+l+1.5_r_kind)
           END DO
        END DO
     END DO
@@ -371,7 +418,7 @@ CONTAINS
 
              DO n2 = 0,Ho_nmax
 
-                Etot = Etot + 0.5_r_kind*(j2+1)*density_matrix(l,jindex,n2,n1)*hf_gamma(l,jindex,n1,n2)
+                Etot = Etot + 0.5_r_kind*(j2+1.0_r_kind)*density_matrix(l,jindex,n2,n1)*hf_gamma(l,jindex,n1,n2)
                 
                 
              END DO
@@ -382,6 +429,39 @@ CONTAINS
 
   END SUBROUTINE hf_total_energy
 
+   SUBROUTINE hf_total_energy_v2(Etot)
+    IMPLICIT NONE
+
+    REAL(kind=r_kind) :: Etot
+    INTEGER :: l,jindex,n1,n2,j2,n3,n4    
+
+    Etot = 0.0_r_kind
+    
+    DO l=0,Ho_lmax
+       DO jindex = 0,1
+          IF(l==0 .and. jindex==1) CYCLE
+          j2 = 2*l + (-1)**jindex
+          DO n1 = 0,Ho_nmax
+             Etot = Etot + Ho_hbaromega*(2.0_r_kind*n1+l+1.5_r_kind)*(j2+1)*density_matrix(l,jindex,n1,n1)
+
+!!$             WRITE(*,*) 'n1=',n1,'density_matrix(l,jindex,n1,n1) = ',density_matrix(l,jindex,n1,n1)
+
+             DO n2 = 0,Ho_nmax
+                DO n3 = 0,Ho_nmax
+                   DO n4 = 0,Ho_nmax
+
+                      Etot = Etot + 0.5_r_kind*(j2+1.0_r_kind)*density_matrix(l,jindex,n3,n1)*Ho_two_body_matel(l,jindex,n1,n2,n3,n4)*density_matrix(l,jindex,n4,n2)
+
+
+                   END DO
+                END DO
+             END DO
+          END DO
+       END DO
+    END DO
+
+
+  END SUBROUTINE hf_total_energy_v2
 
 
   SUBROUTINE hf_diagonalize
@@ -504,6 +584,9 @@ CONTAINS
     IMPLICIT NONE
 
     INTEGER :: l,jindex
+
+    COMPLEX(kind=r_kind) :: zero_c = (0.0_r_kind,0.0_r_kind)
+    REAL(kind=r_kind) :: zero_r = 0.0_r_kind
     
     REAL(kind=r_kind), parameter :: kappa_R = 1.487_r_kind
     REAL(kind=r_kind), parameter :: V_0R = 200.00_r_kind
@@ -516,10 +599,15 @@ CONTAINS
     WRITE(*,*) 'Ho_nmax = ',Ho_nmax
 
     ALLOCATE(hf_transform(0:Ho_lmax,0:1,0:Ho_nmax,0:Ho_nmax))
+    hf_transform = zero_c
     ALLOCATE(density_matrix(0:Ho_lmax,0:1,0:Ho_nmax,0:Ho_nmax))
+    density_matrix = zero_c
     ALLOCATE(density_matrix_old(0:Ho_lmax,0:1,0:Ho_nmax,0:Ho_nmax))
+    density_matrix_old = zero_c
     ALLOCATE(hf_energies(0:Ho_lmax,0:1,0:Ho_nmax))
+    hf_energies = zero_r
     ALLOCATE(hf_energies_old(0:Ho_lmax,0:1,0:Ho_nmax))
+    hf_energies_old = zero_r
 
     Ho_size_all = 0
 
@@ -536,15 +624,21 @@ CONTAINS
 
      ALLOCATE(hf_states_all(0:Ho_size_all-1)) 
      ALLOCATE(hf_energies_all(0:Ho_size_all-1))
+     hf_energies_all = zero_r
+     ALLOCATE(hf_energies_all_old(0:Ho_size_all-1))
+     hf_energies_all_old = zero_r
+
      ALLOCATE(hf_energies_all_sort(0:Ho_size_all-1))
 
      ALLOCATE(fermi_index_hfbasis(0:Ho_lmax,0:1))
      ALLOCATE(hf_hamiltonian(0:Ho_lmax,0:1,0:Ho_nmax,0:Ho_nmax))
+     hf_hamiltonian = zero_c
      ALLOCATE(hf_gamma(0:Ho_lmax,0:1,0:Ho_nmax,0:Ho_nmax))
+     hf_gamma = zero_c
      ALLOCATE(Ho_two_body_matel(0:Ho_lmax,0:1,0:Ho_nmax,0:Ho_nmax,0:Ho_nmax,0:Ho_nmax))
        
 
-     Ho_two_body_matel = (0.0_r_kind,0.0_r_kind)
+     Ho_two_body_matel = zero_c
 
      !should give 0,1,and 2 based on orthogonality of radial wfs
      !CALL calculate_two_body_matels_GL(1e-5_r_kind,1.0_r_kind)

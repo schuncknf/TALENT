@@ -34,6 +34,6 @@ int *N_jl;  // N_jl[i] will hold the number of basis states of the given j,l
 // hamilt(j1,l1)[a][b] = V[i1].V_ab[a][b].t
 //    + sum_cd,i2  V[i1].V_ab[a][b].Vi2[i2].V_cd[c][d] * rho[i2].rh[c][d]
 // please set Ni and N_jl[Ni] before calling this function
-Vj1_t *create_V(double hw);
-void free_Vab(Vj1_t **temp);
+Vi1_t *create_V(double hw);
+void free_V(Vi1_t *temp);
 #endif
