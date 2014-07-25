@@ -2,7 +2,7 @@
   compile with:
   g++ -o HF.exe HF.cpp -larmadillo -std=c++11
   run with:
-  ./HF.exe spfilename mtxfilename
+  ./HF.exe spFile.dat mtxFile.dat
 
   A Hartree-Fock Solver for neutron drops
 */
@@ -70,11 +70,6 @@ void inputSP(char* spFile, int& particleNum, int& spstateNum,
 	     vector<state>& statesVector);
 void inputMTX(char* mtxFile, int& mtxEleNum,
 	      vector<interactionEle>& mtxEleVector);
-double onebody( int alpha, int beta, vector<state> psiVec);
-double twobody( int alpha, int beta, int nStates, mat Dmtx,
-		vector<interactionEle> vecV);
-double onebody( int alpha, int beta);
-double twobody( int alpha, int beta, int nStates, mat Dmtx);
 double mtxElement( int alpha, int nu, int beta, int mu, 
 		   vector<interactionEle> vecV);
 double densityMtxEle( int mu, int nu, mat Dmtx);
@@ -119,14 +114,20 @@ int main(int argc, char * argv[])
   counter = 0;
   for( auto& iterV:vecV)
     {      
-      // cout << counter << " " << iterV.i << " " << iterV.j << " " << iterV.k << " " << iterV.l << " " << iterV.vEle << endl;
+      cout << counter << " " << iterV.i << " " << iterV.j << " " << iterV.k << " " << iterV.l << " ";
+      cout.precision(15);
+      cout << iterV.vEle << endl;
       counter++;
     }
 
 
 
-  double singleParticle;
-  mat hamiltonian = zeros(nStates, nStates);
+  double singleParticle,ENERGY;
+  mat hartreeFock = zeros(nStates, nStates);
+  mat TRANSFORM = zeros(nStates, nStates);
+  mat densityMtx = zeros(nStates, nStates);
+  mat h0Mtx = zeros(nStates, nStates);
+  double vMtx[nStates][nStates][nStates][nStates];
   mat Dmtx = eye(nStates, nStates);
   vec eigenvalues = zeros(nStates, 1);
   vec eigenPrevious = zeros(nStates, 1);
@@ -135,65 +136,147 @@ int main(int argc, char * argv[])
   cout << "Beep Boop!" << endl;
   int iteration = 0;
   int iterationMAX = 100;
-  double threshhold = 1e-6;
+  double threshhold = 1e-12;
+
+  for( int ii = 0; ii < nStates; ii++)
+    {
+      for( int jj = Nparticles; jj < nStates; jj++)
+	{
+	  Dmtx(ii,jj) = 0.0; // project only N particles
+	}
+    }
+
+  for( int alpha = 0; alpha < nStates; alpha++)
+    {
+      h0Mtx(alpha,alpha) = psiVec[alpha].E;    
+      for( int beta = 0; beta < nStates; beta++)
+	{
+	  double sum = 0.0;
+	  for( int mu = 0; mu < nStates; mu++)
+	    {
+	      for( int nu = 0; nu < nStates; nu++)
+		{
+		  for( auto& v:vecV)
+		    {
+		      if(alpha==v.i && nu==v.j && beta==v.k && mu==v.l)
+			{
+			  vMtx[alpha][beta][mu][nu] = v.vEle;	  
+			}    
+		    } 
+		} // end nu
+	    } // end mu	 
+	} // end beta
+    } // end alpha
+
+  densityMtx = Dmtx*trans(Dmtx);
+
+  cout << "h0: " << endl << h0Mtx << endl;
+  cout << "rho: " << densityMtx << endl;
+
   while( iteration < iterationMAX)
     {
       cout << "iteration = " << iteration << endl;
+      hartreeFock = zeros(nStates,nStates);
       // Here we construct h_alpha,beta
       for( int alpha = 0; alpha < nStates; alpha++)
 	{
 	  for( int beta = alpha; beta < nStates; beta++)
 	    {
-	      hamiltonian(alpha,beta) = onebody(alpha,beta,psiVec) +
-	    twobody(alpha,beta,nStates,Dmtx,vecV);
+	      double sum = 0.0;
+	      for( int mu = 0; mu < nStates; mu++)
+		{
+		  for( int nu = 0; nu < nStates; nu++)
+		    {
+		      sum += mtxElement(alpha,nu,beta,mu,vecV)*densityMtxEle(mu,nu,Dmtx);
+		    } // end nu loop
+		} // end mu loop
 	      
-	      hamiltonian(beta, alpha) = hamiltonian(alpha, beta);
+	      hartreeFock(alpha,beta) = sum;
+
+	      if( alpha == beta ) hartreeFock(alpha,beta) += psiVec[alpha].E;
+	      	      
+	      hartreeFock(beta, alpha) = hartreeFock(alpha, beta);
 	    } // end beta loop
 	} // end alpha loop
-      cout << "HAM TIME: " << endl << hamiltonian << endl;
+      cout << "HF TIME: " << endl << hartreeFock << endl;
       
-      eig_sym(eigenvalues, Dmtx, hamiltonian);
+
+
+      eig_sym(eigenvalues, Dmtx, hartreeFock);
+
+      TRANSFORM = trans(Dmtx)*h0Mtx*Dmtx;
+
+      for( int ii = 0; ii < nStates; ii++)
+	{
+	  for( int jj = Nparticles; jj < nStates; jj++)
+	    {
+	      Dmtx(ii,jj) = 0.0; // project only N particles
+	    }
+	}
+      cout << "Density: " << endl << densityMtx << endl;
       
-      cout << "DIAG HAM?!?: " << endl << eigenvalues << endl;
+      
+      cout << "DIAG HF?!?: " << endl << eigenvalues << endl;
+      
+      cout << "MORE PRECISION: " << endl;
+      for(int ii=0; ii<nStates; ii++)
+	{
+	  cout.precision(15);
+	  cout << eigenvalues(ii) << endl;
+	}
+      
+      densityMtx = Dmtx*trans(Dmtx);
+
+      cout << "TRACE: " << trace(densityMtx) << endl;
       
       // Dmtx = trans(Dmtx);
       
-      cout << "Final gs energy: " << eigenvalues(0) << endl;
+      ENERGY = 0.0;
 
+      for( int alpha = 0; alpha < nStates; alpha++)
+	{	      
+	  for( int beta = 0; beta < nStates; beta++)
+	    {
+	      ENERGY += h0Mtx(alpha,beta)*densityMtx(beta,alpha);	      
+	      for( int gamma = 0; gamma < nStates; gamma++)
+		{
+		  for( int delta = 0; delta < nStates; delta++)
+		    {
+		      ENERGY += 0.5*vMtx[alpha][beta][gamma][delta]*densityMtx(delta,beta)*densityMtx(gamma,alpha);
+		    } // end delta
+		} // end gamma
+	    } // end beta
+	} // end alpha
+      
+      cout << "ENERGY: " << ENERGY << endl;
+      
+      ENERGY = 0.0;
+
+      
+
+     
+      for( int ii = 0; ii < Nparticles; ii++)
+	{
+	  ENERGY += TRANSFORM(ii,ii) + eigenvalues(ii);
+	}
+      ENERGY = 0.5*ENERGY;
+      cout.precision(15);
+      cout << "ENERGY2: " << ENERGY << endl;
+      cout << "h0: " << endl << h0Mtx << endl;
+      
       iteration++;
       eigenDiff = eigenvalues - eigenPrevious;
       if( abs(eigenDiff.max()) < threshhold) break;
       eigenPrevious = eigenvalues;
     }
 
-  cout << "Final gs energy = " << eigenvalues(0) << " after " <<
+  cout << "Final gs energy = " << ENERGY << " after " <<
     iteration << " iterations, error < " << threshhold << endl;
   
 
   return 0;
 } // end main
 
-double onebody( int alpha, int beta, vector<state> psiVec)
-{
-  if( alpha == beta ) return psiVec[alpha].E;
-  else return 0.0;
-} // end one body
-
-double twobody( int alpha, int beta, int nStates, mat Dmtx,
-		vector<interactionEle> vecV)
-{
-  double sum = 0.0;
-  for( int mu = 0; mu < nStates; mu++)
-    {
-      for( int nu = 0; nu < nStates; nu++)
-	{
-	  sum += mtxElement(alpha,nu,beta,mu,vecV)*densityMtxEle(mu,nu,Dmtx);
-	} // end nu loop
-    } // end mu loop
-
-  return sum;
-
-} // end twobody
 
 double mtxElement( int alpha, int nu, int beta, int mu, 
 		   vector<interactionEle> vecV)
@@ -214,7 +297,7 @@ double densityMtxEle( int mu, int nu, mat Dmtx)
   double sum = 0.0;
   for( int ii = 0; ii < int(sqrt(Dmtx.size())); ii++) // future trouble probs
     {
-      sum += Dmtx(mu,ii)*Dmtx(nu,ii);
+      sum += Dmtx(mu,ii)*Dmtx(nu,ii);      
     } // end ii loop
   return sum;
 } // end densityMtx
