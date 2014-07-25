@@ -15,7 +15,7 @@ public:
     HfSolver();
     ~HfSolver();
 
-    void setParam(double b, int dim, int nPart);
+    void setParam(double b, int nMax, int nPart);
     void run(double& HFEnergy);
 
 private:

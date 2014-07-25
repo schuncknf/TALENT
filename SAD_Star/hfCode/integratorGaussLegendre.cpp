@@ -65,3 +65,19 @@ void IntegratorGaussLegendre::readTab(const string& file, map<int, vector<double
   } //end while
   data[n]= valVec;
 }
+
+//------------------------------------------------------------------------------
+double IntegratorGaussLegendre::integrate0ToInf(gsl_function& func) const{
+    if(weights_.count(order_)<1 || abscissa_.count(order_)<1 ){
+        throw logic_error( (string("in ")+__FILE__+" "+__FUNCTION__+", table unavailable for this order").c_str());
+    }
+
+    double sum=0;
+    for(int i=0; i<order_; i++){
+        double t= abscissa_.at(order_).at(i);
+        sum+= weights_.at(order_).at(i) * func.function((1.+ t)/(1.-t), func.params) * 2./(1.-t)/(1.-t);
+    }
+
+    return sum;
+}
+

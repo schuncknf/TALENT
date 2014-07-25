@@ -18,10 +18,12 @@ DETAILS:
 #include <iostream>
 #include <armadillo>
 
-#include"integratorGaussLegendreGSL.h"
-#include"integratorGaussLegendre.h"
+#include "integratorGaussLaguerre.h"
+#include "integratorGaussLegendre.h"
+#include "integratorGaussLaguerre.h"
+
 #include "sphericalhofunc.h"
-#include<gsl/gsl_integration.h>
+
 
 #include "VMinnesotaMatrixGenerator.h"
 
@@ -46,7 +48,7 @@ typedef struct {
     int n3; //angular momentum for the first function
     int n4; //angular momentum for the second function
     double r1;
-    IntegratorGaussLegendreGSL integrator;
+    IntegratorGaussLaguerre integrator;
     SphericalHOFunc Rn;
     gsl_function integrandR1R2;
     gsl_function integrandR1;
@@ -107,8 +109,9 @@ double integrandR1(double r1, void * params){
     p->r1= r1;
     p->integrandR1R2.params= p;
 
-    double aMax=200. * p->Rn.getB();
-    return p->integrator.integrate(p->integrandR1R2, 0., aMax);
+    double aMax=1e4 * p->Rn.getB();
+    //return p->integrator.integrate(p->integrandR1R2, 0., aMax);
+    return p->integrator.integrate0ToInf(p->integrandR1R2);
 }
 
 ////----------------------------------------------------------------------------------------------------------------------------------
@@ -134,9 +137,10 @@ double integrandR1(double r1, void * params){
 
 
 //----------------------------------------------------------------------------------------------------------------------------------
-void VMinnesotaMatrixGenerator::calc2BodyMat(vector<vector<vector<vector<double> > > >& Vabcd, double b){
+void VMinnesotaMatrixGenerator::calc2BodyMat(TwoBodyMat& Vabcd, double b){
     // Creation of the objects to put in the structure
-    IntegratorGaussLegendreGSL integrator;
+    IntegratorGaussLaguerre integrator;
+    integrator.readTables("../gen_laguerre");
     integrator.setOrder(250);
 
     SphericalHOFunc Rn;
@@ -155,11 +159,13 @@ void VMinnesotaMatrixGenerator::calc2BodyMat(vector<vector<vector<vector<double>
     p->integrandR1R2= intR1R2Func;
     p->integrandR1= intR1Func;
 
-    double aMax=200. * p->Rn.getB();
+    double aMax=1e4 * p->Rn.getB();
 
+
+    int dim= Vabcd.size();
+    TwoBodyMat isFilled (dim, vector<vector<vector<double> > >(dim, vector<vector<double> >(dim, vector<double>(dim, 0.))));
 
     // Loop on matrix elements
-    int dim= Vabcd.size();
     for(int n1 = 0; n1 < dim; n1++ ) {
         p->n1= n1;
         cout<<"n1 "<<n1<<endl;
@@ -171,17 +177,39 @@ void VMinnesotaMatrixGenerator::calc2BodyMat(vector<vector<vector<vector<double>
                     p->n4=n4;
 
                     // Calc element:
-                    p->integrandR1.params= p;
-                    double elem= p->integrator.integrate(p->integrandR1, 0., aMax);
-                    Vabcd[n1][n2][n3][n4]= elem;
-                    Vabcd[n1][n2][n4][n3]= elem;
+                    if( isFilled[n1][n2][n3][n4] < 0.5){
+                        p->integrandR1.params= p;
+                        //double elem= p->integrator.integrate(p->integrandR1, 0., aMax);
+                        double elem= p->integrator.integrate0ToInf(p->integrandR1);
 
-//                    Vabcd[n1][n4][n3][n2]= elem;
-//                    Vabcd[n1][n4][n2][n3]= elem;
+                        Vabcd[n1][n2][n3][n4]= elem;
+                        Vabcd[n1][n2][n4][n3]= elem;
 
-//                    Vabcd[n3][n2][n1][n4]= elem;
-//                    Vabcd[n3][n2][n4][n1]= elem;
-                    cout<<n1<<" "<<n2<<" "<<n3<<" "<<n4<<" "<<setprecision(12)<<elem<<endl;
+                        Vabcd[n2][n1][n3][n4]= elem;
+                        Vabcd[n2][n1][n4][n3]= elem;
+
+                        Vabcd[n3][n4][n1][n2]= elem;
+                        Vabcd[n3][n4][n2][n1]= elem;
+
+                        Vabcd[n4][n3][n1][n2]= elem;
+                        Vabcd[n4][n3][n2][n1]= elem;
+
+                        isFilled[n1][n2][n3][n4]= 1.;
+                        isFilled[n1][n2][n4][n3]= 1.;
+
+                        isFilled[n2][n1][n3][n4]= 1.;
+                        isFilled[n2][n1][n4][n3]= 1.;
+
+                        isFilled[n3][n4][n1][n2]= 1.;
+                        isFilled[n3][n4][n2][n1]= 1.;
+
+                        isFilled[n4][n3][n1][n2]= 1.;
+                        isFilled[n4][n3][n2][n1]= 1.;
+
+                        cout<<n1<<" "<<n2<<" "<<n3<<" "<<n4<<" "<<setprecision(12)<<elem<<endl;
+                    }
+
+
 
                 } //end n4
             } // end n3
@@ -209,24 +237,14 @@ double hElem(int& i, int& j, mat& density, vector<vector<vector<vector<double> >
     // density dependent part
     for(unsigned int n1=0; n1<density.n_cols/2; n1++){
         for(unsigned int n3=0; n3<density.n_cols/2; n3++){
-            //cout<<(sigmai == sigmaj)<<endl;
             if(sigmaI == sigmaJ){
                 elem+= 0.5*Vabcd[n1][i/2][n3][j/2]* density(2*n3, 2*n1);
             }
-
-//            if(sigma2 == sigma4){
-//                elem+= Vabcd[k][i/2][l][j/2]* density(2*l + (1-sigma2), 2*k + (1-sigma2));
-//            }
-//            else{
-//                elem+= Vabcd[k][i/2][l][j/2]* density(2*l + sigma2, 2*k + sigma4);
-//            }
         }
     }
 
     // HO part
-    double mnc2= 938.9059;
-    double hbarc= 197.32891;
-    double hbarOmega= hbarc*hbarc/mnc2/b/b;
+    double hbarOmega= HBARC*HBARC/MNC2/b/b;
     if(i == j){
         elem+= (2*(i/2) +3./2.) * hbarOmega;
     }

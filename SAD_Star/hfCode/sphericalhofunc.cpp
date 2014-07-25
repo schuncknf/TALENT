@@ -22,7 +22,7 @@ double SphericalHOFunc::eval(int n, int l, double r) {
 //------------------------------------------------------------------------------
 void SphericalHOFunc::setB(double j) {
     b_ = j;
-    logb_=log(b_);
+    logb_= log(b_);
 }
 
 
@@ -45,20 +45,20 @@ double SphericalHOFunc::hoRadial (int n, int l, double r){
 double SphericalHOFunc::norm(int n, int l){
     double logFacVal= logFac(n);
 
-//    double oddProd=1;
-//    for(int i=3; i< 2*n+2*l+2; i+=2){
-//        oddProd*=i;
-//    }
-//    double logOddProd= log(oddProd);
-
-    double logOddProd=0;
+    double oddProd=1;
     for(int i=3; i< 2*n+2*l+2; i+=2){
-        logOddProd+= log(i);
+        oddProd*=i;
     }
+    double logOddProd= log(oddProd);
 
-    double log2Pow= 0.69314718056*(n + l + 2.); //=log2 * ...
+//    double logOddProd=0;
+//    for(int i=3; i< 2*n+2*l+2; i+=2){
+//        logOddProd+= log(i);
+//    }
 
-    double logPiSqr= 0.5* 1.14472988585; //= log(pi)/2
+    double log2Pow= 0.69314718055994528623 * (n + l + 2.); //=log2 * ...
+
+    double logPiSqr= 0.57236494292470008194; //= log(pi)/2
 
     double res= exp( logFacVal +  log2Pow - logPiSqr - logOddProd -3.*logb_);
 
@@ -66,16 +66,16 @@ double SphericalHOFunc::norm(int n, int l){
 }
 //------------------------------------------------------------------------------
 double SphericalHOFunc::logFac(int n){
-//  double prod(1);
-//  for(int i=2; i<n+1; i++){
-//      prod*= i;
-//  }
-//    return log(prod);
-    double sum(0);
-    for(int i=2; i<n+1; i++){
-        sum+= log(i);
-    }
-    return sum;
+  double prod(1);
+  for(int i=2; i<n+1; i++){
+      prod*= i;
+  }
+    return log(prod);
+//    double sum(0);
+//    for(int i=2; i<n+1; i++){
+//        sum+= log(i);
+//    }
+//    return sum;
 }
 
 

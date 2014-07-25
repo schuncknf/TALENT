@@ -6,6 +6,8 @@
 
 #include<iostream>
 #include<iomanip>
+#include "constants.h"
+
 #include "hfSolver.h"
 
 
@@ -30,12 +32,10 @@ BOOST_FIXTURE_TEST_SUITE( hfSolver, HfSolverFixture )
 //------------------------------------------------------------------------------
 BOOST_AUTO_TEST_CASE( benchmarkTest )
 {
-    int nMax= 3;
+    int nMax= 4;
     int nPart= 2;
     double hbarOmega= 10.;
-    double hbarc= 197.32891;
-    double mc2=938.9059;
-    double b= hbarc/sqrt(mc2 * hbarOmega);
+    double b= HBARC/sqrt(MNC2 * hbarOmega);
     cout<<"b= "<<b<<endl;
 
     double hfEnergy=0.;
