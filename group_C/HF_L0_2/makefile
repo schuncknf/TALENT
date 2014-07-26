@@ -17,8 +17,4 @@ run:	$(OBJ)
 	$(cc) -o $@ -c $< $(CFLAGS)
 
 clean:
-	rm -rf *.o *~
-
-mrproper: clean
-	rm -rf $(EXEC)
-
+	rm -rf *\.o *~ $(EXEC)
