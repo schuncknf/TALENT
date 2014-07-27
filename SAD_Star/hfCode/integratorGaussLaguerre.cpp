@@ -57,9 +57,10 @@ void IntegratorGaussLaguerre::readTab(const string& file, map<int, vector<double
 
   string word;
   vector<double> valVec;
+  double val;
   while(! input.eof()){
-      input>>word;
-      double val= std::atof(word.c_str());
+      input>>val;
+      //double val= std::atof(word.c_str());
       valVec.push_back(val);
   } //end while
   data[n]= valVec;
@@ -72,7 +73,7 @@ double IntegratorGaussLaguerre::integrate0ToInf(gsl_function func) const{
         throw logic_error( (string("in ")+__FILE__+" "+__FUNCTION__+", table unavailable for this order").c_str());
     }
 
-    double sum=0;
+    double sum= 0.;
     double t(0.);
     for(int i=0; i<order_; i++){
         t= abscissa_.at(order_).at(i);

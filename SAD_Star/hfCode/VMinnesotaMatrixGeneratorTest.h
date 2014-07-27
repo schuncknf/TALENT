@@ -36,9 +36,12 @@ BOOST_AUTO_TEST_CASE( benchmarkTest )
     int nMax=4;
     double hbarOmega= 10.;
     double b=HBARC/sqrt(MNC2*hbarOmega);
+    cout<<"b "<<setprecision(20)<<b<<endl;
+    cout<<"logb "<<log(b)<<endl;
 
     cout<<setprecision(20)<<log(2)<<endl;
-    cout<<setprecision(20)<<log(M_PI)/2.<<endl;
+    cout<<setprecision(20)<<log(M_PI)<<endl;
+    cout<<setprecision(20)<<(M_PI)<<endl;
 
     // Vabsd
     TwoBodyMat Vabcd(nMax+1, vector<vector<vector<double> > >(nMax+1, vector<vector<double> >(nMax+1, vector<double>(nMax+1, 0.))));
@@ -56,8 +59,8 @@ BOOST_AUTO_TEST_CASE( benchmarkTest )
         double spin=( (i1%2==i3%2)*(i2%2==i4%2) - (i1%2==i4%2)*(i2%2==i3%2));
         double eVal= abs(Vabcd[i1/2][i2/2][i3/2][i4/2]*spin - elemBench);
         error+= eVal;
-        if(eVal > 1e-3){
-            cout<<i1/2<<" "<<i2/2<<" "<<i3/2<<" "<<i4/2<<" e="<<eVal<<endl;
+        if(eVal > 1e-5){
+//            cout<<i1/2<<" "<<i2/2<<" "<<i3/2<<" "<<i4/2<<" e="<<eVal<<"  eB= "<<elemBench<<""<<endl;
         }
     }
 

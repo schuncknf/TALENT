@@ -18,6 +18,8 @@ public:
     void setParam(double b, int nMax, int nPart);
     void run(double& HFEnergy);
 
+    void read2BodyMat(VMinnesotaMatrixGenerator::TwoBodyMat& mat, string file);
+
 private:
     double b_;
     int nMax_;
