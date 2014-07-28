@@ -109,12 +109,22 @@ States::States(int N_basis, int system)     // System:  0: n; 1: n,l,m; 2: n,l,m
         case 5:
             for (int i=0; i < N_basis;i++)
             {
-//              state_matrix(i,0) = i%N_basis-N_basis*(2*i/N_basis)/2;
-//              state_matrix(i,3) = 2*i/N_basis-.5;
+              state_matrix(i,0) = i%N_basis-N_basis*(2*i/N_basis)/2;
+              state_matrix(i,3) = 2*i/N_basis-.5;
+
+/* Is this the correct order? Does the order matter? Probably not.. Otherwise: suggestion:
+ * ****************************************************************************************
+ *
+
               state_matrix(i,0) = (i - i%2)/2;
               state_matrix(i,3) = i%2 - .5;
+
+ *
+ *
+ */
+
             }
          break;
         }
         cout <<endl<<endl<<"mapping:   "<<endl<< state_matrix << endl;
-        }
+    }
