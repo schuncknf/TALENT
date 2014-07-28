@@ -37,5 +37,8 @@ int *N_jl;  // N_jl[i] will hold the number of basis states of the given j,l
 //    + sum_cd,i2  V[i1].V_ab[a][b].Vi2[i2].V_cd[c][d] * rho[i2].rh[c][d]
 // please set Ni and N_jl[Ni] before calling this function
 Vi1_t *create_V(double hw);
+void V_me(Vi1_t *V, double hw);
 void free_V(Vi1_t *V);
+void save_V(Vi1_t *V, int Nmax, double hw);
+Vi1_t *read_V(char *filename, double *hw);
 #endif
