@@ -1,0 +1,45 @@
+Hartree-Fock program for neutron drops with Minnesota potential in spherical symmetry.
+Potential is calculated in a brute-force way using multipolar decomposition
+of the potential and a two-dimensional integration (both with 128 point Gauss-Laguerre).
+
+exp(-mu(vec{r1}-vec{r2})^2)  = exp(-mu(r1-r2)^2) * 4pi
+        * sum_LM iL(2*mu*r1*r2)/exp(2*mu*r1*r2) * Y*_LM(1) * Y_LM(2)
+where iL(x)/exp(x) is (scaled) modified spherical Bessel function, calculated by GSL
+
+
+Usage: ./run hw Nmax lmax occ0 occ1 ... occ(2lmax)
+   or: ./run -i Vme_aaa.dat occ0 occ1 ... occ(2lmax)
+
+Nmax gives the maximal N = 2n+l (to calculate the basis size)
+occ_i gives the number of occupied shells with given j,l
+(j,l) shells are sorted like this:
+s1/2, p1/2, p3/2, d3/2, d5/2, f3/2, f5/2, ...
+
+program will not change the given occupation numbers
+even if some empty level acquires lower energy
+
+Example of input and output:
+
+./run 10 10 1 2 1 1      (i.e. hw=10, Nmax=10, lmax=1, occ0=2, occ1=1, occ2=1)
+
+E = 199.492848 (10 particles)
+
+l=0, j=1/2:
+e0 = -0.668808 (2 particles)
+e1 = 27.685623 (2 particles)
+e2 = 50.488787
+e3 = 71.662424
+e4 = 92.347249
+e5 = 112.881425
+l=1, j=1/2:
+e0 = 14.934386 (2 particles)
+e1 = 39.804753
+e2 = 61.365125
+e3 = 82.183528
+e4 = 102.792087
+l=1, j=3/2:
+e0 = 14.934386 (4 particles)
+e1 = 39.804753
+e2 = 61.365125
+e3 = 82.183528
+e4 = 102.792087

@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include "sho.h"
 #include "gaulag.h"
-#define NGAUSS 256
+#define NGAUSS 128
 #define SCALING 0.1
 
 // generated with scaling 0.2 and alf=1, NGAUSS=64

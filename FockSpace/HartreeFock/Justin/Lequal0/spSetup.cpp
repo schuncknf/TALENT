@@ -26,7 +26,7 @@ int main()
     {
       spEnergy = (2*n + 1.5)*h_barOmega;
       spFile << "  " << 2*n << "  " << n << "  " << l << "  " << 1 << "  " << -1 << "    " << spEnergy << endl;
-      spFile << "  " << 2*n+1 << "  " << n << "  " << l << "  " << 1 << "  " << 1 << "    " << spEnergy << endl;
+      spFile << "  " << 2*n+1 << "  " << n << "  " << l << "  " << 1 << "  " << 1 << "     " << spEnergy << endl;
     }
 
 

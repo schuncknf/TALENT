@@ -80,7 +80,8 @@ extern "C"
 	return:
 			-computed integral value or -1.0 if n order quadrature is not supported
 	*/
-	double gauss_legendre_2D_cube(int n, double (*f)(double,double,void*), void* data, double a, double b, double c, double d);
+
+  double gauss_legendre_2D_cube(int n, double (*f)(int, int, int, int,double,double,void*),int n1,int n2,int n3,int n4,void* bbq, double a, double b, double c, double d);
 
 	/* Computing of abscissas and weights for Gauss-Legendre quadrature for any(reasonable) order n
 		[in] n   - order of quadrature
