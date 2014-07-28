@@ -36,6 +36,7 @@ void gaulag_init(int n, int alf, double scale)
   factor = 1.;
   for (i = n + alf - 1; i >= n; i--)
     factor *= (long double)i;
+  z = 0.;
   for (i = 0; i < n; i++) {  // Loop over the desired roots.
     if (i == 0) {  // Initial guess for the smallest root.
       z=(1.0+alf)*(3.0+0.92*alf)/(1.0+2.4*n+1.8*alf);

@@ -1153,7 +1153,7 @@ void r8mat_write ( string output_filename, int m, int n, double table[] )
   {
     for ( i = 0; i < m; i++ )
     {
-      output << "  " << setw(24) << setprecision(16) << table[i+j*m];
+      output << "  " << setw(30) << setprecision(20) << table[i+j*m];
     }
     output << "\n";
   }

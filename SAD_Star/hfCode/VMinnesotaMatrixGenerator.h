@@ -19,6 +19,8 @@ DETAILS:
 #include <vector>
 #include <armadillo>
 
+#include "constants.h"
+
 using namespace std;
 using namespace arma;
 

@@ -18,39 +18,33 @@ DETAILS:
 #include <iostream>
 #include <armadillo>
 
-#include"integratorGaussLegendreGSL.h"
-#include"integratorGaussLegendre.h"
-#include "sphericalhofunc.h"
-#include<gsl/gsl_integration.h>
+#include "integratorGaussLaguerre.h"
+#include "integratorGaussLegendre.h"
+#include "integratorGaussLegendreGSL.h"
 
+#include "sphericalhofunc.h"
 #include "VMinnesotaMatrixGenerator.h"
 
-//#include "Integrator.h" //or whatever we will call it
-//#include "HoBasis.h" //as before
-
-/*
- FURTHER DECLARATIONS
-*/
 using namespace arma; //for the armadillo library
 
 /*
  STRUCTURES
 */
 typedef struct {
-    //nothing inside;
-} potStruct;
-
-typedef struct {
     int n1; //main quantum number for the first function
     int n2; //main quantum number for the second function
     int n3; //angular momentum for the first function
     int n4; //angular momentum for the second function
-    double r1;
-    IntegratorGaussLegendreGSL integrator;
+    double r1; // value of r1
+    vector<double> norm;
     SphericalHOFunc Rn;
+} Struct1;
+
+typedef struct {
+    Struct1* parameters;
+    IntegratorGaussLegendre integrator;
     gsl_function integrandR1R2;
-    gsl_function integrandR1;
-} structR1;
+} Struct2;
 
 
 /*
@@ -64,124 +58,149 @@ static double kS= 0.465;//0.465; //fm^-2
 static double v0S= 91.85;//91.85; //MeV
 
 //----------------------------------------------------------------------------------------------------------------------------------
-double integrand(double& r1, double& r2, int& n1, int& n2, int& n3, int& n4, SphericalHOFunc& Rn) {
+double integrand(double& r1, double& r2, int n1, int n2, int n3, int n4, SphericalHOFunc& Rn, vector<double>& norm) {
 
-    double gaussR= +v0R/4./kR * (exp(-kR*r1*r1 -kR*r2*r2 +2*kR*r1*r2) - exp(-kR*r1*r1 -kR*r2*r2 -2*kR*r1*r2));
-    double gaussS= -v0S/4./kS * (exp(-kS*r1*r1 -kS*r2*r2 +2*kS*r1*r2) - exp(-kS*r1*r1 -kS*r2*r2 -2*kS*r1*r2));
-    double Rn1Rn2= Rn.eval(n1, 0, r1) * Rn.eval(n2, 0, r2);
+    double rm2= (r1-r2)*(r1-r2);
+    double rp2= (r1+r2)*(r1+r2);
+    double gaussR= +v0R/4./kR * (exp(-kR*rm2) - exp(-kR*rp2));
+    double gaussS= -v0S/4./kS * (exp(-kS*rm2) - exp(-kS*rp2));
+    double Rn1Rn2= Rn.eval(n1, 0, r1, norm[n1]) * Rn.eval(n2, 0, r2, norm[n2]);
 
-    double RnFactor1= Rn1Rn2 * Rn.eval(n3, 0, r1) * Rn.eval(n4, 0, r2);
-    double term1= 0.5*(gaussR + gaussS) * RnFactor1 * r1*r2;
+    double VD=   0.5*(gaussR+ gaussS)* Rn1Rn2* Rn.eval(n3, 0, r1, norm[n3])* Rn.eval(n4, 0, r2, norm[n4])* r1*r2;
+    double VEPr= 0.5*(gaussR+ gaussS)* Rn1Rn2* Rn.eval(n4, 0, r1, norm[n4])* Rn.eval(n3, 0, r2, norm[n3])* r1*r2;
 
-    double RnFactor2= Rn1Rn2 * Rn.eval(n4, 0, r1) * Rn.eval(n3, 0, r2);
-    double term2= 0.5*(gaussR + gaussS) * RnFactor2 * r1*r2;
+    //if(std::isnan(term1) || std::isnan(term2) ){
+//            cout<<"Pb: in integrand: one nan factor:"<<endl;
+//            cout<<"Rn1 "<<Rn.eval(n1, 0, r1)<<endl;
+//            cout<<"Rn2 "<<Rn.eval(n2, 0, r2)<<endl;
+//            cout<<"Rn3 "<<Rn.eval(n3, 0, r1)<<endl;
+//            cout<<"Rn4 "<<n4<<"  "<<Rn.eval(n4, 0, r2)<<endl;
+//            cout<<"gR "<<gaussR<<endl;
+//            cout<<"gS "<<gaussS<<endl;
+//            cout<<"Rn1 "<<RnFactor1<<endl;
+//            cout<<"Rn2 "<<RnFactor2<<endl;
+//            cout<<"norm n1 "<<n1<<"  "<<p->norm[n1]<<endl;
+//            cout<<"integrand= "<<VD<<" "<<VEPr<<endl;
 
-    if(std::isnan(term1) || std::isnan(term2) ){
-            cout<<"Pb: in integrand: one nan factor:"<<endl;
-            cout<<"r0 "<<Rn.eval(n1, 0, r1)<<endl;
-            cout<<"r1 "<<Rn.eval(n2, 0, r2)<<endl;
-            cout<<"r2 "<<Rn.eval(n3, 0, r1)<<endl;
-            cout<<"r3 "<<n4<<"  "<<Rn.eval(n4, 0, r2)<<endl;
-            cout<<"gR "<<gaussR<<endl;
-            cout<<"gS "<<gaussS<<endl;
-            cout<<"Rn1 "<<RnFactor1<<endl;
-            cout<<"Rn2 "<<RnFactor2<<endl;
+    //}
+    return VD + VEPr;
+}
 
-    }
-
-    return term1 + term2;
+//----------------------------------------------------------------------------------------------------------------------------------
+double integrandTest(double& r1, double& r2, int& n1, int& n2, int& n3, int& n4, SphericalHOFunc& Rn, vector<double>& norm) {
+  return r1*r1*exp(-r1)*exp(-r1*r2);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------------
 double integrandR1R2(double r2, void * params){
-    structR1 * p= (structR1*) params;
+    Struct1 * p= (Struct1*) params;
 //    cout<<"nval= "<<p->n1<<" "<<p->n2<<" "<<p->n3<<" "<<p->n4<<endl;
-    return integrand(p->r1, r2, p->n1, p->n2, p->n3, p->n4, p->Rn);
+
+    return integrand(p->r1, r2, p->n1, p->n2, p->n3, p->n4, p->Rn, p->norm);
 }
 
 
 //----------------------------------------------------------------------------------------------------------------------------------
 double integrandR1(double r1, void * params){
 
-    structR1 * p= (structR1*) params;
-    p->r1= r1;
-    p->integrandR1R2.params= p;
+    Struct2 * p= (Struct2*) params;
+    p->parameters->r1= r1;
 
-    double aMax=200. * p->Rn.getB();
-    return p->integrator.integrate(p->integrandR1R2, 0., aMax);
+
+    //double aMax=2e3 * p->Rn.getB();
+    //return p->integrator.integrate(p->integrandR1R2, 0., aMax);
+    return p->integrator.integrate0ToInf(p->integrandR1R2);
 }
-
-////----------------------------------------------------------------------------------------------------------------------------------
-//double VabcdElem(structR1* p, int dim){
-//    p->n2= i;
-//    p->n4= j;
-//    p->integrandR1.params= p;
-
-//    double aMax= 500.;
-//    double elem(0);
-
-//    // GammaHF part
-//    for(int n1=0; n1<dim; n1++){
-//        p->n1= n1;
-//        for(int n3=0; n3<dim; n3++){
-//            p->n3= n3;
-//            elem+= p->integrator.integrate(p->integrandR1, 0., aMax);
-//            cout<<n1<<" "<<i<<" "<<n3<<" "<<j<<" "<<p->integrator.integrate(p->integrandR1, 0., aMax)<<endl;
-//        }
-//    }
-//    return elem;
-//}
 
 
 //----------------------------------------------------------------------------------------------------------------------------------
-void VMinnesotaMatrixGenerator::calc2BodyMat(vector<vector<vector<vector<double> > > >& Vabcd, double b){
-    // Creation of the objects to put in the structure
-    IntegratorGaussLegendreGSL integrator;
-    integrator.setOrder(250);
+void VMinnesotaMatrixGenerator::calc2BodyMat(TwoBodyMat& Vabcd, double b){
+    int dim= Vabcd.size();
 
+    // Struct1
     SphericalHOFunc Rn;
     Rn.setB(b);
 
+    vector<double> norm;
+    for(int i=0; i<dim; i++){
+        norm.push_back(Rn.norm(i,0));
+        cout<<"norm "<<Rn.norm(i,0)<<endl;
+    }
+
+    Struct1* param1= new Struct1;
+    param1->norm= norm;
+    param1->Rn= Rn;
+
+    // Struct2
     gsl_function intR1R2Func;
     intR1R2Func.function= integrandR1R2;
+    intR1R2Func.params= param1;
 
-    gsl_function intR1Func;
-    intR1Func.function= integrandR1;
+    IntegratorGaussLegendre integrator;
+    integrator.readTables("../gen_legendre");
+    integrator.setOrder(150);
 
-    structR1 * p= new structR1;
-    p->Rn= Rn;
-    p->integrator= integrator;
-    p->r1= 0.;
-    p->integrandR1R2= intR1R2Func;
-    p->integrandR1= intR1Func;
-
-    double aMax=200. * p->Rn.getB();
-
+    Struct2 * param2= new Struct2;
+    param2->integrator= integrator;
+    param2->integrandR1R2= intR1R2Func;
+    param2->parameters= param1;
 
     // Loop on matrix elements
-    int dim= Vabcd.size();
+    gsl_function intR1Func;
+    intR1Func.function= integrandR1;
+    intR1Func.params= param2;
+
+    TwoBodyMat isFilled (dim, vector<vector<vector<double> > >(dim, vector<vector<double> >(dim, vector<double>(dim, 0.))));
+
+//// Test:
+//    double val= integrator.integrate0ToInf(intR1Func);
+//    cout<<"double itegration tests: 1= "<<setprecision(15)<<val<<endl;
+//    cout<<"diff= "<<1-val<<endl;
+//    //end test
+
+
     for(int n1 = 0; n1 < dim; n1++ ) {
-        p->n1= n1;
+        param1->n1= n1;
         cout<<"n1 "<<n1<<endl;
-        for (int n2 = 0; n2 < dim; n2++) {
-            p->n2=n2;
+        for (int n2 = n1; n2 < dim; n2++) {
+           param1->n2=n2;
             for(int n3=0; n3<dim; n3++){ //n1
-                p->n3=n3;
+                param1->n3=n3;
                 for(int n4=n3; n4<dim; n4++){ //max(n3,n2)
-                    p->n4=n4;
+                    param1->n4=n4;
 
                     // Calc element:
-                    p->integrandR1.params= p;
-                    double elem= p->integrator.integrate(p->integrandR1, 0., aMax);
-                    Vabcd[n1][n2][n3][n4]= elem;
-                    Vabcd[n1][n2][n4][n3]= elem;
+                    if( isFilled[n1][n2][n3][n4] < 0.5){
+                        double elem= integrator.integrate0ToInf(intR1Func);
 
-//                    Vabcd[n1][n4][n3][n2]= elem;
-//                    Vabcd[n1][n4][n2][n3]= elem;
+                        Vabcd[n1][n2][n3][n4]= elem;
+                        Vabcd[n1][n2][n4][n3]= elem;
 
-//                    Vabcd[n3][n2][n1][n4]= elem;
-//                    Vabcd[n3][n2][n4][n1]= elem;
-                    cout<<n1<<" "<<n2<<" "<<n3<<" "<<n4<<" "<<setprecision(12)<<elem<<endl;
+                        Vabcd[n2][n1][n3][n4]= elem;
+                        Vabcd[n2][n1][n4][n3]= elem;
+
+                        Vabcd[n3][n4][n1][n2]= elem;
+                        Vabcd[n3][n4][n2][n1]= elem;
+
+                        Vabcd[n4][n3][n1][n2]= elem;
+                        Vabcd[n4][n3][n2][n1]= elem;
+
+                        isFilled[n1][n2][n3][n4]= 1.;
+                        isFilled[n1][n2][n4][n3]= 1.;
+
+                        isFilled[n2][n1][n3][n4]= 1.;
+                        isFilled[n2][n1][n4][n3]= 1.;
+
+                        isFilled[n3][n4][n1][n2]= 1.;
+                        isFilled[n3][n4][n2][n1]= 1.;
+
+                        isFilled[n4][n3][n1][n2]= 1.;
+                        isFilled[n4][n3][n2][n1]= 1.;
+
+//                        cout<<n1<<" "<<n2<<" "<<n3<<" "<<n4<<" "<<setprecision(25)<<elem<<endl;
+                    }
+
+
 
                 } //end n4
             } // end n3
@@ -190,45 +209,37 @@ void VMinnesotaMatrixGenerator::calc2BodyMat(vector<vector<vector<vector<double>
 
 
 
-    // Clean: TODO !!!!
-//    intR1R2Func.params= NULL;
-//    intR1Func.params= NULL;
-//    p->integrandR1= gsl_function();
-//    p->integrandR1R2= gsl_function();
-//    delete(p);
-
+    // Clean:
+    //delete param1;
+    //delete param2;
 }
 
 //----------------------------------------------------------------------------------------------------------------------------------
-double hElem(int& i, int& j, mat& density, vector<vector<vector<vector<double> > > >& Vabcd, double b){
+double hElem(int i, int j, mat& density, vector<vector<vector<vector<double> > > >& Vabcd, double b){
     double elem(0);
 
-    int sigmaI= i%2;
-    int sigmaJ= j%2;
+    int sigma2= i%2;
+    int sigma4= j%2;
 
     // density dependent part
     for(unsigned int n1=0; n1<density.n_cols/2; n1++){
         for(unsigned int n3=0; n3<density.n_cols/2; n3++){
-            //cout<<(sigmai == sigmaj)<<endl;
-            if(sigmaI == sigmaJ){
-                elem+= 0.5*Vabcd[n1][i/2][n3][j/2]* density(2*n3, 2*n1);
+            for(int sigma1=0; sigma1<2 ;sigma1++){
+                for(int sigma3=0; sigma3<2; sigma3++){
+                    double spin= ( (sigma1==sigma3)*(sigma2==sigma4) - (sigma1==sigma4)*(sigma2==sigma3) );
+                    elem+= 0.5*Vabcd[n1][i/2][n3][j/2]*spin* density(2*n3+sigma3, 2*n1+sigma1);
+                }
             }
-
-//            if(sigma2 == sigma4){
-//                elem+= Vabcd[k][i/2][l][j/2]* density(2*l + (1-sigma2), 2*k + (1-sigma2));
-//            }
-//            else{
-//                elem+= Vabcd[k][i/2][l][j/2]* density(2*l + sigma2, 2*k + sigma4);
+//            if(sigmaI == sigmaJ){
+//                elem+= 0.5*Vabcd[n1][i/2][n3][j/2]* density(2*n3, 2*n1);
 //            }
         }
     }
 
     // HO part
-    double mnc2= 938.9059;
-    double hbarc= 197.32891;
-    double hbarOmega= hbarc*hbarc/mnc2/b/b;
+    double hbarOmega= HBARC*HBARC/MNC2/b/b;
     if(i == j){
-        elem+= (2*(i/2) +3./2.) * hbarOmega;
+        elem+= (2.*(i/2) +1.5) * hbarOmega;
     }
 
     return elem;
