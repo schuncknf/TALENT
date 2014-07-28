@@ -124,7 +124,7 @@ void solver::run_iteration()
 {
     for(unsigned int i = 0; i < max_it; i++)
     {
-        std::cout << std::endl << i << "  ";
+        std::cout << std::endl << endl<<endl<<endl<< "ITERATION #"<< i << "  "<<endl;
 
         PHYSICAL_rho_to_h();
         SYSTEM_h_to_rho();

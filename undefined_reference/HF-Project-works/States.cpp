@@ -4,8 +4,9 @@
 using namespace std;
 using namespace arma;
 
-States::States(int N_basis, int system)     // System:  0: n; 1: n,l,m; 2: n,l,m,s; 3: n,l,m,s,t, 4: n,s
+States::States(int N_basis, int sys)     // System:  0: n; 1: n,l,m; 2: n,l,m,s; 3: n,l,m,s,t, 4: n,s
         {
+        system = sys;
         int n,l,m,s,t,N=0,J=0, j, N_max;
         state_matrix = zeros<mat>(N_basis,5);
         switch(system)
@@ -114,7 +115,7 @@ States::States(int N_basis, int system)     // System:  0: n; 1: n,l,m; 2: n,l,m
 
 /* Is this the correct order? Does the order matter? Probably not.. Otherwise: suggestion:
  * ****************************************************************************************
- *
+ *              no, the prder doesent matter, that parametrization is the N° 4
 
               state_matrix(i,0) = (i - i%2)/2;
               state_matrix(i,3) = i%2 - .5;
