@@ -30,6 +30,8 @@ eig_t alloc_eig(int Nmax)
   if (Nmax <= 0) {
 zero_alloc:
     temp.Nmax = 0;
+    temp.t = NULL;
+    temp.v = NULL;
     temp.a = NULL;
     temp.lam = NULL;
     temp.eigvec = NULL;
@@ -38,20 +40,33 @@ zero_alloc:
     return temp;
   }
   temp.Nmax = Nmax;
+  temp.t = alloc_matrix(Nmax, Nmax);
+  temp.v = alloc_matrix(Nmax, Nmax);
   temp.a = alloc_matrix(Nmax, Nmax);
   temp.eigvec = alloc_matrix(Nmax, Nmax);
+  if ((temp.t == NULL) || (temp.eigvec == NULL))
+    goto zero_alloc;
+  if ((temp.v == NULL) || (temp.eigvec == NULL))
+    goto zero_alloc;
   if ((temp.a == NULL) || (temp.eigvec == NULL))
     goto zero_alloc;
   temp.lam = (double*)malloc(Nmax * sizeof(double));
   if (temp.lam == NULL) {
     fprintf(stderr, "eigen/alloc_eig: failed allocation of lam[%d]\n", Nmax);
-    free(temp.a[0]); free(temp.a); free(temp.eigvec[0]); free(temp.eigvec);
+    free(temp.t[0]); free(temp.t);
+    free(temp.v[0]); free(temp.v);
+    free(temp.a[0]); free(temp.a);
+    free(temp.eigvec[0]); free(temp.eigvec);
     goto zero_alloc;
   }
   temp.isup = (int*)malloc(2 * Nmax * sizeof(int));
   if (temp.isup == NULL) {
     fprintf(stderr, "eigen/alloc_eig: failed allocation of isup[%d]\n", Nmax);
-    free(temp.a[0]); free(temp.a); free(temp.eigvec[0]); free(temp.eigvec); free(temp.lam);
+    free(temp.t[0]); free(temp.t);
+    free(temp.v[0]); free(temp.v);
+    free(temp.a[0]); free(temp.a);
+    free(temp.eigvec[0]); free(temp.eigvec); 
+    free(temp.lam);
     goto zero_alloc;
   }
   return temp;
@@ -59,6 +74,10 @@ zero_alloc:
 
 void free_eig(eig_t temp)
 {
+  free(temp.t[0]);
+  free(temp.t);
+  free(temp.v[0]);
+  free(temp.v);
   free(temp.a[0]);
   free(temp.a);
   free(temp.lam);

@@ -20,11 +20,14 @@ public:
     ~IntegratorGaussLegendreGSL();
 
     void setOrder(int n);
+    void readTables(string tabDir);
 
     double integrate(gsl_function& func, double a, double b) const;
 
     template<class T>
     double integrate(T& func, double a, double b) const;
+
+    double integrate0ToInf(gsl_function& F) const;
 
 
 //    template<class T>

@@ -58,19 +58,22 @@ BOOST_AUTO_TEST_CASE( func1Test )
     BOOST_CHECK_CLOSE(res, 2.e3/3., 1e-6);
 }
 
-////------------------------------------------------------------------------------
-//double funcTest2(double x, void*){
-//    return x*exp(-x);
-//}
-////------------------------------------------------------------------------------
-//BOOST_AUTO_TEST_CASE( func2Test )
-//{
-//    gsl_function F;
-//    F.function = funcTest0;
-//    F.params = NULL;
-//    double res= integrator_.integrate0ToInf(F);
-//    BOOST_CHECK_CLOSE(res, 1., 1e-6);
-//}
+//------------------------------------------------------------------------------
+double funcTest2(double x, void*){
+    return x*exp(-x);
+}
+//------------------------------------------------------------------------------
+BOOST_AUTO_TEST_CASE( func2Test )
+{
+    integrator_.setOrder(60);
+
+    gsl_function F;
+    F.function = funcTest2;
+    F.params = NULL;
+
+    double res= integrator_.integrate0ToInf(F);
+    BOOST_CHECK_CLOSE(res, 1., 1e-6);
+}
 
 
 

@@ -116,8 +116,10 @@ int main() {
         MatrixDim << 2 << 5 << 10 << 20 << 50 << endr;
     vec EnCalc(5);
     FILE *pt;
+
+    cout << norm(3,0,0.8) << endl;
     
-    prms P;
+    /*prms P;
     gsl_function F;
     
     F.function = Hij;
@@ -146,7 +148,7 @@ int main() {
             fprintf(pt, "%g \t %.9f \t %.9f \t %.9f \t %.9f \t %.9f\n", P.b, EnCalc(0), EnCalc(1), EnCalc(2), EnCalc(3), EnCalc(4));
     }
     
-    fclose(pt);
+    fclose(pt); */
     
     
     return 0;
