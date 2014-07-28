@@ -331,7 +331,7 @@ double gauss_legendre(int n, double (*f)(double,void*), void* data, double a, do
 		D = (d+c)/2
 
 */
-double gauss_legendre_2D_cube(int n, double (*f)(double,double,void*), void* data, double a, double b, double c, double d)
+double gauss_legendre_2D_cube(int n, double (*f)(int, int, int, int,double,double,void*),int n1,int n2,int n3,int n4,void* bbq, double a, double b, double c, double d)
 {
 	double* x = NULL;
 	double* w = NULL;
@@ -373,29 +373,29 @@ double gauss_legendre_2D_cube(int n, double (*f)(double,double,void*), void* dat
 	if(n&1) /* n - odd */
 	{
 
-		s = w[0]*w[0]*(*f)(B,D,data);
+	  s = w[0]*w[0]*(*f)(n1,n2,n3,n4,B,D,bbq);
 		
 		for (j=1,t=0.0;j<m;j++)
 		{
 			Cy = C*x[j];
-			t += w[j]*((*f)(B,D+Cy,data)+(*f)(B,D-Cy,data));
+			t += w[j]*((*f)(n1,n2,n3,n4,B,D+Cy,bbq)+(*f)(n1,n2,n3,n4,B,D-Cy,bbq));
 		}
 		s += w[0]*t;
 
 		for (i=1,t=0.0;i<m;i++)
 		{
 			Ax = A*x[i];
-			t += w[i]*((*f)(B+Ax,D,data)+(*f)(B-Ax,D,data));
+			t += w[i]*((*f)(n1,n2,n3,n4,B+Ax,D,bbq)+(*f)(n1,n2,n3,n4,B-Ax,D,bbq));
 		}
 		s += w[0]*t;
 
 		for (i=1;i<m;i++)
-		{
+	{
 			Ax = A*x[i];
 			for (j=1;j<m;j++)
 			{
 				Cy = C*x[j];
-				s += w[i]*w[j]*( (*f)(B+Ax,D+Cy,data)+(*f)(Ax+B,D-Cy,data)+(*f)(B-Ax,D+Cy,data)+(*f)(B-Ax,D-Cy,data));
+				s += w[i]*w[j]*( (*f)(n1,n2,n3,n4,B+Ax,D+Cy,bbq)+(*f)(n1,n2,n3,n4,Ax+B,D-Cy,bbq)+(*f)(n1,n2,n3,n4,B-Ax,D+Cy,bbq)+(*f)(n1,n2,n3,n4,B-Ax,D-Cy,bbq));
 			}
 		}
 
@@ -408,7 +408,7 @@ double gauss_legendre_2D_cube(int n, double (*f)(double,double,void*), void* dat
 			for (j=0;j<m;j++)
 			{
 				Cy = C*x[j];
-				s += w[i]*w[j]*( (*f)(B+Ax,D+Cy,data)+(*f)(Ax+B,D-Cy,data)+(*f)(B-Ax,D+Cy,data)+(*f)(B-Ax,D-Cy,data));
+				s += w[i]*w[j]*( (*f)(n1,n2,n3,n4,B+Ax,D+Cy,bbq)+(*f)(n1,n2,n3,n4,Ax+B,D-Cy,bbq)+(*f)(n1,n2,n3,n4,B-Ax,D+Cy,bbq)+(*f)(n1,n2,n3,n4,B-Ax,D-Cy,bbq));
 			}
 		}
 	}
