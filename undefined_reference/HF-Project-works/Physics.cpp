@@ -6,7 +6,10 @@
 double matrN_drops_VixElement(int,int,int,int, void*);
 double fIntegrand(double,double,void*);
 
-double T_full_HO(int i,int j,States& states,void* parm) { double *wb = (double*)parm; return (i==j)? *wb*((2*states.state_matrix(i,0))+1.5) :0; }
+double T_full_HO(int i,int j,States& states,void* parm) {
+    double *wb = (double*)parm;
+    return (i==j)? *wb*((2.*states.state_matrix(i,0))+1.5) : 0.;
+}
 
 
 

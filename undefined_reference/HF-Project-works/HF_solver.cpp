@@ -95,12 +95,24 @@ void solver::SYSTEM_h_to_rho()
 
 double solver::Calc_conv_par()
 {
+
+/*
+ * Old norm:
+ * **********
+ *
     arma::mat sum_squared = (e + e_old)%(e + e_old);
     arma::mat diff_squared = (e - e_old)%(e - e_old);
 
     conv_par = diff_squared.max() / sum_squared.max();
 
-    return conv_par;
+ *
+ *
+ */
+
+    arma::mat sum_rho = rho - rho_old;
+    arma::mat diff_rho = rho + rho_old;
+
+    return arma::norm(diff_rho) / arma::norm(sum_rho);
 }
 
 void solver::alternative_rho()

@@ -24,7 +24,7 @@ using namespace arma;
 
 int main()
 {
-    int N_basis = 10;
+    int N_basis = 8;
     int N_particles = 2;
     int system = 5;
     double b  = 0.49104389631014383; // remember b = sqrt(m omega /hbar) hbar omega = 10 MeV, m=938.9059
@@ -34,7 +34,6 @@ int main()
 
     unsigned int max_iterations = 50;
     double conv_treshold = 1e-10;
-
 
     Quad glqi = Quad("QLQI_N128.bin"); // global integrator
     
