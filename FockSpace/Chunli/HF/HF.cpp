@@ -21,9 +21,9 @@ using namespace std;
 #define V0S 91.85
 #define KR 1.487
 #define KS 0.465
-#define Ulimit 20.0
-#define Dlimit 0.0001
-#define StepNum 50
+//#define Ulimit 20.0
+//#define Dlimit 0.0001
+//#define StepNum 50
 #define Threshold 0.0001
 #define nStates 3
 #define N 2
@@ -31,15 +31,16 @@ using namespace std;
 
 double h0(int a, int b);
 double densityMatrix(int a, int b, gsl_matrix *wf);
-double matrixElement(int a, int b, int c, int d);
+//double matrixElement(int a, int b, int c, int d);
 void laguerre_general(int n, double x, double cx[]);
 double gam1(double x);
 void An0(int n, double logax[]);
-void HO_wavefun(int n, double x, double rx[]);
-double func(int a, int b, int c, int d, double x1, double x2);
+//void HO_wavefun(int n, double x, double rx[]);
+//double func(int a, int b, int c, int d, double x1, double x2);
 double Diff(gsl_vector *eigPre, gsl_vector *eig);
 double calcEnergy(gsl_matrix *eigvec, gsl_vector *eigval);
-
+double matrixElement1(int a, int b, int c, int d);
+double func1(int a, int b, int c, int d, double x1, double x2);
 
 
 int main()
@@ -76,7 +77,10 @@ int main()
                 {
                     for(int delta = 0; delta < nStates; delta++)
                     {
-                        spPot += densityMatrix(beta, delta, Eigvec) * (matrixElement(alpha, beta, gamma, delta) + matrixElement(alpha, beta, delta, gamma)); // matrix elements mean two-body matrix elements
+                        spPot += densityMatrix(beta, delta, Eigvec)\
+                                * (matrixElement1(alpha, beta, gamma, delta)\
+                                   + matrixElement1(alpha, beta, delta, gamma));
+                        // matrix elements mean two-body matrix elements
 //cout << spPot << endl;
 
                     }
@@ -144,7 +148,7 @@ double densityMatrix(int a, int b, gsl_matrix *wf)
 
     return denMat;
 }
-
+/*
 //use Minnesota potential to calculate two-body matrix elements, v=0.5*(V_R+V_S), [(ab|v|cd)+(ab|v|dc)], where a means R_a0,
 // V_R=V_{0,R}*Exp{-kappa_R*(r1-r2)^2}, V_S=V_{0,S}*Exp{-kappa_S*(r1-r2)^2}.
 double matrixElement(int a, int b, int c, int d)
@@ -156,13 +160,13 @@ double matrixElement(int a, int b, int c, int d)
     {
         for(yy = Dlimit; yy <= Ulimit; yy += h)
         {
-            TBMat += func(a, b, c, d, xx, yy) * h * h;
+            TBMat += func(a, b, c, d, xx, yy) * h * h; //simpson integration
         }
     }
 
     return TBMat;
 }
-
+*/
 void laguerre_general(int n, double x, double cx[])
 {
     int i;
@@ -230,7 +234,7 @@ void An0(int n, double logax[])
     }
 }
 
-
+/*
 void HO_wavefun(int n, double x, double rx[])
 {
     int i;
@@ -250,7 +254,8 @@ void HO_wavefun(int n, double x, double rx[])
     delete [] cx;
 
 }
-
+*/
+/*
 double func(int a, int b, int c, int d, double x1, double x2)
 {
     double *rx1 = new double[nStates];
@@ -264,6 +269,7 @@ double func(int a, int b, int c, int d, double x1, double x2)
 	delete [] rx1;
 	delete [] rx2;
 }
+*/
 
 double Diff(gsl_vector *eigPre, gsl_vector *eig)
 {
@@ -304,4 +310,71 @@ double calcEnergy(gsl_matrix *eigvec, gsl_vector *eigval)
     energy = kinetic + pot;
 
     return energy;
+}
+
+
+//Calculate two-body matrix element with Gauss-Laguerre quadrature.
+double matrixElement1(int a, int b, int c, int d)
+{
+    double weight[100];
+    double abscissa[100];
+    int pos1 = 0; 
+    int pos2 = 0;
+    fstream file1, file2;
+    file1.open("lag_o100_w.txt");
+    while(!file1.eof())
+    {
+        file1 >> weight[pos1];
+        pos1++;
+        if(pos1>=100)
+        {
+            break;
+        }
+    }
+    file1.close();
+
+    file2.open("lag_o100_x.txt");
+    while(!file2.eof())
+    {
+        file2 >> abscissa[pos2];
+        pos2++;
+        if(pos2>=100)
+        {
+            break;
+        }
+    }
+    file2.close();
+
+    double TBMat1 = 0.0;
+    for(int i = 0; i < 100; i++)
+        for(int j = 0; j < 100; j++)
+        {
+            TBMat1 += weight[i]*weight[j]*func1(a, b, c, d, abscissa[i], abscissa[j]);
+        }
+    return TBMat1;
+}
+
+double func1(int a, int b, int c, int d, double x1, double x2)
+{
+    double *logax = new double[nStates];
+    double *cx1 = new double[nStates];
+    double *cx2 = new double[nStates];
+
+
+    An0(nStates, logax);
+    laguerre_general(nStates, x1, cx1);
+    laguerre_general(nStates, x2, cx2);
+
+
+    return (B_ANL*B_ANL/4.0)*(B_ANL*B_ANL/4.0)\
+            *exp(logax[a])*exp(logax[b])*exp(logax[c])*exp(logax[d])\
+            *cx1[a]*cx1[c]*cx2[b]*cx2[d]\
+            *((V0R/KR)*(exp(-KR*B_ANL*B_ANL*(sqrt(x1)+sqrt(x2))*(sqrt(x1)+sqrt(x2)))\
+                        -exp(-KR*B_ANL*B_ANL*(sqrt(x1)-sqrt(x2))*(sqrt(x1)-sqrt(x2))))\
+              -(V0S/KS)*(exp(-KS*B_ANL*B_ANL*(sqrt(x1)+sqrt(x2))*(sqrt(x1)+sqrt(x2)))\
+                         -exp(-KS*B_ANL*B_ANL*(sqrt(x1)-sqrt(x2))*(sqrt(x1)-sqrt(x2)))));
+
+    delete [] logax;
+    delete [] cx1;
+    delete [] cx2;
 }
