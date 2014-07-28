@@ -57,10 +57,36 @@ void IntegratorGaussLaguerre::readTab(const string& file, map<int, vector<double
 
   string word;
   vector<double> valVec;
+  double val;
   while(! input.eof()){
-      input>>word;
-      double val= std::atof(word.c_str());
+      input>>val;
+      //double val= std::atof(word.c_str());
       valVec.push_back(val);
   } //end while
   data[n]= valVec;
+}
+
+
+//------------------------------------------------------------------------------
+double IntegratorGaussLaguerre::integrate0ToInf(gsl_function func) const{
+    if(weights_.count(order_)<1 || abscissa_.count(order_)<1 ){
+        throw logic_error( (string("in ")+__FILE__+" "+__FUNCTION__+", table unavailable for this order").c_str());
+    }
+
+    double sum= 0.;
+    double t(0.);
+    for(int i=0; i<order_; i++){
+        t= abscissa_.at(order_).at(i);
+        sum+= exp( log(weights_.at(order_).at(i)) + t) * func.function(t, func.params); //func(t, func.params); GSL_FN_FDF_EVAL_F(&func,t)
+        //cout<<"exp "<< exp(t)<<"  func "<<func(t)<<"w "<<weights_.at(order_).at(i)<<endl;
+//        cout<<"g-laguerre xi= "<<abscissa_.at(order_).at(i)<<endl;
+//        cout<<"wi= "<<weights_.at(order_).at(i)<<endl;
+        if(std::isnan(sum)){
+            cout<<"STOP"<<endl;
+            break;
+        }
+
+    }
+
+    return sum;
 }

@@ -4,8 +4,8 @@ CFLAGS	= -Wall
 #LDFLAGS	= -L/usr/local/lib/ -lgsl -lgslcblas -lm
 LDFLAGS	= -lgsl -lgslcblas -lm -Wno-deprecated 
 EXEC	= run
-DEPS	= param.h eigen.h solver.h potential.h gauher.h sho.h check.h
-SRC	= main.c eigen.c solver.c potential.c gauher.c sho.c check.c
+DEPS	= param.h eigen.h solver.h potential.h gaulag.h sho.h check.h
+SRC	= main.c eigen.c solver.c potential.c gaulag.c sho.c check.c
 
 all:	$(EXEC)
 

@@ -86,13 +86,16 @@ eig_t solve_HF(Vab_t **Vacbd, int N_dim, int N_occ)
     make_hamilt(hamilt, rho, Vacbd);
     solve_eig(hamilt); // eigen.c
     calc_rho(hamilt, rho, N_occ);
-	check_rho(rho, N_all);
+//	check_rho(rho, N_all);
     E_old = E;
     E = calc_E(hamilt, rho, Vacbd, N_occ);
     printf("iteration %d: E = %f\n", i, E);
     i++;
   }
-  printf("E = %lf\n", E);
+  printf("E = %lf, ", E);
+  for (i = 0; i < N_occ - 1; i++)
+    printf("e%d = %lf, ", i+1, hamilt.lam[i]);
+  printf("e%d = %lf\n", N_occ, hamilt.lam[N_occ-1]);
   free(rho[0]); free(rho);
   return hamilt;
 }

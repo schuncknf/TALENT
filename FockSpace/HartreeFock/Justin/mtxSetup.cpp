@@ -1,6 +1,16 @@
+/*
+
+  compile with 
+
+  g++ -o mtxSetup.exe gauss_legendre.o mtxSetup.cpp
+
+ */
+
+
 #include <iostream>
 #include <fstream>
 #include <cmath>
+#include "gauss_legendre.h"
 
 using namespace std;
 
@@ -12,7 +22,7 @@ double radiallogs(int n, int l, double r, double nu);
 double recursive(int n, double alpha, double x);
 double logfact(int n);
 double logoddfact(int n);
-double integFunc(int n1, int n2, int n3, int n4, double r1, double r2);
+double integFunc(int n1,int n2,int n3, int n4, double r1, double r2, void* bbq);
 int deltaChron(int A, int B);
 
 ofstream mtxFile;
@@ -44,7 +54,7 @@ int main()
 
   mtxFile << "# number of matrix elements" << endl;
   mtxFile << spNum << endl;
-  mtxFile << "i j k l Vbar" << endl;
+  //mtxFile << "i j k l Vbar" << endl;
 
   for(n1=0; n1<=maxN; n1++)
     {
@@ -62,13 +72,33 @@ int main()
 			    {
 			      for(s4=-1; s4<=1; s4+=2)
 				{
-				  vDirect = 0.0;
-				  vExchange = 0.0;
-				  if (s1!=s2 && s3!=s4) // only integrate if both bra and ket have different sp spins
-				    {
-				      for(double r1 = r1min; r1 < r1max; r1=r1+r1step)
+				  TOTAL = 0.0;				  
+				  void* bbq;				  
+				  if (s1==s3 && s2==s4) // only integrate if both bra and ket have different sp spins
+				    {				     
+				      if(s1 == s4)
+					{ 
+					  TOTAL = 0.0;
+					  //vDirect = gauss_legendre_2D_cube(64, integFunc,n1,n2,n3,n4,bbq,0,20,0,20);
+					}
+				      else
 					{
-					  for(double r2 = r2min; r2 < r2max; r2=r2+r2step)
+					  TOTAL = gauss_legendre_2D_cube(128, integFunc,n1,n2,n3,n4,bbq,0,30,0,30);
+					}
+				    }
+				  else if(s1 == s4 && s2 == s3)
+				    {
+				      TOTAL = -1.0*gauss_legendre_2D_cube(128, integFunc,n1,n2,n3,n4,bbq,0,30,0,30);
+				    }
+				  else 
+				    {
+				      TOTAL = 0.0;
+				    }
+				  
+				  /*
+				    for(double r1 = r1min; r1 < r1max; r1=r1+r1step)
+				    {
+				    for(double r2 = r2min; r2 < r2max; r2=r2+r2step)
 					    {
 					      vDirect += integFunc(n1,n2,n3,n4,r1,r2)*r1step*r2step;
 					      vExchange += integFunc(n1,n2,n4,n3,r1,r2)*r1step*r2step;  // exchange term swaps n4 and n3
@@ -76,24 +106,17 @@ int main()
 					      // double integSum += integFunc(r1,r2)*r1step*r2step;
 					    } // end r2 loop
 					} // end r1 loop
-				      vDirect = vDirect*(deltaChron(s1,s3)*deltaChron(s2,s4) - deltaChron(s1,s4)*deltaChron(s2,s3));
-				      vExchange = vExchange*(deltaChron(s1,s3)*deltaChron(s2,s4) - deltaChron(s1,s4)*deltaChron(s2,s3));
-				      
-				      TOTAL = vDirect + vExchange;
-				    } // end if
-				  else
-				    {
-				      TOTAL = 0.0;
-				    } // end else
+				      */
+				      //vDirect = vDirect*(deltaChron(s1,s3)*deltaChron(s2,s4) - deltaChron(s1,s4)*deltaChron(s2,s3));
+				      //vExchange = vExchange*(deltaChron(s1,s3)*deltaChron(s2,s4) - deltaChron(s1,s4)*deltaChron(s2,s3));
+				     
 
-				  //# nr n  l  2j 2j_z  energy
-				  //  0  0  0  1  -1    15
-				  // 1  0  0  1  1     15
-				  
 				  spLabel1 = 2*n1+0.5*(s1+1);
 				  spLabel2 = 2*n2+0.5*(s2+1);
 				  spLabel3 = 2*n3+0.5*(s3+1);
 				  spLabel4 = 2*n4+0.5*(s4+1);
+				  
+				  mtxFile.precision(15);
 				  mtxFile << spLabel1 << " " << spLabel2 << " " << spLabel3 << " " << spLabel4 << " " << TOTAL << endl;
 				  //mtxFile << "n1: " << n1 << " s1: " << s1 << " n2: " << n2 << " s2: " << s2 << " n3: " << n3 << " s3: " << s3 << " n4: " << n4 << " s4: " << s4 << " mtxEle: " << TOTAL << endl;
 				} // end s4 loop
@@ -128,9 +151,9 @@ int deltaChron(int A, int B)
     }
 } // end deltaChron
 
-double integFunc(int n1, int n2, int n3, int n4, double r1, double r2)
+double integFunc(int n1, int n2, int n3, int n4, double r1, double r2, void* bbq)
 {
-  double value,V_Rfunc,V_Sfunc,V0R,V0S,KappaR,KappaS;
+  double value,V_Rfunc,V_Sfunc,V0R,V0S,KappaR,KappaS,V;
   //double V_0 = 1.0;
   //double mass = 1.0;
   double nu,mcSquared,h_barOmega,h_barC;
@@ -147,10 +170,12 @@ double integFunc(int n1, int n2, int n3, int n4, double r1, double r2)
   KappaR = 1.487; // fm^-2
   KappaS = 0.465; // fm^-2
 
-  V_Rfunc = V0R*( exp(-KappaR*(r1-r2)*(r1-r2)) - exp(-KappaR*(r1+r2)*(r1+r2)) )/KappaR;
-  V_Sfunc = V0S*( exp(-KappaS*(r1-r2)*(r1-r2)) - exp(-KappaS*(r1+r2)*(r1+r2)) )/KappaS;
+  V_Rfunc = 0.25*V0R*( exp(-KappaR*(r1-r2)*(r1-r2)) - exp(-KappaR*(r1+r2)*(r1+r2)) )/KappaR;
+  V_Sfunc = -0.25*V0S*( exp(-KappaS*(r1-r2)*(r1-r2)) - exp(-KappaS*(r1+r2)*(r1+r2)) )/KappaS;
+  V = 0.5*(V_Rfunc + V_Sfunc);
 
-  value = radiallogs(n1,l,r1,nu)*radiallogs(n2,l,r2,nu)*radiallogs(n3,l,r1,nu)*radiallogs(n4,l,r2,nu)*r1*r2*(V_Rfunc + V_Sfunc)/8.0;
+  value = radiallogs(n1,l,r1,nu)*radiallogs(n2,l,r2,nu) * (r1*r2*V) * 
+    (radiallogs(n3,l,r1,nu)*radiallogs(n4,l,r2,nu) + radiallogs(n3,l,r2,nu)*radiallogs(n4,l,r1,nu)); // factor of two?!?!
 
   //V_0*r1*r2*0.25*( exp(-mass*(r1-r2)*(r1-r2)) - exp(-mass*(r1+r2)*(r1+r2)) )/mass;
 

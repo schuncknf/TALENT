@@ -120,10 +120,16 @@ do while (sum_E.gt.tol)
      end do 
    end do
    
+<<<<<<< HEAD
+   rho = rho_prev
+!~    rho=0.5d0*(rho+rho_prev)
+     
+=======
     rho = rho_prev
 !   rho=0.5d0*(rho+rho_prev) linear combinations
  
     !recalculate gamm 
+>>>>>>> 7c5bbb0ab80c3a8c3202465b0ff27aa796eea2d8
   do mu=1,n_max    
      do nu=1,n_max
       

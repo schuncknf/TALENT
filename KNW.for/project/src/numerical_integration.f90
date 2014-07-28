@@ -4,7 +4,7 @@ MODULE numerical_integration
 
   PRIVATE
 
-  PUBLIC :: is_init_grid_GH, grid_size_GH, grid_points_GH, grid_weights_GH, init_grid_GH, is_init_grid_GLag, grid_size_GLag, alpha_GLag, grid_points_GLag, grid_weights_GLag, init_grid_GLag
+  PUBLIC :: is_init_grid_GH, grid_size_GH, grid_points_GH, grid_weights_GH, init_grid_GH, is_init_grid_GLag, grid_size_GLag, alpha_GLag, grid_points_GLag, grid_weights_GLag, init_grid_GLag,is_init_grid_GL, grid_size_GL, grid_points_GL, grid_weights_GL, init_grid_GL
 
   LOGICAL, protected :: is_init_grid_GH = .false.
   INTEGER, protected :: grid_size_GH
@@ -19,6 +19,11 @@ MODULE numerical_integration
   REAL(KIND=r_kind), protected :: alpha_GLag
   REAL(KIND=r_kind), ALLOCATABLE, protected :: grid_points_GLag(:)
   REAL(KIND=r_kind), ALLOCATABLE, protected :: grid_weights_GLag(:)
+  
+  LOGICAL, protected :: is_init_grid_GL = .false.
+  INTEGER, protected :: grid_size_GL
+  REAL(KIND=r_kind), ALLOCATABLE, protected :: grid_points_GL(:)
+  REAL(KIND=r_kind), ALLOCATABLE, protected :: grid_weights_GL(:)
   
 
 
@@ -358,7 +363,9 @@ CONTAINS
     REAL(KIND=8) :: ai,nn !ai,gammln, nn
     REAL(KIND=8) :: p1,p2,p3,pp,z,z1
 
-    maxit = 10; eps = 3.E-14
+    !maxit = 10
+    maxit = 50 !increased
+    eps = 3.E-14
     nn = n
     DO i=1,n
        IF(i == 1)THEN
@@ -415,6 +422,78 @@ CONTAINS
 
   END FUNCTION gammln
 
+
+      SUBROUTINE GAULEG(X1,X2,X,W,N)
+      USE types
+      IMPLICIT REAL(KIND=r_kind) (A-H,O-Z)
+      INTEGER N
+      REAL(KIND=r_kind) X1,X2,X(N),W(N)
+      REAL(KIND=r_kind), PARAMETER :: EPS=1.E-14_r_kind      
+      
+      M=(N+1)/2
+      XM=0.5_r_kind*(X2+X1)
+      XL=0.5_r_kind*(X2-X1)
+      DO I=1,M
+         Z=COS(3.141592654_r_kind*(I-.25_r_kind)/(N+.5_r_kind))
+ 1       CONTINUE
+         P1=1._r_kind
+         P2=0._r_kind
+         DO J=1,N
+            P3=P2
+            P2=P1
+            P1=((2._r_kind*J-1._r_kind)*Z*P2-(J-1._r_kind)*P3)/J
+         END DO
+         PP=N*(Z*P1-P2)/(Z*Z-1._r_kind)
+         Z1=Z
+         Z=Z1-P1/PP
+         IF(ABS(Z-Z1).GT.EPS)GO TO 1
+         X(I)=XM-XL*Z
+         X(N+1-I)=XM+XL*Z
+         W(I)=2._r_kind*XL/((1._r_kind-Z*Z)*PP*PP)
+         W(N+1-I)=W(I)
+      END DO
+      RETURN
+    END SUBROUTINE GAULEG
+
+    SUBROUTINE init_grid_GL(n)
+    IMPLICIT NONE
+
+    INTEGER, intent(in) :: n
+   
+
+    INTEGER :: II 
+
+    IF(allocated(grid_points_GL)) DEALLOCATE(grid_points_GL)
+    IF(allocated(grid_weights_GL)) DEALLOCATE(grid_weights_GL)
+
+
+    grid_size_GL = n
+    
+    ALLOCATE(grid_points_GL(n),grid_weights_GL(n))
+
+    write(*,*) 'init_grid_GL: calling gauleg'
+    
+    CALL gauleg(-1.0_r_kind,1.0_r_kind,grid_points_GL,grid_weights_GL,n)
+
+    write(*,*) 'init_grid_GL: done'
+
+!!$    !For debug
+!!$    WRITE(*,*) 'Gauss Legendre'
+!!$    WRITE(*,*) 'grid_size_GL = ',grid_size_GL
+!!$    WRITE(*,'(2A16)') 'grid pts','grid weights'
+!!$    DO II = 1,grid_size_GL
+!!$
+!!$       WRITE(*,'(2f16.10)') grid_points_GL(II),grid_weights_GL(II)
+!!$
+!!$    END DO
+!!$    !end for debug
+    
+    
+
+    is_init_grid_GL = .true.
+
+
+  END SUBROUTINE init_grid_GL
 
 
 

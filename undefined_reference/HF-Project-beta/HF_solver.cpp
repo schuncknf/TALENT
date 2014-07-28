@@ -13,9 +13,12 @@ solver::solver(physical_world * pass_object, unsigned int max_iterations, double
     conv_treshold = treshold;
 
     int Nbasis = physical_object->N_max;
-
+    int Nparticles = physical_object->N_part;
     h = arma::zeros<mat>(Nbasis,Nbasis);
-    rho = arma::eye<mat>(Nbasis,Nbasis);
+    Init_rho(Nparticles,Nbasis);
+//    rho = (double) Nparticles / (double) Nbasis * arma::eye<mat>(Nbasis,Nbasis);
+
+
     e = arma::ones<vec>(Nbasis);
 
     run_iteration();
@@ -27,10 +30,17 @@ solver::~solver()
 
 }
 */
+void solver::Init_rho(int N_p,int Nbasis) { 
+  rho = arma::zeros<mat>(Nbasis,Nbasis);
+  for(int i=0;i< N_p; i++) 
+    rho(i,i)=1;
+}
 
 void solver::PHYSICAL_rho_to_h()
 {
     int Nbasis = physical_object->N_max;
+
+    rho.print("rho");
 
     for(int i1 = 0; i1 < Nbasis; i1++)
     for(int i2 = 0; i2 < Nbasis; i2++)
@@ -41,6 +51,8 @@ void solver::PHYSICAL_rho_to_h()
         for(int j2 = 0; j2 < Nbasis; j2++)
             h(i1,i2) += physical_object->V(i1,j2,i2,j1) * rho(j1,j2);
     }
+
+    h.print("h:");
 }
 
 void solver::SYSTEM_h_to_rho()
@@ -63,26 +75,7 @@ void solver::SYSTEM_h_to_rho()
     D.print("eigenvectors:");
 
     // You need to keep the N lowest eigenvectors:
-    // (are they automatically ordered using the eig_sym function?)
     D.resize(Nbasis, Nparticles);
-
-    /* I think it's better to use transpose (= hermitian conjugation if complex
-     * and then multiply
-     * 
-     * alternative code:
-     * 
-
-    arma::mat Dstar = conj(D);
-
-    for(int i1; i1 < N; i1++)
-    for(int i2; i2 < N; i2++)
-    for(int i3; i3 < N; i3++)
-        rho(i1,i2) = D(i1,i3)*Dstar(i2,i3);
-
-     *
-     *
-     */
-
     rho = D*D.t();
 }
 

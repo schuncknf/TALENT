@@ -54,6 +54,20 @@ BOOST_AUTO_TEST_CASE( func3Test )
 }
 
 
+//------------------------------------------------------------------------------
+double funcTest4(double x, void*){
+    return sin(x)/x;
+}
+//------------------------------------------------------------------------------
+BOOST_AUTO_TEST_CASE( func4Test )
+{
+    gsl_function func;
+    func.function=funcTest4;
+    func.params= NULL;
+    integrator_.setOrder(500);
+    double res= integrator_.integrate0ToInf(func);
+    BOOST_CHECK_CLOSE(res, M_PI/2., 0.1);
+}
 
 
 BOOST_AUTO_TEST_SUITE_END()

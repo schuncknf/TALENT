@@ -28,7 +28,7 @@ class solver
         solver(physical_world * pass_object, unsigned int max_iterations, double conv_treshold);
 
 //        ~solver();
-
+        void Init_rho(int, int);
         void PHYSICAL_rho_to_h();
         void SYSTEM_h_to_rho();
 
