@@ -93,8 +93,16 @@ double SphericalHOFunc::laguerrel0(int n, double x){
     for(int i=1; i<2*n+1; i++){
         pow2*=2;
     }
-    double sqrtx= sqrt(x);
-    return (1-n%2 *2)/(fac(n)* pow2* sqrtx)*  boost::math::hermite(2*n+1, sqrtx);
+    double sqx= sqrt(x);
+
+
+//    double res=(1-n%2 *2)/(fac(n)* pow2* sqrtx)*  boost::math::hermite(2*n+1, sqrtx);
+//    if(res != gsl_sf_laguerre_n(n, 0.5, x)){
+//            cout<<n<<"  "<<res<<"  "<<gsl_sf_laguerre_n(n, 0.5, x)<<endl;
+//    }
+
+    return  double(1-n%2 *2)/(sqx * fac(n) * pow2 ) * boost::math::hermite(2*n+1, sqx);
+    //return gsl_sf_laguerre_n(n, 0.5, x);
 }
 
 

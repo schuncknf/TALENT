@@ -29,6 +29,6 @@ namespace VMinnesotaMatrixGenerator{
   typedef vector<vector<vector<vector<double> > > > TwoBodyMat;
 
   void fillHMatrix(mat& H, mat& density, vector<vector<vector<vector<double> > > >& Vabcd, double& b);
-  void calc2BodyMat(vector<vector<vector<vector<double> > > >& Vabcd, double& b);
+  void calc2BodyMat(vector<vector<vector<vector<double> > > >& Vabcd, double& b, int order);
 }
 

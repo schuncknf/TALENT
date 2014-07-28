@@ -39,31 +39,30 @@ BOOST_AUTO_TEST_CASE( benchmarkTest )
 
     // Vabsd
     TwoBodyMat Vabcd(nMax+1, vector<vector<vector<double> > >(nMax+1, vector<vector<double> >(nMax+1, vector<double>(nMax+1, 0.))));
-    calc2BodyMat(Vabcd, b);
+    calc2BodyMat(Vabcd, b, 200);
 
     // Benchmark
     double error=0.;
 
-    ifstream input("./2BodyMatBenchmark.dat");
+    ifstream input("./2BodyMatBenchmark2.dat");
     int i1, i2, i3, i4;
     double elemBench;
 
     if(!input){
-        throw logic_error("File 2BodyMatBenchmark.dat does not exist");
+        throw logic_error("File 2BodyMatBenchmark2.dat does not exist");
     }
     while(!input.eof()){
         input>>i1>>i2>>i3>>i4>>elemBench;
-        double eVal= abs(Vabcd[i1][i2][i3][i4] - elemBench);
-        cout<<Vabcd[i1][i2][i3][i4]<<"  "<<elemBench<<endl;
+        double spin=( (i1%2==i3%2)*(i2%2==i4%2) - (i1%2==i4%2)*(i2%2==i3%2));
+        double eVal= abs(Vabcd[i1/2][i2/2][i3/2][i4/2]*spin - elemBench);
         error+= eVal;
         if(eVal > 1e-5){
 //            cout<<i1/2<<" "<<i2/2<<" "<<i3/2<<" "<<i4/2<<" e="<<eVal<<"  eB= "<<elemBench<<""<<endl;
         }
-        input>>elemBench;
     }
 
 
-    BOOST_CHECK_CLOSE(error+1., 1., 1e-6);
+    BOOST_CHECK_CLOSE(error+1., 1., 0.5);
 }
 
 

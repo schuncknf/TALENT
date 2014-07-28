@@ -48,7 +48,7 @@ void HfSolver::run(double& hfEnergy){
     cout<<"Vabcd matrix creation";
     cout<<flush;
     VMinnesotaMatrixGenerator::TwoBodyMat Vabcd((nMax_+1), vector<vector<vector<double> > >((nMax_+1), vector<vector<double> >((nMax_+1), vector<double>((nMax_+1), 0.))));
-    VMinnesotaMatrixGenerator::calc2BodyMat(Vabcd, b_);
+    VMinnesotaMatrixGenerator::calc2BodyMat(Vabcd, b_, 50);
     //read2BodyMat(Vabcd, "./matels_hf.dat");
     cout<<"       OK"<<endl;
 

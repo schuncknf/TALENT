@@ -107,7 +107,7 @@ double integrandR1(double r1, void * params){
 
 
 //----------------------------------------------------------------------------------------------------------------------------------
-void VMinnesotaMatrixGenerator::calc2BodyMat(TwoBodyMat& Vabcd, double& b){
+void VMinnesotaMatrixGenerator::calc2BodyMat(TwoBodyMat& Vabcd, double& b, int order){
     int dim= Vabcd.size();
 
     // Struct1
@@ -131,7 +131,7 @@ void VMinnesotaMatrixGenerator::calc2BodyMat(TwoBodyMat& Vabcd, double& b){
     IntegratorGaussLegendre integrator;
     integrator.setTableDir("../gen_legendre");
     //integrator.setTableDir("../gen_laguerre");
-    integrator.setOrder(48);
+    integrator.setOrder(order);
 
     Struct2 * param2= new Struct2;
     param2->integrator= integrator;

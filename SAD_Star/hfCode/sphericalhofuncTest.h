@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE( orthonormal2Test )
         }
     }
 
-    BOOST_CHECK_CLOSE(cumulError +1., 1., 1e-12);
+    BOOST_CHECK_CLOSE(cumulError +1., 1., 1e-10);
 }
 
 
@@ -168,7 +168,9 @@ BOOST_AUTO_TEST_CASE( antonBenchmark ){
             double RnBench= sho_wf(r, mw, n, l);
             double Rn= funcR.eval(n, l, r);
             double diff= abs(Rn- RnBench);
-            cout<<Rn<<"  "<<RnBench<<endl;
+//            if(diff> 1e-3 *RnBench && RnBench>1e-20){
+//                cout<<n<<"  "<<r<<"  "<<Rn<<"  "<<RnBench<<endl;
+//            }
             sum+= diff;
         }
     }
