@@ -14,7 +14,7 @@
 double sho_wf(double r, double mw, int n, int l)
 {
   int i, npl;
-  double x, mwr2,factor;
+  double x, mwr2, factor;
   if ((r < 0) || (mw < 0) || (n < 0) || (l < 0))
     return 0.;
   if (r == 0) {
