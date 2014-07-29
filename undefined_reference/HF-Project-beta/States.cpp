@@ -1,13 +1,10 @@
+#include <armadillo>
+#include "States.h"
 
+using namespace std;
+using namespace arma;
 
-class States
-{
-    private:
-    public:
-      mat state_matrix;
-
-    // this function will fill T and V then make a guess for the initial density
-    States(int N_basis, int system)     // System:  0: n; 1: n,l,m; 2: n,l,m,s; 3: n,l,m,s,t
+States::States(int N_basis, int system)     // System:  0: n; 1: n,l,m; 2: n,l,m,s; 3: n,l,m,s,t, 4: n,s
         {
         int n,l,m,s,t,N=0,J=0, j, N_max;
         state_matrix = zeros<mat>(N_basis,5);
@@ -92,9 +89,30 @@ class States
              }
             
           break;
+
+        case 4:
+          N=0;
+          n=0;
+          J=0;
+          while(N<N_basis)
+          {
+              state_matrix(N,0) = n;
+              state_matrix(N,1) = -0.5;
+              N++;
+              state_matrix(N,0) = n;
+              state_matrix(N,1) = +0.5;
+              N++;
+              n++;
           }
+          break;
+          
+        case 5:
+            for (int i=0; i < N_basis;i++)
+            {
+              state_matrix(i,0) = i%N_basis-N_basis*(2*i/N_basis)/2;
+              state_matrix(i,3) = 2*i/N_basis-.5;
+            }
+         break;
         }
-          
-          
-        /************************************************************************************/
-};
+        cout << state_matrix << endl;
+        }

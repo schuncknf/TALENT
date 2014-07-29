@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
   eig_t hamilt;  // matrix dimension: the maximum n quantum number (l=0 in this program)
   hamilt = alloc_eig(52); // matrices for hamiltonian, eigenvectors, eigenvalues etc.
   for (b = 0.1; b < 2.01; b += 0.1) {
-    gaulag_init(256, 1, 0.07 * b);
+    gaulag_init(256, 1, 0.04 * b);
     printf("%3.1lf ", b);
     mw = 1. / (b * b);
     generate_H_me(hamilt, mw, 3);

@@ -13,7 +13,7 @@
 #include "sphericalhofunc.h"
 #include "integratorGaussLegendre.h"
 #include "integratorGaussLaguerre.h"
-
+#include "constants.h"
 
 using namespace std;
 
@@ -75,8 +75,9 @@ double hoProdTest(double r, SphericalHOFunc& func, int n1, int n2){
 BOOST_AUTO_TEST_CASE( orthonormal2Test )
 {
     IntegratorGaussLaguerre integrator;
-    integrator.readTables( "../gen_laguerre");
-    integrator.setOrder(1000);
+    integrator.setTableDir("../gen_laguerre");
+    //integrator.readTables( );
+    integrator.setOrder(500);
 
     SphericalHOFunc funcR;
     funcR.setB(0.5);
@@ -84,7 +85,7 @@ BOOST_AUTO_TEST_CASE( orthonormal2Test )
 
     double cumulError= 0;
 
-    int nMax= 20;
+    int nMax= 4;
     for(int n1=0; n1<nMax; n1++){
         for(int n2= 0; n2< nMax; n2++){
             auto integrand= bind(hoProdTest, placeholders::_1, funcR, n1, n2);
@@ -97,43 +98,84 @@ BOOST_AUTO_TEST_CASE( orthonormal2Test )
         }
     }
 
-    BOOST_CHECK_CLOSE(cumulError +1., 1., 0.1);
+    BOOST_CHECK_CLOSE(cumulError +1., 1., 1e-10);
 }
 
 
-//------------------------------------------------------------------------------
-BOOST_AUTO_TEST_CASE( plotTest ){
-    SphericalHOFunc funcR;
-    funcR.setB(0.5);
+////------------------------------------------------------------------------------
+//BOOST_AUTO_TEST_CASE( plotTest ){
+//    SphericalHOFunc funcR;
+//    funcR.setB(0.5);
 
-    ofstream output("r19.dat");
-    for(double r=0; r<40; r+=0.01){
-        output<<r <<"   "<<setprecision(10)<<funcR.eval(19,0, r)<<endl;
-    }
-    output.close();
+//    ofstream output("r19.dat");
+//    for(double r=0; r<40; r+=0.01){
+//        output<<r <<"   "<<setprecision(10)<<funcR.eval(19,0, r)<<endl;
+//    }
+//    output.close();
+//}
+
+
+//------------------------------------------------------------------------------
+// Anton function:
+double sho_wf(double r, double mw, int n, int l)
+{
+  int i, npl;
+  double x, mwr2, cur, last, last2, factor;
+  if ((r < 0) || (mw < 0) || (n < 0) || (l < 0))
+    return 0.;
+  if (r == 0) {
+    if (l != 0)
+      return 0.;
+    factor = mw;
+    for (i = 1; i <= n; i++)
+      factor *= (i + 0.5) / i;
+    return 2 * sqrt(sqrt(mw / M_PI) * factor);
+  }
+  x = sqrt(mw) * r;
+  mwr2 = x * x;
+  npl = n + l;
+  factor = mw;
+  for (i = 3; i <= 2 * npl + 1; i += 2)
+    factor *= 2 * mwr2 / i;
+  cur = 0.;
+  last2 = sqrt(factor);
+  if (l == npl)
+    cur = last2;
+  last = ((npl + 0.5) / x - x) * last2;
+  if (l == npl - 1)
+    cur = last;
+  for (i = npl - 2; i >= l; i--) {
+    cur = (((i + 1.5) / x - x) * last - sqrt(npl - i - 1) * last2) / sqrt(npl - i);
+    last2 = last;
+    last = cur;
+  }
+  return 2 * pow(mw / M_PI, 0.25) * exp(-0.5*mwr2) * cur;
 }
 
-
 //------------------------------------------------------------------------------
-BOOST_AUTO_TEST_CASE( r19Test ){
+BOOST_AUTO_TEST_CASE( antonBenchmark ){
+    double hbarOmega= 10.;
+    double b= HBARC/sqrt(MNC2*hbarOmega);
+    double mw= MNC2* hbarOmega/HBARC/HBARC;
+
     SphericalHOFunc funcR;
-    funcR.setB(0.5);
+    funcR.setB(b);
 
-    double tmp;
-    vector<double> val;
-    ifstream input("r19Benchmark.dat");
-    while(!input.eof()){
-        input>>tmp>>tmp;
-        val.push_back(tmp);
+    double sum=0;
+    for(int n=0; n<10; n++){
+        int l=0;
+        for(double r=0.1 ; r<100*b; r+=0.1){
+            double RnBench= sho_wf(r, mw, n, l);
+            double Rn= funcR.eval(n, l, r);
+            double diff= abs(Rn- RnBench);
+//            if(diff> 1e-3 *RnBench && RnBench>1e-20){
+//                cout<<n<<"  "<<r<<"  "<<Rn<<"  "<<RnBench<<endl;
+//            }
+            sum+= diff;
+        }
     }
 
-    double cumulError(0);
-    double r=0;
-    for(unsigned int i=0; i<val.size(); i++){
-        cumulError+= abs(val[i] - funcR.eval(19, 0, r));
-        r+= 0.01;
-    }
-    BOOST_CHECK_CLOSE(cumulError+1., 1., 1e-5);
+    BOOST_CHECK_LT(sum , 1e-13);
 }
 
 

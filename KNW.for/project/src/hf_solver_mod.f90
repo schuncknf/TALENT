@@ -9,45 +9,57 @@ CONTAINS
 
   IMPLICIT NONE
 
-  REAL(kind=r_kind) :: b
+  REAL(kind=r_kind) :: b, hbaromega
   INTEGER :: nmax,lmax
   REAL(kind=r_kind) :: delta, tol
   INTEGER :: iteration, iteration_max
   INTEGER :: num_part
-  REAL(kind=r_kind) :: e_fermi
+  REAL(kind=r_kind) :: e_fermi, mixing, E_HF, E_HF_v2
 
   b = 1.0_r_kind !maby have default value based on mass
-  iteration_max = 10
-  tol = 1e-5_r_kind
+  hbaromega = 10.0_r_kind
+  iteration_max = 20
+  tol = 1e-15_r_kind
   num_part = 2
   lmax = 0
-  nmax = 10
+  !nmax = 1
+  nmax = 4
 
+
+  mixing = 0.0_r_kind
   
 
-  CALL init_Ho_basis(b,nmax,lmax) 
+  CALL init_Ho_basis(nmax,lmax,b,hbaromega) !b is not used if hbaromega is supplied
+  !CALL init_Ho_basis(nmax,lmax,b)
+
+  WRITE(*,*) 'hbarc = ',hbarc
+  WRITE(*,*) 'neuron mass = ',mnc2
+  
   CALL hf_init
   CALL hf_init_dens(num_part) !generates initial density matrix
   
   
-  
+  WRITE(*,*) 'Mixing parameter = ',mixing
   WRITE(*,*) 'Starting iteration'
-  WRITE(*,'(A5,A14,A14)') 'iter','e_fermi','delta'
+  WRITE(*,'(A5,2A20,A14,A14)') 'iter','E_HF','E_HF_v2','e_fermi','delta'
   delta = 100.0_r_kind
   iteration = 1
   hf_iteration_loop : DO WHILE (iteration <= iteration_max .and. delta > tol)
      
      CALL hf_update_hamiltonian
-     
+       
      CALL hf_diagonalize
 
      CALL hf_find_fermi_energy(num_part,e_fermi)
      
-     CALL hf_update_density_matrix(0.0_r_kind)
+     CALL hf_update_density_matrix(mixing)
      
-     !CALL hf_calculate_delta(delta)     
+     CALL hf_total_energy(E_HF)
+     CALL hf_total_energy_v2(E_HF_v2)
 
-     WRITE(*,'(I5,F14.6,F14.6)') iteration, e_fermi, delta
+     CALL hf_calculate_delta(delta)     
+
+     WRITE(*,'(I5,2F20.14,F14.6,E14.6)') iteration, E_HF,E_HF_v2, e_fermi, delta
     
      iteration = iteration + 1
      
