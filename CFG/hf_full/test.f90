@@ -1,4 +1,3 @@
-!spin 对角化且两块相等时，轨道计半，然后乘2，能量同理
 PROGRAM MAIN
 USE PARS
 IMPLICIT NONE
