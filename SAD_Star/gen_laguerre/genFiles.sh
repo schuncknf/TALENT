@@ -5,8 +5,8 @@
 # Parameters:
 #############################
 quadName="gauss-laguerre"
-orderMin=200
-orderMax=300
+orderMin=2
+orderMax=500
 #############################
 
 for i in `seq $orderMin $orderMax` ; do

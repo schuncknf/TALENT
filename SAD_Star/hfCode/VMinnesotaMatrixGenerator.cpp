@@ -83,19 +83,15 @@ double integrand(double& r1, double& r2, int n1, int n2, int n3, int n4, Spheric
 //            cout<<"integrand= "<<VD<<" "<<VEPr<<endl;
 
     //}
-    return VD + VEPr;
+
+    return (VD + VEPr);
 }
 
-//----------------------------------------------------------------------------------------------------------------------------------
-double integrandTest(double& r1, double& r2, int& n1, int& n2, int& n3, int& n4, SphericalHOFunc& Rn, vector<double>& norm) {
-  return r1*r1*exp(-r1)*exp(-r1*r2);
-}
 
 //----------------------------------------------------------------------------------------------------------------------------------
 double integrandR1R2(double r2, void * params){
     Struct1 * p= (Struct1*) params;
 //    cout<<"nval= "<<p->n1<<" "<<p->n2<<" "<<p->n3<<" "<<p->n4<<endl;
-
     return integrand(p->r1, r2, p->n1, p->n2, p->n3, p->n4, p->Rn, p->norm);
 }
 
@@ -106,15 +102,12 @@ double integrandR1(double r1, void * params){
     Struct2 * p= (Struct2*) params;
     p->parameters->r1= r1;
 
-
-    //double aMax=2e3 * p->Rn.getB();
-    //return p->integrator.integrate(p->integrandR1R2, 0., aMax);
     return p->integrator.integrate0ToInf(p->integrandR1R2);
 }
 
 
 //----------------------------------------------------------------------------------------------------------------------------------
-void VMinnesotaMatrixGenerator::calc2BodyMat(TwoBodyMat& Vabcd, double b){
+void VMinnesotaMatrixGenerator::calc2BodyMat(TwoBodyMat& Vabcd, double& b, int order){
     int dim= Vabcd.size();
 
     // Struct1
@@ -124,7 +117,6 @@ void VMinnesotaMatrixGenerator::calc2BodyMat(TwoBodyMat& Vabcd, double b){
     vector<double> norm;
     for(int i=0; i<dim; i++){
         norm.push_back(Rn.norm(i,0));
-        cout<<"norm "<<Rn.norm(i,0)<<endl;
     }
 
     Struct1* param1= new Struct1;
@@ -137,8 +129,9 @@ void VMinnesotaMatrixGenerator::calc2BodyMat(TwoBodyMat& Vabcd, double b){
     intR1R2Func.params= param1;
 
     IntegratorGaussLegendre integrator;
-    integrator.readTables("../gen_legendre");
-    integrator.setOrder(150);
+    integrator.setTableDir("../gen_legendre");
+    //integrator.setTableDir("../gen_laguerre");
+    integrator.setOrder(order);
 
     Struct2 * param2= new Struct2;
     param2->integrator= integrator;
@@ -152,16 +145,8 @@ void VMinnesotaMatrixGenerator::calc2BodyMat(TwoBodyMat& Vabcd, double b){
 
     TwoBodyMat isFilled (dim, vector<vector<vector<double> > >(dim, vector<vector<double> >(dim, vector<double>(dim, 0.))));
 
-//// Test:
-//    double val= integrator.integrate0ToInf(intR1Func);
-//    cout<<"double itegration tests: 1= "<<setprecision(15)<<val<<endl;
-//    cout<<"diff= "<<1-val<<endl;
-//    //end test
-
-
     for(int n1 = 0; n1 < dim; n1++ ) {
         param1->n1= n1;
-        cout<<"n1 "<<n1<<endl;
         for (int n2 = n1; n2 < dim; n2++) {
            param1->n2=n2;
             for(int n3=0; n3<dim; n3++){ //n1
@@ -198,41 +183,32 @@ void VMinnesotaMatrixGenerator::calc2BodyMat(TwoBodyMat& Vabcd, double b){
                         isFilled[n4][n3][n2][n1]= 1.;
 
 //                        cout<<n1<<" "<<n2<<" "<<n3<<" "<<n4<<" "<<setprecision(25)<<elem<<endl;
-                    }
-
-
+                    } // if is not filled
 
                 } //end n4
             } // end n3
         } // end n2
     } // end n1
 
-
-
     // Clean:
     //delete param1;
     //delete param2;
 }
 
+
 //----------------------------------------------------------------------------------------------------------------------------------
-double hElem(int i, int j, mat& density, vector<vector<vector<vector<double> > > >& Vabcd, double b){
-    double elem(0);
+double hElem(int& i, int& j, mat& density, vector<vector<vector<vector<double> > > >& Vabcd, double& b){
+    double elem(0.);
 
     int sigma2= i%2;
     int sigma4= j%2;
 
-    // density dependent part
+    // Density dependent part
     for(unsigned int n1=0; n1<density.n_cols/2; n1++){
         for(unsigned int n3=0; n3<density.n_cols/2; n3++){
-            for(int sigma1=0; sigma1<2 ;sigma1++){
-                for(int sigma3=0; sigma3<2; sigma3++){
-                    double spin= ( (sigma1==sigma3)*(sigma2==sigma4) - (sigma1==sigma4)*(sigma2==sigma3) );
-                    elem+= 0.5*Vabcd[n1][i/2][n3][j/2]*spin* density(2*n3+sigma3, 2*n1+sigma1);
-                }
+            if(sigma2 == sigma4){
+                elem+= Vabcd[n1][i/2][n3][j/2] * density(2*n3, 2*n1);
             }
-//            if(sigmaI == sigmaJ){
-//                elem+= 0.5*Vabcd[n1][i/2][n3][j/2]* density(2*n3, 2*n1);
-//            }
         }
     }
 
@@ -248,16 +224,17 @@ double hElem(int i, int j, mat& density, vector<vector<vector<vector<double> > >
 
 
 //----------------------------------------------------------------------------------------------------------------------------------
-void VMinnesotaMatrixGenerator::fillHMatrix(mat& H, mat& density, vector<vector<vector<vector<double> > > >& Vabcd, double b) {
+void VMinnesotaMatrixGenerator::fillHMatrix(mat& H, mat& density, TwoBodyMat& Vabcd, double& b) {
     if(H.n_cols != density.n_cols || Vabcd.size() != density.n_cols/2){
         throw invalid_argument( (string(__FILE__)+", "+__FUNCTION__+": H matrix has not the same size than density matrix").c_str());
     }
 
     // Loop on matrix elements
     for(int i = 0; i < int(H.n_cols); i++ ) {
-        for (int j = 0; j < int(H.n_cols); j++ ) {
+        for (int j = i+1; j < int(H.n_cols); j++ ) {
            H(i,j)= hElem(i, j, density, Vabcd, b);
+           H(j,i)= H(i,j);
         }
+        H(i,i)= hElem(i, i, density, Vabcd, b);
     }
-
 }

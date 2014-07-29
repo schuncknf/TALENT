@@ -22,8 +22,9 @@ public:
     IntegratorGaussLaguerre();
     ~IntegratorGaussLaguerre();
 
-    void readTables(string tabDir);
+    void readTables();
     void setOrder(int n);
+    void setTableDir(string dir);
 
 //    template<class T>
 //    double integrate(T func, double a, double b) const;
@@ -37,6 +38,7 @@ private:
     int order_;
     map<int, vector<double> > weights_;
     map<int, vector<double> > abscissa_;
+    string tableDir_;
     void readTab(const string& file, map<int, vector<double> >& data, int n);
 
 };

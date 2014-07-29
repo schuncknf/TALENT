@@ -1,17 +1,12 @@
 #include <math.h>
 #include<iostream>
 
-#include <gsl/gsl_sf_gamma.h>
-#include <gsl/gsl_sf_laguerre.h>
-#include <gsl/gsl_integration.h>
-
-#include <armadillo>
-
-#include "VCoulombMatrixGenerator.h"
+#include "hfSolver.h"
+#include "constants.h"
 
 using namespace std;
 using namespace arma;
-using namespace VCoulombMatrixGenerator;
+
 
 
 
@@ -19,16 +14,16 @@ using namespace VCoulombMatrixGenerator;
 // Hydrogen
 int main() {
 
-    int dim=20;
-    mat A(dim, dim, fill::zeros);
-    setMatrix(A, dim, 0.5);
+    int nMax= 4;
+    int nPart= 2;
+    double hbarOmega= 10.;
+    double b= HBARC/sqrt(MNC2 * hbarOmega);
 
+    double hfEnergy=0.;
 
-    vec eigval;
-    mat eigvec;
-    eig_sym(eigval, eigvec, A);
-
-    cout<<eigval[0]<<endl;
+    HfSolver solver;
+    solver.setParam(b, nMax, nPart);
+    solver.run(hfEnergy);
 
 
 

@@ -16,19 +16,37 @@ IntegratorGaussLaguerre::~IntegratorGaussLaguerre()
 //------------------------------------------------------------------------------
 void IntegratorGaussLaguerre::setOrder(int n){
   order_=n;
+
+  if(weights_.count(n) < 1){
+      ostringstream weightFile;
+      weightFile<<tableDir_<<"/gauss-laguerre_n"<<n<<"_w.txt";
+      ifstream wInput(weightFile.str().c_str());
+
+      ostringstream abscissaFile;
+      abscissaFile<<tableDir_<<"/gauss-laguerre_n"<<n<<"_x.txt";
+      ifstream xInput(abscissaFile.str().c_str());
+
+      if(wInput && xInput){
+          this->readTab(weightFile.str(), weights_, n);
+          this->readTab(abscissaFile.str(), abscissa_, n);
+      }
+
+      wInput.close();
+      xInput.close();
+  }
 }
 
 
 //------------------------------------------------------------------------------
-void IntegratorGaussLaguerre::readTables(string tableDir){
+void IntegratorGaussLaguerre::readTables(){
     int nMax=5e4;
     for(int n=2; n<nMax; n++){
         ostringstream weightFile;
-        weightFile<<tableDir<<"/gauss-laguerre_n"<<n<<"_w.txt";
+        weightFile<<tableDir_<<"/gauss-laguerre_n"<<n<<"_w.txt";
         ifstream wInput(weightFile.str().c_str());
 
         ostringstream abscissaFile;
-        abscissaFile<<tableDir<<"/gauss-laguerre_n"<<n<<"_x.txt";
+        abscissaFile<<tableDir_<<"/gauss-laguerre_n"<<n<<"_x.txt";
         ifstream xInput(abscissaFile.str().c_str());
 
         if(wInput && xInput){
@@ -78,15 +96,13 @@ double IntegratorGaussLaguerre::integrate0ToInf(gsl_function func) const{
     for(int i=0; i<order_; i++){
         t= abscissa_.at(order_).at(i);
         sum+= exp( log(weights_.at(order_).at(i)) + t) * func.function(t, func.params); //func(t, func.params); GSL_FN_FDF_EVAL_F(&func,t)
-        //cout<<"exp "<< exp(t)<<"  func "<<func(t)<<"w "<<weights_.at(order_).at(i)<<endl;
-//        cout<<"g-laguerre xi= "<<abscissa_.at(order_).at(i)<<endl;
-//        cout<<"wi= "<<weights_.at(order_).at(i)<<endl;
-        if(std::isnan(sum)){
-            cout<<"STOP"<<endl;
-            break;
-        }
-
     }
 
     return sum;
+}
+
+
+//------------------------------------------------------------------------------
+void IntegratorGaussLaguerre::setTableDir(string dir){
+    tableDir_= dir;
 }

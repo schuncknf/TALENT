@@ -27,7 +27,6 @@ int simmetry=0;
     public:
         int N_max;      // Base dimension
         int N_part;     // Number of particles
-
         // Store the actual density and the hamiltonian elements
         arma::mat rho_old;                // needed for better convergence?
         arma::mat rho;
@@ -41,7 +40,7 @@ int simmetry=0;
         
         // this function will fill T and V then make a guess for the initial density
         physical_world(int N_basis, int N_particles, double (*fill_V)(int, int, int, int, States&, Quad&, double, void*),
-                       double (*fill_T)(int, int, States&, void*), void* parameters, States& states, Quad& quad, double b);
+                       double (*fill_T)(int, int, States&, void*), void* parameters, States& states, Quad& quad, double b, int sym);
 };
 
 

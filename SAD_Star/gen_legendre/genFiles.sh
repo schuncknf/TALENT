@@ -6,7 +6,7 @@
 #############################
 quadName="gauss-legendre"
 orderMin=2
-orderMax=2000
+orderMax=500
 #############################
 
 for i in `seq $orderMin $orderMax` ; do

@@ -6,6 +6,7 @@
  * @brief This class solves the HF equation
  */
 
+#include <iomanip>
 #include "VMinnesotaMatrixGenerator.h"
 
 class HfSolver

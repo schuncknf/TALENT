@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
     printf("incorect input values (they should be positive)\n");
     return 1;
   }
-  gaulag_init(100, 1, 0.2);
+  gaulag_init(128, 1, 0.2);
   hamilt = alloc_eig(N); // matrices for hamiltonian, eigenvectors, eigenvalues etc.
   printf("# n_max = %d\n# hbar*omega\tenergy\n", N - 1);
   for (hw = hw_min; hw <= hw_max; hw += hw_step) {

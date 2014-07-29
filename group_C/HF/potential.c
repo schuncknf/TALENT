@@ -41,7 +41,7 @@ void V_me(Vi1_t *V, double hw)
   Vi2_t *Vi2;
   mw = hw / H2M;
   // matrix elements use double integration by Gauss-Laguerre quadrature
-  gaulag_init(GLNODES, 1., 0.07 / sqrt(mw));  // then use gl.x[i] and gl.w[i]
+  gaulag_init(GLNODES, 1., 0.04 / sqrt(mw));  // then use gl.x[i] and gl.w[i]
   halfint1 = (double*)malloc(gl.N * sizeof(double));
   halfint2 = (double*)malloc(gl.N * sizeof(double));
   coef1 = (double*)malloc(Ni * sizeof(double));
@@ -132,7 +132,7 @@ void V_me(Vi1_t *V, double hw)
               if (a != b)
                 V[i1].V_ab[b][a].Vi2[i2].V_cd[d][c] = sum1S;
               if (i1 > i2) {  // symmetry V_acbd = V_cadb
-                sum2S = (sum1R + sum2R) * (Vi2[i1]._2j2 + 1);
+                sum2S = (sum1R + sum2R) * (V[i1]._2j1 + 1);
                 V[i2].V_ab[c][d].Vi2[i1].V_cd[a][b] = sum2S;
                 if (a != b)
                   V[i2].V_ab[d][c].Vi2[i1].V_cd[b][a] = sum2S;
@@ -145,6 +145,8 @@ void V_me(Vi1_t *V, double hw)
   }  // i1
   free(halfint1);
   free(halfint2);
+  free(coef1);
+  free(coef2);
 }
 
 Vi1_t *create_V(double hw)
@@ -201,7 +203,7 @@ Vi1_t *create_V(double hw)
       }
     }
   }
-  V_me(V, hw);  // matrix elements of the potential
+  // matrix elements of the potential should be calculated separately by V_me(V,hw)
   return V;
 }
 
@@ -224,4 +226,66 @@ void free_V(Vi1_t *V)
     free(V[i1].V_ab);
   }
   free(V);
+}
+
+void save_V(Vi1_t *V, int Nmax, double hw)
+{
+  int i1, i2, a, b;
+  Vi2_t *Vi2;
+  FILE *outfile;
+  char filename[32];
+  sprintf(filename, "Vme_hw%.2lf_N%d_l%d.dat", hw, Nmax, (Ni-1)/2);
+  outfile = fopen(filename, "wb");
+  if (outfile == NULL) {
+    fprintf(stderr, "save_V: cannot create file %s\n", filename);
+    return;
+  }
+  fwrite(&hw, sizeof(double), 1, outfile);
+  fwrite(&Ni, sizeof(int), 1, outfile);
+  fwrite(N_jl, sizeof(int), Ni, outfile);
+  for (i1 = 0; i1 < Ni; i1++) {
+    for (a = 0; a < V[i1].N; a++) {
+      for (b = 0; b < V[i1].N; b++) {
+        Vi2 = V[i1].V_ab[a][b].Vi2;
+        for (i2 = 0; i2 < Ni; i2++) {
+          fwrite(Vi2[i2].V_cd[0], sizeof(double), Vi2[i2].N * Vi2[i2].N, outfile);
+        }
+      }
+    }
+  }
+  fclose(outfile);
+}
+
+Vi1_t *read_V(char *filename, double *hw)
+{
+  int i1, i2, a, b;
+  FILE *infile;
+  Vi1_t *V;
+  Vi2_t *Vi2;
+  infile = fopen(filename, "rb");
+  if (infile == NULL) {
+    fprintf(stderr, "read_V: cannot open file %s\n", filename);
+    exit(1);
+  }
+  fread(hw, sizeof(double), 1, infile);
+  fread(&Ni, sizeof(int), 1, infile);
+  N_jl = (int*)malloc(Ni * sizeof(int));
+  if (N_jl == NULL) {
+    fprintf(stderr, "read_V: failed to allocate N_jl[%d]\n", Ni);
+    exit(1);
+  }
+  fread(N_jl, sizeof(int), Ni, infile);
+  V = create_V(*hw);
+  for (i1 = 0; i1 < Ni; i1++) {
+    for (a = 0; a < V[i1].N; a++) {
+      for (b = 0; b < V[i1].N; b++) {
+        Vi2 = V[i1].V_ab[a][b].Vi2;
+        for (i2 = 0; i2 < Ni; i2++) {
+          fread(Vi2[i2].V_cd[0], sizeof(double), Vi2[i2].N * Vi2[i2].N, infile);
+        }
+      }
+    }
+  }
+  fclose(infile);
+  return V;
 }
