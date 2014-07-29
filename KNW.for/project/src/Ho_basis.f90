@@ -71,6 +71,245 @@ CONTAINS
 !!$    
 !!$  END SUBROUTINE sort_hf
 
+
+  SUBROUTINE read_mortens_matels(Nmax,lmax,filename_sp_in,filename_matels_in)
+    IMPLICIT NONE
+
+    INTEGER, intent(in) :: Nmax, lmax
+    CHARACTER(100), optional :: filename_sp_in, filename_matels_in
+    CHARACTER(100) :: filename_sp, filename_matels
+
+    CHARACTER(100) :: slask
+    INTEGER :: II,morten_index, n, l, j2, tz, Nmaj, jindex
+    INTEGER :: ios, par, a,b,c,d, line
+    REAL(kind=r_kind) :: e_ho, matel_val
+    INTEGER :: n1,n2,n3,n4,l1,l2,l3,l4,jindex1,jindex2,jindex3,jindex4,j2max
+    INTEGER :: lpr,jindexpr,deg,deg_pr, j12, j12_2, Ho_size_all_morten, Ho_size_TBME_morten
+
+
+    INTEGER, allocatable :: lookup_mi(:,:,:)
+
+    REAL(kind=r_kind), allocatable :: matels_jcoup(:,:)
+    
+    TYPE nlj
+       INTEGER :: n,l,jindex
+    END type nlj
+    
+    TYPE(nlj), allocatable :: lookup_nlj(:)
+
+    IF(.not. present(filename_sp_in)) THEN
+       filename_sp= 'spJ.dat'
+    ELSE
+       filename_sp = filename_sp_in
+    END IF
+
+    IF(.not. present(filename_matels_in)) THEN
+       filename_matels= 'VJ-scheme.dat'
+    ELSE
+       filename_matels = filename_matels_in
+    END IF
+
+
+    !construct lookup table
+
+    OPEN(unit=1,file=TRIM(filename_sp), status="old")
+
+    !first ten lines are legend etc
+    DO II = 1,10
+       READ(1,*)
+    END DO
+
+    
+
+    Ho_size_all_morten = 0
+
+    DO l=0,lmax
+        DO jindex = 0,1
+           IF(l==0 .and. jindex==1) CYCLE
+
+           Ho_size_all_morten = Ho_size_all_morten + (Nmax-l)/2 + 1
+
+        END DO
+     END DO
+
+
+    ALLOCATE(lookup_mi(0:Nmax/2,0:lmax,0:1))
+    ALLOCATE(lookup_nlj(2*Ho_size_all_morten))
+
+    !WRITE(*,*) 'Ho_size_all = ',Ho_size_all
+
+    DO II=1,2*Ho_size_all_morten
+       READ(1,*) slask, morten_index, n, l, j2, tz, Nmaj, e_ho
+       !WRITE(*,*) morten_index,n,l,j2,tz,Nmaj,e_ho
+       
+       IF(ABS(e_ho - Ho_hbaromega*(Nmaj + 1.5_r_kind))>1e-10) THEN
+          WRITE(*,*) 'Oscillator paramters in sp file:',TRIM(filename_sp),' are inconsistent.'
+          STOP
+       END IF
+
+       IF(tz == -1) THEN !assuming this means neutron
+          IF(j2-2*l == 1) jindex = 0
+          IF(j2-2*l == -1) jindex = 1
+          lookup_mi(n,l,jindex) = morten_index
+          lookup_nlj(morten_index)%n = n
+          lookup_nlj(morten_index)%l = l
+          lookup_nlj(morten_index)%jindex = jindex
+
+          WRITE(*,*) 'n,l,jindex = ',n,l,jindex
+          WRITE(*,*) 'lookup_mi(n,l,jindex) = ',lookup_mi(n,l,jindex)
+       END IF      
+
+    END DO  
+       
+    CLOSE(1)
+
+    !read matels
+    WRITE(*,*) 'Reading J scheme matrix elements from file: ',TRIM(filename_matels)
+
+    OPEN(unit=1,file=TRIM(filename_matels), status="old")
+
+    j2max = 2*lmax + 1
+    Ho_size_TBME_morten = (lmax+1)*2*(lmax+1)*2*(Nmax/2+1)**4
+
+
+    WRITE(*,*) 'Basis for matrix elements read'
+    WRITE(*,*) 'Nmax = ',Nmax,'lmax = ',lmax
+    WRITE(*,*) 'size_TBME = ',HO_size_TBME_morten
+    WRITE(*,*) 'Basis used in hf'
+    WRITE(*,*) 'Ho_Nmax = ',Ho_nmax,'Ho_lmax = ',Ho_lmax
+    WRITE(*,*) 'Ho_size_TBME = ',Ho_size_TBME
+
+    
+    ALLOCATE(matels_jcoup(0:j2max,Ho_size_TBME_morten))
+    matels_jcoup = 0.0_r_kind
+
+    line = 1
+
+    DO 
+
+       READ(1,*,iostat=ios) tz, par, j12_2, a, b, c, d, matel_val
+
+       !WRITE(*,*) tz, par, j2, a, b, c, d, matel_val
+
+       IF(tz == -1) THEN
+
+          l1 = lookup_nlj(a)%l
+          jindex1 = lookup_nlj(a)%jindex
+          n1 = lookup_nlj(a)%n
+          l2 = lookup_nlj(b)%l
+          jindex2 = lookup_nlj(b)%jindex
+          n2 = lookup_nlj(b)%n
+          l3 = lookup_nlj(c)%l
+          jindex3 = lookup_nlj(c)%jindex
+          n3 = lookup_nlj(c)%n
+          l4 = lookup_nlj(d)%l
+          jindex4 = lookup_nlj(d)%jindex
+          n4 = lookup_nlj(d)%n
+          
+          IF(l1 /= l3 .or. jindex1 /= jindex3 .or. l2 /= l4 .or. jindex2 /= jindex4) THEN
+!!$             WRITE(*,*) 'Unused matel'
+!!$             WRITE(*,*) 'a,b,c,d = ',a,b,c,d
+!!$             WRITE(*,*) 'l1, l3, jindex1, jindex3 = ',l1,l3,jindex1,jindex3
+!!$             WRITE(*,*) 'l2, l4, jindex2, jindex4 = ',l2,l4,jindex2,jindex4
+             CYCLE
+          END IF
+
+          IF(MOD(j12_2,2) /= 0) THEN
+             WRITE(*,*) 'Incorrect jj coupling'
+             STOP
+          END IF
+          
+          j12 = j12_2 / 2
+
+!!$          !for debug
+!!$          WRITE(*,*) 'line = ',line
+!!$          WRITE(*,*) 'a,b,c,d = ',a,b,c,d
+!!$          WRITE(*,*) 'j12,l1,jindex1,l2,jindex2 = ',j12,l1,jindex1,l2,jindex2
+!!$          WRITE(*,*) 'n1,n2,n3,n4 =',n1,n2,n3,n4
+!!$
+!!$          !end for debug
+
+          matels_jcoup(j12,TBME_index_v2(Nmax,lmax,l1,jindex1,l2,jindex2,n1,n2,n3,n4)) = matel_val
+          
+
+       END IF
+
+       IF(ios<0) EXIT
+       IF(ios>0) THEN
+          WRITE(*,*) 'Errror reading file:',TRIM(filename_matels)
+          STOP
+       END IF
+
+       line = line +1 
+
+    END DO
+
+
+    CLOSE(1)
+    WRITE(*,*) 'Done'
+
+    WRITE(*,*) 'Converting matrix elements'
+    OPEN(unit=2, file="test_read_morten.txt")
+   
+
+    DO l=0,MIN(Ho_lmax,lmax)
+       DO jindex = 0,1
+          IF(l==0 .and. jindex==1) CYCLE
+          deg = Ho_degeneracy(l,jindex)
+          DO lpr = 0,MIN(Ho_lmax,lmax)
+             DO jindexpr = 0,1
+                IF(lpr==0 .and. jindexpr==1) CYCLE
+                deg_pr = Ho_degeneracy(lpr,jindexpr)
+
+                DO n1 = 0,(MIN(Ho_Nmax,Nmax)-l)/2
+                   DO n2 = 0,(MIN(Ho_Nmax,Nmax)-lpr)/2
+                      DO n3 = 0,(MIN(Ho_Nmax,Nmax)-l)/2
+                         DO n4 = 0,(MIN(Ho_Nmax,Nmax)-lpr)/2 
+
+                            matel_val = 0.0_r_kind
+                            DO j12 = 0,j2max
+                               matel_val = matel_val + REAL((2*j12+1),kind=r_kind)/REAL(deg*deg_pr,kind=r_kind)*matels_jcoup(j12,TBME_index_v2(Nmax,lmax,l,jindex,lpr,jindexpr,n1,n2,n3,n4))
+
+                               !for debug
+                               IF(ABS(matels_jcoup(j12,TBME_index_v2(Nmax,lmax,l,jindex,lpr,jindexpr,n1,n2,n3,n4))) > 1.0e-20) THEN
+
+                                  WRITE(2,*) j12,l,jindex,lpr,jindexpr,n1,n2,n3,n4,matels_jcoup(j12,TBME_index_v2(Nmax,lmax,l,jindex,lpr,jindexpr,n1,n2,n3,n4))
+                                  WRITE(2,*) 2*j12, lookup_mi(n1,l,jindex), lookup_mi(n2,lpr,jindexpr), lookup_mi(n3,l,jindex), lookup_mi(n4,lpr,jindexpr)
+                                  WRITE(2,*) (2*j12+1), deg, deg_pr
+                                  WRITE(2,*) matel_val !, matels_jcoup(j12,TBME_index_v2(Nmax,lmax,l,jindex,lpr,jindexpr,n1,n2,n3,n4))
+                                  
+                               END IF
+                               !end for debug
+
+                            END DO
+                            Ho_two_body_matels(TBME_index(l,jindex,lpr,jindexpr,n1,n2,n3,n4)) =COMPLEX(matel_val,0.0_r_kind) 
+
+!!$                            !for debug
+!!$                            IF(ABS(matel_val) > 1.0e-20) THEN
+!!$                               WRITE(*,*) l,jindex,lpr,jindexpr,n1,n2,n3,n4,Ho_two_body_matels(TBME_index(l,jindex,lpr,jindexpr,n1,n2,n3,n4))
+!!$                            END IF
+!!$                            !end for debug
+                            
+                         END DO
+                      END DO
+                   END DO
+                END DO
+             END DO
+          END DO
+       END DO
+    END DO
+
+   CLOSE(2)
+
+
+    
+    DEALLOCATE(lookup_mi,lookup_nlj)
+
+  END SUBROUTINE read_mortens_matels
+
+
+
+
   !as fortran does not support matrices with more than 7 dimensions this function
   !returns the index in the collapsed 8-dim array to where the matrix element is stored
   INTEGER FUNCTION TBME_index(l,jindex,lpr,jindexpr,n1,n2,n3,n4)
@@ -98,6 +337,33 @@ CONTAINS
 
 
   END FUNCTION TBME_index
+
+
+  INTEGER FUNCTION TBME_index_v2(Nmax,lmax,l,jindex,lpr,jindexpr,n1,n2,n3,n4)
+    IMPLICIT NONE
+    INTEGER, intent(in) :: Nmax,lmax,l,jindex,lpr,jindexpr,n1,n2,n3,n4
+
+    INTEGER :: size_block, size_block_2, size_block_4
+
+    TBME_index_v2 = 1
+
+    !n1,n3 belong to l,j
+    !n2,n4 belong to lpr,jpr
+
+    size_block = Nmax/2+1
+    size_block_2 = size_block**2
+    size_block_4 = size_block_2**2
+
+    TBME_index_v2 = TBME_index_v2 + l*2*(lmax+1)*2*size_block_4 &
+         + jindex*(lmax+1)*2*size_block_4 &
+         + lpr*2*size_block_4 + jindexpr*size_block_4 &
+         + (n1 + size_block*n3)*size_block_2 &
+         + n2 + size_block*n4
+         
+    
+
+
+  END FUNCTION TBME_index_v2
 
 
 
@@ -731,7 +997,7 @@ CONTAINS
      !should give 0,1,and 2 based on orthogonality of radial wfs
      !CALL calculate_two_body_matels_GL(1e-5_r_kind,1.0_r_kind)
 
-     IF(Ho_lmax == 0) THEN     
+     IF(Ho_lmax == 0 .and. .false.) THEN     
         CALL calculate_two_body_matels_GL(kappa_R,0.5_r_kind*V_0R)
         CALL calculate_two_body_matels_GL(kappa_S,0.5_r_kind*V_0S)
 
@@ -766,12 +1032,56 @@ CONTAINS
 
         !END DO
         !END DO
-     END IF
+     ELSE
+        !CALL read_mortens_matels(Ho_Nmax, Ho_lmax)
+        CALL read_mortens_matels(2,2)
+     END IF   
 
 
-
+     CALL print_TBMEs
 
   END SUBROUTINE hf_init
+
+
+  SUBROUTINE print_TBMEs
+    IMPLICIT NONE
+
+    INTEGER :: l,jindex,lpr,jindexpr
+    INTEGER :: n1,n2,n3,n4
+
+     OPEN(unit=1,file='matels_hf_v2.dat')
+
+     WRITE(1,*) 'Two-body matrix elements'
+
+     DO l=0,Ho_lmax
+        DO jindex = 0,1
+           IF(l==0 .and. jindex==1) CYCLE
+
+           DO lpr = 0,Ho_lmax
+              DO jindexpr = 0,1
+                 IF(lpr==0 .and. jindexpr==1) CYCLE
+
+                 DO n1 = 0,(Ho_Nmax-l)/2
+                    DO n2 = 0,(Ho_Nmax-lpr)/2
+                       DO n3 = 0,(Ho_Nmax-l)/2
+                          DO n4 = 0,(Ho_Nmax-lpr)/2                             
+
+                             WRITE(1,'(8I2,2F20.12)') l,jindex,lpr,jindexpr,n1,n2,n3,n4,REAL(Ho_two_body_matels(TBME_index(l,jindex,lpr,jindexpr,n1,n2,n3,n4)),kind=r_kind),AIMAG(Ho_two_body_matels(TBME_index(l,jindex,lpr,jindexpr,n1,n2,n3,n4)))
+
+                          END DO
+                       END DO
+                    END DO
+                 END DO
+              END DO
+           END DO
+        END DO
+     END DO
+
+     CLOSE(1)
+
+
+  END SUBROUTINE print_TBMEs
+
 
    SUBROUTINE calculate_two_body_matels(mu,V_0)
     IMPLICIT NONE
@@ -1084,23 +1394,23 @@ CONTAINS
 
     WRITE(*,*) 'Done'
 
-    OPEN(unit=1,file='matels_hf.dat')
-
-    WRITE(1,*) 'Two-body matrix elements'
-    
-    DO n1 = 0,Ho_Nmax/2!MIN(1,Ho_nmax)
-       DO n2 = 0,Ho_Nmax/2!MIN(1,Ho_nmax)
-          DO n3 = 0,Ho_Nmax/2!MIN(1,Ho_nmax)
-             DO n4 = 0,Ho_Nmax/2!MIN(1,Ho_nmax)
-                
-                WRITE(1,'(4I2,2F20.12)') n1,n2,n3,n4,REAL(Ho_two_body_matel(l,jindex,n1,n2,n3,n4),kind=r_kind),AIMAG(Ho_two_body_matel(l,jindex,n1,n2,n3,n4))
-
-             END DO
-          END DO
-       END DO
-    END DO
-
-    CLOSE(1)
+!!$    OPEN(unit=1,file='matels_hf.dat')
+!!$
+!!$    WRITE(1,*) 'Two-body matrix elements'
+!!$    
+!!$    DO n1 = 0,Ho_Nmax/2!MIN(1,Ho_nmax)
+!!$       DO n2 = 0,Ho_Nmax/2!MIN(1,Ho_nmax)
+!!$          DO n3 = 0,Ho_Nmax/2!MIN(1,Ho_nmax)
+!!$             DO n4 = 0,Ho_Nmax/2!MIN(1,Ho_nmax)
+!!$                
+!!$                WRITE(1,'(4I2,2F20.12)') n1,n2,n3,n4,REAL(Ho_two_body_matel(l,jindex,n1,n2,n3,n4),kind=r_kind),AIMAG(Ho_two_body_matel(l,jindex,n1,n2,n3,n4))
+!!$
+!!$             END DO
+!!$          END DO
+!!$       END DO
+!!$    END DO
+!!$
+!!$    CLOSE(1)
 
 
   END SUBROUTINE calculate_two_body_matels_GL
