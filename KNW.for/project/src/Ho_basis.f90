@@ -72,6 +72,8 @@ CONTAINS
 !!$  END SUBROUTINE sort_hf
 
 
+  !The following assumed that mortens matels where antisymmetric, big mistake!
+  ! I found that triplet-triplet scattering of two particles of same species by minnesota was non-zero!!!!!
   SUBROUTINE read_mortens_matels(Nmax,lmax,filename_sp_in,filename_matels_in)
     IMPLICIT NONE
 
@@ -81,18 +83,21 @@ CONTAINS
 
     CHARACTER(100) :: slask
     INTEGER :: II,morten_index, n, l, j2, tz, Nmaj, jindex
-    INTEGER :: ios, par, a,b,c,d, line
+    INTEGER :: ios, par, a,b,c,d, line, a_temp, c_temp
     REAL(kind=r_kind) :: e_ho, matel_val
     INTEGER :: n1,n2,n3,n4,l1,l2,l3,l4,jindex1,jindex2,jindex3,jindex4,j2max
     INTEGER :: lpr,jindexpr,deg,deg_pr, j12, j12_2, Ho_size_all_morten, Ho_size_TBME_morten
+    INTEGER :: j2_1,j2_2
 
 
     INTEGER, allocatable :: lookup_mi(:,:,:)
 
     REAL(kind=r_kind), allocatable :: matels_jcoup(:,:)
+    REAL(kind=r_kind) :: norm_L, norm_R
+    INTEGER :: sign_ket_perm, sign_bra_perm, ket_perm, bra_perm
     
     TYPE nlj
-       INTEGER :: n,l,jindex
+       INTEGER :: n,l,jindex, j2
     END type nlj
     
     TYPE(nlj), allocatable :: lookup_nlj(:)
@@ -154,6 +159,7 @@ CONTAINS
           lookup_nlj(morten_index)%n = n
           lookup_nlj(morten_index)%l = l
           lookup_nlj(morten_index)%jindex = jindex
+          lookup_nlj(morten_index)%j2 = j2
 
           WRITE(*,*) 'n,l,jindex = ',n,l,jindex
           WRITE(*,*) 'lookup_mi(n,l,jindex) = ',lookup_mi(n,l,jindex)
@@ -175,6 +181,7 @@ CONTAINS
     WRITE(*,*) 'Basis for matrix elements read'
     WRITE(*,*) 'Nmax = ',Nmax,'lmax = ',lmax
     WRITE(*,*) 'size_TBME = ',HO_size_TBME_morten
+    WRITE(*,*) 'j2max = ',j2max
     WRITE(*,*) 'Basis used in hf'
     WRITE(*,*) 'Ho_Nmax = ',Ho_nmax,'Ho_lmax = ',Ho_lmax
     WRITE(*,*) 'Ho_size_TBME = ',Ho_size_TBME
@@ -182,6 +189,9 @@ CONTAINS
     
     ALLOCATE(matels_jcoup(0:j2max,Ho_size_TBME_morten))
     matels_jcoup = 0.0_r_kind
+
+    OPEN(unit=3,file="matels_jcoup.dat")
+
 
     line = 1
 
@@ -193,33 +203,71 @@ CONTAINS
 
        IF(tz == -1) THEN
 
-          l1 = lookup_nlj(a)%l
-          jindex1 = lookup_nlj(a)%jindex
-          n1 = lookup_nlj(a)%n
-          l2 = lookup_nlj(b)%l
-          jindex2 = lookup_nlj(b)%jindex
-          n2 = lookup_nlj(b)%n
-          l3 = lookup_nlj(c)%l
-          jindex3 = lookup_nlj(c)%jindex
-          n3 = lookup_nlj(c)%n
-          l4 = lookup_nlj(d)%l
-          jindex4 = lookup_nlj(d)%jindex
-          n4 = lookup_nlj(d)%n
-          
-          IF(l1 /= l3 .or. jindex1 /= jindex3 .or. l2 /= l4 .or. jindex2 /= jindex4) THEN
+          !TODO
+          !derive correct normalization factors for j-scheme states
+          norm_L = 1.0_r_kind
+          norm_R = 1.0_r_kind
+          IF(a == b) norm_L = sqrt(2.0_r_kind)
+          IF(c == d) norm_R = sqrt(2.0_r_kind)
+          !end TODO
+
+          !need to do permutations in a,b,c,d indices, 4! = 4*3*2*1 = 24 
+
+          ! ab|cd  ab|dc  ba|cd  ba|dc  4 perms
+          ! cd|ab  dc|ab  cd|ba  dc|ba  4 perms
+
+
+          DO ket_perm = 1,2
+             sign_ket_perm = 1
+             IF(ket_perm == 2) THEN
+                j2_1 = lookup_nlj(a)%j2
+                j2_2 = lookup_nlj(b)%j2
+                sign_ket_perm = (-1)**(1+(j12_2-j2_1-j2_2)/2)
+                a_temp = a
+                a = b
+                b = a_temp
+             END IF
+             DO bra_perm = 1,2
+                sign_bra_perm = 1
+                IF(bra_perm == 2) THEN
+                   j2_1 = lookup_nlj(c)%j2
+                   j2_2 = lookup_nlj(d)%j2
+                   sign_bra_perm = (-1)**(1+(j12_2-j2_1-j2_2)/2)
+                   c_temp = c
+                   c = d
+                   d = c_temp
+                END IF
+
+
+
+
+                l1 = lookup_nlj(a)%l
+                jindex1 = lookup_nlj(a)%jindex
+                n1 = lookup_nlj(a)%n
+                l2 = lookup_nlj(b)%l
+                jindex2 = lookup_nlj(b)%jindex
+                n2 = lookup_nlj(b)%n
+                l3 = lookup_nlj(c)%l
+                jindex3 = lookup_nlj(c)%jindex
+                n3 = lookup_nlj(c)%n
+                l4 = lookup_nlj(d)%l
+                jindex4 = lookup_nlj(d)%jindex
+                n4 = lookup_nlj(d)%n
+
+                IF(l1 /= l3 .or. jindex1 /= jindex3 .or. l2 /= l4 .or. jindex2 /= jindex4) THEN
 !!$             WRITE(*,*) 'Unused matel'
 !!$             WRITE(*,*) 'a,b,c,d = ',a,b,c,d
 !!$             WRITE(*,*) 'l1, l3, jindex1, jindex3 = ',l1,l3,jindex1,jindex3
 !!$             WRITE(*,*) 'l2, l4, jindex2, jindex4 = ',l2,l4,jindex2,jindex4
-             CYCLE
-          END IF
+                   CYCLE
+                END IF
 
-          IF(MOD(j12_2,2) /= 0) THEN
-             WRITE(*,*) 'Incorrect jj coupling'
-             STOP
-          END IF
-          
-          j12 = j12_2 / 2
+                IF(MOD(j12_2,2) /= 0) THEN
+                   WRITE(*,*) 'Incorrect jj coupling'
+                   STOP
+                END IF
+
+                j12 = j12_2 / 2
 
 !!$          !for debug
 !!$          WRITE(*,*) 'line = ',line
@@ -229,10 +277,49 @@ CONTAINS
 !!$
 !!$          !end for debug
 
-          matels_jcoup(j12,TBME_index_v2(Nmax,lmax,l1,jindex1,l2,jindex2,n1,n2,n3,n4)) = matel_val
-          
+
+               
+                matels_jcoup(j12,TBME_index_v2(Nmax,lmax,l1,jindex1,l2,jindex2,n1,n2,n3,n4)) = sign_ket_perm*sign_bra_perm*norm_L*norm_R*matel_val
+                matels_jcoup(j12,TBME_index_v2(Nmax,lmax,l1,jindex1,l2,jindex2,n3,n4,n1,n2)) = sign_ket_perm*sign_bra_perm*norm_L*norm_R*matel_val
+
+                WRITE(3,'(5I3,F14.8)') j12,a,b,c,d,sign_ket_perm*sign_bra_perm*matel_val
+                
+
+
+
+             END DO
+          END DO
+
+          !TODO derive correct symmetry relations
+!!$          matels_jcoup(j12,TBME_index_v2(Nmax,lmax,l1,jindex1,l2,jindex2,n3,n4,n1,n2)) = matels_jcoup(j12,TBME_index_v2(Nmax,lmax,l1,jindex1,l2,jindex2,n1,n2,n3,n4))
+!!$
+!!$          matels_jcoup(j12,TBME_index_v2(Nmax,lmax,l1,jindex1,l2,jindex2,n2,n1,n4,n3)) = matels_jcoup(j12,TBME_index_v2(Nmax,lmax,l1,jindex1,l2,jindex2,n1,n2,n3,n4))
+!!$
+!!$          j2_1 = 2*l1 + (-1)**jindex1
+!!$          j2_2 = 2*l2 + (-1)**jindex2
+!!$          
+!!$          matels_jcoup(j12,TBME_index_v2(Nmax,lmax,l1,jindex1,l2,jindex2,n2,n1,n3,n4)) = &
+!!$               (-1)**(1+j12-(j2_1+j2_2)/2)*matels_jcoup(j12,TBME_index_v2(Nmax,lmax,l1,jindex1,l2,jindex2,n1,n2,n3,n4))
+!!$
+!!$          matels_jcoup(j12,TBME_index_v2(Nmax,lmax,l1,jindex1,l2,jindex2,n1,n2,n4,n3)) = &
+!!$               (-1)**(1+j12-(j2_1+j2_2)/2)*matels_jcoup(j12,TBME_index_v2(Nmax,lmax,l1,jindex1,l2,jindex2,n1,n2,n3,n4))
+!!$
+!!$          matels_jcoup(j12,TBME_index_v2(Nmax,lmax,l1,jindex1,l2,jindex2,n4,n3,n1,n2)) = &
+!!$               (-1)**(1+j12-(j2_1+j2_2)/2)*matels_jcoup(j12,TBME_index_v2(Nmax,lmax,l1,jindex1,l2,jindex2,n3,n4,n1,n2))
+!!$
+!!$          matels_jcoup(j12,TBME_index_v2(Nmax,lmax,l1,jindex1,l2,jindex2,n3,n4,n2,n1)) = &
+!!$               (-1)**(1+j12-(j2_1+j2_2)/2)*matels_jcoup(j12,TBME_index_v2(Nmax,lmax,l1,jindex1,l2,jindex2,n3,n4,n1,n2))
+
+          !matels_jcoup(j12,TBME_index_v2(Nmax,lmax,l1,jindex1,l2,jindex2,n2,n1,n3,n4)) = matels_jcoup(j12,TBME_index_v2(Nmax,lmax,l1,jindex1,l2,jindex2,n1,n2,n3,n4))          
+
+
+
+
+          !end TODO
+
 
        END IF
+
 
        IF(ios<0) EXIT
        IF(ios>0) THEN
@@ -246,10 +333,15 @@ CONTAINS
 
 
     CLOSE(1)
+
+    CLOSE(3)
     WRITE(*,*) 'Done'
 
     WRITE(*,*) 'Converting matrix elements'
     OPEN(unit=2, file="test_read_morten.txt")
+
+
+    
    
 
     DO l=0,MIN(Ho_lmax,lmax)
@@ -267,16 +359,22 @@ CONTAINS
                          DO n4 = 0,(MIN(Ho_Nmax,Nmax)-lpr)/2 
 
                             matel_val = 0.0_r_kind
+                            
+                            j2max = (2*l+(-1)**jindex + 2*lpr+(-1)**jindex)/2
+                            !for test
+                            !j2max = 0
+                            !end for test
+
                             DO j12 = 0,j2max
                                matel_val = matel_val + REAL((2*j12+1),kind=r_kind)/REAL(deg*deg_pr,kind=r_kind)*matels_jcoup(j12,TBME_index_v2(Nmax,lmax,l,jindex,lpr,jindexpr,n1,n2,n3,n4))
 
                                !for debug
                                IF(ABS(matels_jcoup(j12,TBME_index_v2(Nmax,lmax,l,jindex,lpr,jindexpr,n1,n2,n3,n4))) > 1.0e-20) THEN
 
-                                  WRITE(2,*) j12,l,jindex,lpr,jindexpr,n1,n2,n3,n4,matels_jcoup(j12,TBME_index_v2(Nmax,lmax,l,jindex,lpr,jindexpr,n1,n2,n3,n4))
-                                  WRITE(2,*) 2*j12, lookup_mi(n1,l,jindex), lookup_mi(n2,lpr,jindexpr), lookup_mi(n3,l,jindex), lookup_mi(n4,lpr,jindexpr)
-                                  WRITE(2,*) (2*j12+1), deg, deg_pr
-                                  WRITE(2,*) matel_val !, matels_jcoup(j12,TBME_index_v2(Nmax,lmax,l,jindex,lpr,jindexpr,n1,n2,n3,n4))
+                                  WRITE(2,'(9I2,F12.8)') j12,l,2*l+(-1)**jindex,lpr,2*lpr+(-1)**jindex,n1,n2,n3,n4,REAL((2*j12+1),kind=r_kind)/REAL(deg*deg_pr,kind=r_kind)*matels_jcoup(j12,TBME_index_v2(Nmax,lmax,l,jindex,lpr,jindexpr,n1,n2,n3,n4))
+                                  !WRITE(2,*) 2*j12, lookup_mi(n1,l,jindex), lookup_mi(n2,lpr,jindexpr), lookup_mi(n3,l,jindex), lookup_mi(n4,lpr,jindexpr)
+                                  !WRITE(2,*) (2*j12+1), deg, deg_pr
+                                  !WRITE(2,*) matel_val !, matels_jcoup(j12,TBME_index_v2(Nmax,lmax,l,jindex,lpr,jindexpr,n1,n2,n3,n4))
                                   
                                END IF
                                !end for debug
@@ -306,6 +404,287 @@ CONTAINS
     DEALLOCATE(lookup_mi,lookup_nlj)
 
   END SUBROUTINE read_mortens_matels
+
+
+  SUBROUTINE read_mortens_matels_v2(Nmax,lmax,filename_sp_in,filename_matels_in)
+    IMPLICIT NONE
+
+    INTEGER, intent(in) :: Nmax, lmax
+    CHARACTER(100), optional :: filename_sp_in, filename_matels_in
+    CHARACTER(100) :: filename_sp, filename_matels
+
+    CHARACTER(100) :: slask
+    INTEGER :: II,morten_index, n, l, j2, tz, Nmaj, jindex
+    INTEGER :: ios, par, a,b,c,d, line, a_temp, c_temp
+    REAL(kind=r_kind) :: e_ho, matel_val
+    INTEGER :: n1,n2,n3,n4,l1,l2,l3,l4,jindex1,jindex2,jindex3,jindex4,j2max
+    INTEGER :: lpr,jindexpr,deg,deg_pr, j12, j12_2, Ho_size_all_morten, Ho_size_TBME_morten
+    INTEGER :: j2_1,j2_2, length
+
+
+    INTEGER, allocatable :: lookup_mi(:,:,:)
+
+    REAL(kind=r_kind), allocatable :: matels_jcoup(:,:,:,:,:)
+    REAL(kind=r_kind) :: norm_L, norm_R
+    INTEGER :: sign_ket_perm, sign_bra_perm, ket_perm, bra_perm
+    
+    TYPE nlj
+       INTEGER :: n,l,jindex, j2
+    END type nlj
+    
+    TYPE(nlj), allocatable :: lookup_nlj(:)
+
+    IF(.not. present(filename_sp_in)) THEN
+       filename_sp= 'spJ.dat'
+    ELSE
+       filename_sp = filename_sp_in
+    END IF
+
+    IF(.not. present(filename_matels_in)) THEN
+       filename_matels= 'VJ-scheme.dat'
+    ELSE
+       filename_matels = filename_matels_in
+    END IF
+
+
+    !construct lookup table
+
+    OPEN(unit=1,file=TRIM(filename_sp), status="old")
+
+    !first ten lines are legend etc
+    DO II = 1,10
+       READ(1,*)
+    END DO
+
+    
+
+    Ho_size_all_morten = 0
+
+    DO l=0,lmax
+        DO jindex = 0,1
+           IF(l==0 .and. jindex==1) CYCLE
+
+           Ho_size_all_morten = Ho_size_all_morten + (Nmax-l)/2 + 1
+
+        END DO
+     END DO
+
+     WRITE(*,*) 'Ho_size_all_morten = ',Ho_size_all_morten
+
+
+    ALLOCATE(lookup_mi(0:Nmax/2,0:lmax,0:1))
+    
+    !TODO fix this, morten uses som funny triangular truncation
+    !ALLOCATE(lookup_nlj(2*Ho_size_all_morten))
+
+    ALLOCATE(lookup_nlj(4*Ho_size_all_morten))
+
+    
+
+
+    WRITE(*,*) 'Ho_size_all = ',Ho_size_all
+
+    DO II=1,2*Ho_size_all_morten
+       READ(1,*) slask, morten_index, n, l, j2, tz, Nmaj, e_ho
+       !WRITE(*,*) morten_index,n,l,j2,tz,Nmaj,e_ho
+       
+       IF(ABS(e_ho - Ho_hbaromega*(Nmaj + 1.5_r_kind))>1e-10) THEN
+          WRITE(*,*) 'Oscillator paramters in sp file:',TRIM(filename_sp),' are inconsistent.'
+          STOP
+       END IF       
+
+       IF(tz == -1) THEN !assuming this means neutron
+          IF(j2-2*l == 1) jindex = 0
+          IF(j2-2*l == -1) jindex = 1
+          lookup_mi(n,l,jindex) = morten_index
+          lookup_nlj(morten_index)%n = n
+          lookup_nlj(morten_index)%l = l
+          lookup_nlj(morten_index)%jindex = jindex
+          lookup_nlj(morten_index)%j2 = j2
+
+          !WRITE(*,*) 'n,l,jindex = ',n,l,jindex
+          !WRITE(*,*) 'lookup_mi(n,l,jindex) = ',lookup_mi(n,l,jindex)
+       END IF      
+
+    END DO  
+       
+    CLOSE(1)
+
+    !read matels
+    WRITE(*,*) 'Reading J scheme matrix elements from file: ',TRIM(filename_matels)
+
+    OPEN(unit=1,file=TRIM(filename_matels), status="old")
+
+    j2max = 2*lmax + 1
+    Ho_size_TBME_morten = (lmax+1)*2*(lmax+1)*2*(Nmax/2+1)**4
+
+
+    WRITE(*,*) 'Basis for matrix elements read'
+    WRITE(*,*) 'Nmax = ',Nmax,'lmax = ',lmax
+    WRITE(*,*) 'size_TBME = ',HO_size_TBME_morten
+    WRITE(*,*) 'j2max = ',j2max
+    WRITE(*,*) 'Basis used in hf'
+    WRITE(*,*) 'Ho_Nmax = ',Ho_nmax,'Ho_lmax = ',Ho_lmax
+    WRITE(*,*) 'Ho_size_TBME = ',Ho_size_TBME
+
+    
+    !TODO fix this
+    length = MIN(2*SIZE(lookup_nlj),4*Ho_size_all_morten)
+    !TODO
+
+    WRITE(*,*) 'length = ',length
+
+    ALLOCATE(matels_jcoup(0:j2max,length,length,length,length))
+    matels_jcoup = 0.0_r_kind
+
+    OPEN(unit=3,file="matels_jcoup.dat")
+
+    
+    line = 1
+
+    DO 
+
+       READ(1,*,iostat=ios) tz, par, j12_2, a, b, c, d, matel_val
+
+       !WRITE(*,*) tz, par, j2, a, b, c, d, matel_val
+
+       IF(tz == -1) THEN
+
+          Norm_R = 1.0_r_kind
+          Norm_L = 1.0_r_kind
+
+          IF(a/=b) Norm_L = 1.0_r_kind/sqrt(2.0_r_kind)
+          IF(c/=d) Norm_R = 1.0_r_kind/sqrt(2.0_r_kind)
+
+          DO ket_perm = 1,2
+
+             
+             IF(ket_perm == 2) THEN
+                j2_1 = lookup_nlj(a)%j2
+                j2_2 = lookup_nlj(b)%j2
+                sign_ket_perm = (-1)**((j12_2-j2_1-j2_2)/2)
+                a_temp = a
+                a = b
+                b = a_temp
+             ELSE
+                sign_ket_perm = 1
+             END IF
+             DO bra_perm = 1,2
+
+                IF(bra_perm == 2) THEN
+                   j2_1 = lookup_nlj(c)%j2
+                   j2_2 = lookup_nlj(d)%j2
+                   sign_bra_perm = (-1)**((j12_2-j2_1-j2_2)/2)
+                   c_temp = c
+                   c = d
+                   d = c_temp
+                ELSE
+                   sign_bra_perm = 1
+                END IF
+
+
+
+                matels_jcoup(j12_2/2,a,b,c,d) = Norm_L*Norm_R*matel_val
+                matels_jcoup(j12_2/2,c,d,a,b) = Norm_L*Norm_R*matel_val
+
+                WRITE(3,'(2I3)') ket_perm, bra_perm
+                WRITE(3,'(5I3,F14.8)') j12_2/2,a,b,c,d,sign_ket_perm*sign_bra_perm*matel_val 
+
+             END DO
+          END DO
+
+       END IF
+
+
+       IF(ios<0) EXIT
+       IF(ios>0) THEN
+          WRITE(*,*) 'Errror reading file:',TRIM(filename_matels)
+          STOP
+       END IF
+
+       line = line +1 
+
+    END DO
+
+
+    CLOSE(1)
+
+    CLOSE(3)
+    WRITE(*,*) 'Done'
+
+    WRITE(*,*) 'Converting matrix elements'
+    OPEN(unit=2, file="test_read_morten.txt")
+
+
+    
+   
+
+    DO l=0,MIN(Ho_lmax,lmax)
+       DO jindex = 0,1
+          IF(l==0 .and. jindex==1) CYCLE
+          deg = Ho_degeneracy(l,jindex)
+          DO lpr = 0,MIN(Ho_lmax,lmax)
+             DO jindexpr = 0,1
+                IF(lpr==0 .and. jindexpr==1) CYCLE
+                deg_pr = Ho_degeneracy(lpr,jindexpr)
+
+                DO n1 = 0,(MIN(Ho_Nmax,Nmax)-l)/2
+                   DO n2 = 0,(MIN(Ho_Nmax,Nmax)-lpr)/2
+                      DO n3 = 0,(MIN(Ho_Nmax,Nmax)-l)/2
+                         DO n4 = 0,(MIN(Ho_Nmax,Nmax)-lpr)/2 
+
+                            matel_val = 0.0_r_kind
+                            
+                            j2max = (2*l+(-1)**jindex + 2*lpr+(-1)**jindexpr)/2
+                            !for test
+                            !j2max = 0
+                            !end for test
+
+                            DO j12 = 0,j2max
+                               a = lookup_mi(n1,l,jindex)
+                               b = lookup_mi(n2,lpr,jindexpr)
+                               c = lookup_mi(n3,l,jindex)
+                               d = lookup_mi(n4,lpr,jindexpr)
+
+                               j2_1 = 2*l+(-1)**jindex
+                               j2_2 = 2*lpr+(-1)**jindexpr
+
+
+                               matel_val = matel_val + REAL((2*j12+1),kind=r_kind)/REAL(deg*deg_pr,kind=r_kind) * (matels_jcoup(j12,a,b,c,d) -  (-1)**(j12-(j2_1+j2_2)/2)*matels_jcoup(j12,a,b,d,c))
+
+                               WRITE(2,'(5I3,F14.10)') j12,a,b,c,d,matels_jcoup(j12,a,b,c,d)
+                               WRITE(2,'(5I3,F14.10)') j12,a,b,c,d,matels_jcoup(j12,a,b,d,c)
+                               WRITE(2,*) 
+                               !matel_val = REAL((2*j12+1),kind=r_kind)/REAL(deg*deg_pr,kind=r_kind)*(matels_jcoup(j12,a,b,c,d)+matels_jcoup(j12,a,b,d,c))
+
+                               !for debug                              
+                               !end for debug
+
+                            END DO
+                            Ho_two_body_matels(TBME_index(l,jindex,lpr,jindexpr,n1,n2,n3,n4)) =COMPLEX(matel_val,0.0_r_kind) 
+
+!!$                            !for debug
+!!$                            IF(ABS(matel_val) > 1.0e-20) THEN
+!!$                               WRITE(*,*) l,jindex,lpr,jindexpr,n1,n2,n3,n4,Ho_two_body_matels(TBME_index(l,jindex,lpr,jindexpr,n1,n2,n3,n4))
+!!$                            END IF
+!!$                            !end for debug
+                            
+                         END DO
+                      END DO
+                   END DO
+                END DO
+             END DO
+          END DO
+       END DO
+    END DO
+
+   CLOSE(2)
+
+
+    
+    DEALLOCATE(lookup_mi,lookup_nlj)
+
+  END SUBROUTINE read_mortens_matels_v2
 
 
 
@@ -878,7 +1257,7 @@ CONTAINS
   END SUBROUTINE hf_diagonalize
 
 
-  SUBROUTINE init_Ho_basis(nmax,lmax,b,hbaromega)
+  SUBROUTINE init_Ho_basis(Nmax,lmax,b,hbaromega)
     IMPLICIT NONE
 
     REAL(kind=r_kind), intent(in) :: b
@@ -886,16 +1265,14 @@ CONTAINS
     INTEGER, intent(in) :: nmax, lmax
 
     WRITE(*,*) 'Initializing ho basis'
-
-    !currently only allowing for lmax = 0, need to consider better structure for block diagonality for lmax>0
-    IF(lmax > 0) THEN
-       WRITE(*,*) 'Only lmax = 0 supportet ATM, quitting'
+   
+    IF(lmax > Nmax) THEN
+       WRITE(*,*) "In init_ho_basis: lmax > Nmax"
        STOP
     END IF
-
-   
+    
     Ho_lmax = lmax
-    Ho_Nmax = 2*nmax+lmax
+    Ho_Nmax = Nmax
  
     IF(.not. present(hbaromega)) THEN
 
@@ -941,6 +1318,8 @@ CONTAINS
     REAL(kind=r_kind), parameter :: V_0R = 200.00_r_kind
     REAL(kind=r_kind), parameter :: kappa_S = 0.465_r_kind
     REAL(kind=r_kind), parameter :: V_0S = -91.85_r_kind
+
+    CHARACTER(100) :: file1,file2
 
 
     WRITE(*,*) 'Allocating matricies for HF'
@@ -1033,8 +1412,16 @@ CONTAINS
         !END DO
         !END DO
      ELSE
-        !CALL read_mortens_matels(Ho_Nmax, Ho_lmax)
-        CALL read_mortens_matels(2,2)
+!!$        file1 = 'spJ.swave.dat'
+!!$        file2 = 'VJ-scheme.swave.dat'
+!!$        CALL read_mortens_matels_v2(8, 0,file1,file2 )
+
+
+        file1 = 'spJ.Nmax3.dat'
+        file2 = 'VJ-scheme.Nmax3.dat'
+        !Nmax lmax
+        CALL read_mortens_matels_v2(3, 3,file1,file2 )
+        !CALL read_mortens_matels(2,2)
      END IF   
 
 

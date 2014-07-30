@@ -21,15 +21,15 @@ CONTAINS
   iteration_max = 20
   tol = 1e-15_r_kind
   num_part = 2
-  lmax = 0
-  nmax = 1
-  !nmax = 4
-
+  !lmax = 0
+  !nmax = 1
+  Nmax = 3
+  lmax = 3
 
   mixing = 0.0_r_kind
   
 
-  CALL init_Ho_basis(nmax,lmax,b,hbaromega) !b is not used if hbaromega is supplied
+  CALL init_Ho_basis(Nmax,lmax,b,hbaromega) !b is not used if hbaromega is supplied
   !CALL init_Ho_basis(nmax,lmax,b)
 
   WRITE(*,*) 'hbarc = ',hbarc
