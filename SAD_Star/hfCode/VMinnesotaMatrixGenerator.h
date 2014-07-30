@@ -26,9 +26,12 @@ using namespace arma;
 
 // Declarations
 namespace VMinnesotaMatrixGenerator{
-  typedef vector<vector<vector<vector<double> > > > TwoBodyMat;
+  typedef vector<vector<vector<vector<double> > > > FourIndiceMat;
+  typedef vector<vector< FourIndiceMat > > TwoBodyMat;
 
+
+  TwoBodyMat emptyMat(int nMax, int lMax);
   void fillHMatrix(mat& H, mat& density, vector<vector<vector<vector<double> > > >& Vabcd, double& b);
-  void calc2BodyMat(vector<vector<vector<vector<double> > > >& Vabcd, double& b, int order);
+  void calc2BodyMat(TwoBodyMat& Vabcd, double& b, int order);
 }
 
