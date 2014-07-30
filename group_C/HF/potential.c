@@ -21,6 +21,38 @@ double T_me(double hw, int n1, int n2, int l)
     return 0.;
 }
 
+// creates a table of spherical HO w.f. at Gauss-Laguerre nodes to be used in V_me
+double ***make_sho_table(double mw, int nmax, int lmax)
+{
+  int n, l, ir;
+  double ***sho_nlr;
+  sho_nlr = (double***)malloc(nmax * sizeof(double**));
+  if (sho_nlr == NULL) {
+    fprintf(stderr, "make_sho_table: failed to allocate sho_nlr[%d]\n", nmax);
+    exit(1);
+  }
+  sho_nlr[0] = (double**)malloc(nmax * lmax * sizeof(double*));
+  if (sho_nlr[0] == NULL) {
+    fprintf(stderr, "make_sho_table: failed to allocate sho_nlr[%d][%d]\n", nmax, lmax);
+    exit(1);
+  }
+  sho_nlr[0][0] = (double*)malloc(nmax * lmax * gl.N * sizeof(double));
+  if (sho_nlr[0][0] == NULL) {
+    fprintf(stderr, "make_sho_table: failed to allocate sho_nlr[%d][%d][%d]\n",
+            nmax, lmax, gl.N);
+    exit(1);
+  }
+  for (n = 0; n < nmax; n++) {
+    sho_nlr[n] = sho_nlr[0] + n * lmax;
+    for (l = 0; l < lmax; l++) {
+      sho_nlr[n][l] = sho_nlr[0][0] + (n * lmax + l) * gl.N;
+      for (ir = 0; ir < gl.N; ir++)
+        sho_nlr[n][l][ir] = sho_wf(gl.x[ir], mw, n, l);
+    }
+  }
+  return sho_nlr;
+}
+
 // antisymmetrized matrix elements of Minnesota potential in spherical HO basis
 // V_acbd, where a-b and c-d are pairs of the same l,j (i.e. are coupled to J=0)
 // direct term: a-b integrated over r1, c-d integrated over r2
@@ -37,7 +69,7 @@ void V_me(Vi1_t *V, double hw)
   int i1, i2, ir1, ir2, a, b, c, d, L;
   double r1, r2, mw, rm2, rp2;
   double sum1R, sum1S, sum2R, sum2S, bess, coef;
-  double *halfint1, *halfint2, *coef1, *coef2;
+  double ***sho_nlr, *halfint1, *halfint2, *coef1, *coef2;
   Vi2_t *Vi2;
   mw = hw / H2M;
   // matrix elements use double integration by Gauss-Laguerre quadrature
@@ -50,6 +82,7 @@ void V_me(Vi1_t *V, double hw)
     fprintf(stderr, "V_me: failed allocation of auxiliary arrays halfint[%d] or coef[%d]\n", gl.N, Ni);
     exit(1);
   }
+  sho_nlr = make_sho_table(mw, N_jl[0], (Ni+1)/2); // tabulate SHO w.f.
 /*  for (i1 = 0; i1 < Ni; i1++) {  // zeroing the matrix elements
     for (a = 0; a < V[i1].N; a++) {
       for (b = 0; b < V[i1].N; b++) {
@@ -74,7 +107,7 @@ void V_me(Vi1_t *V, double hw)
             r1 = gl.x[ir1];
             rm2 = (r1-r2)*(r1-r2);
             rp2 = (r1+r2)*(r1+r2);
-            halfint1[ir2] += gl.w[ir1] * r1 * sho_wf(r1,mw,a,V[i1].l1) * sho_wf(r1,mw,b,V[i1].l1)
+            halfint1[ir2] += gl.w[ir1] * r1 * sho_nlr[a][V[i1].l1][ir1] * sho_nlr[b][V[i1].l1][ir1]
                               * (V0R*(exp(-kR*rm2)-exp(-kR*rp2))/(16*kR)
                                - V0S*(exp(-kS*rm2)-exp(-kS*rp2))/(16*kS));
           }
@@ -110,11 +143,11 @@ void V_me(Vi1_t *V, double hw)
                 coef = (V[i1].l1*2 + 1) * (Vi2[i2].l2*2 + 1);
                 sum2R *= coef;
                 sum2S *= coef;
-                halfint2[ir1] += gl.w[ir2] * r2 * r2 * sho_wf(r2,mw,c,Vi2[i2].l2) * sho_wf(r2,mw,b,V[i1].l1)
+                halfint2[ir1] += gl.w[ir2] * r2 * r2 * sho_nlr[c][Vi2[i2].l2][ir2] * sho_nlr[b][V[i1].l1][ir2]
                               * (V0R * exp(-kR*rm2) * (sum1R - sum2R) / 2
                                - V0S * exp(-kS*rm2) * (sum1S - sum2S) / 2);
               }
-              halfint2[ir1] *= sho_wf(r1,mw,a,V[i1].l1);
+              halfint2[ir1] *= sho_nlr[a][V[i1].l1][ir1];
             }
             for (d = 0; d < Vi2[i2].N; d++) {
               sum1R = 0.;  // direct integral
@@ -122,9 +155,9 @@ void V_me(Vi1_t *V, double hw)
               for (ir2 = 0; ir2 < gl.N; ir2++) {
                 r1 = r2 = gl.x[ir1=ir2]; // exchange integral is done over r1
                 sum1R += gl.w[ir2] * halfint1[ir2] * r2
-                         * sho_wf(r2,mw,c,Vi2[i2].l2) * sho_wf(r2,mw,d,Vi2[i2].l2);
+                         * sho_nlr[c][Vi2[i2].l2][ir2] * sho_nlr[d][Vi2[i2].l2][ir2];
                 sum2R += gl.w[ir1] * halfint2[ir1] * r1 * r1
-                         * sho_wf(r1,mw,d,Vi2[i2].l2);
+                         * sho_nlr[d][Vi2[i2].l2][ir1];
               }
               sum1S = (sum1R + sum2R) * (Vi2[i2]._2j2 + 1); // direct + exchange term
               // term (2j+1) is from the summation over m-degenerate density matrices
@@ -147,6 +180,7 @@ void V_me(Vi1_t *V, double hw)
   free(halfint2);
   free(coef1);
   free(coef2);
+  free(sho_nlr[0][0]); free(sho_nlr[0]); free(sho_nlr);
 }
 
 Vi1_t *create_V(double hw)
