@@ -813,7 +813,7 @@ CONTAINS
           DO n=0,(Ho_Nmax-l)/2
              hf_states_all(II)%l = l
              hf_states_all(II)%jindex = jindex
-             hf_states_all(II)%n = II
+             hf_states_all(II)%n = n
              hf_states_all(II)%e = hf_energies(l,jindex,n)
 
              hf_energies_all(II) = hf_energies(l,jindex,n)
@@ -835,8 +835,11 @@ CONTAINS
     !finds the fermi indicies
 
     hf_states_all(:)%occ = 0.0_r_kind
-    fermi_index_hfbasis(:,:) = 0
-    particle_number = 0
+    
+!    fermi_index_hfbasis(:,:) = 0
+        fermi_index_hfbasis(:,:) = -1
+
+   particle_number = 0
     !fermi_index_tot = 0
     II = 0
     DO WHILE(particle_number < N_request)
@@ -856,6 +859,9 @@ CONTAINS
        e_fermi = e
        !fermi_index_tot = fermi_index_tot + 1
        II = II + 1
+
+       WRITE(*,*) 'Find fermi: l = ',l,'n= ',n,'jindex = ',jindex,'fermi_index = ',n 
+
 
     END DO
 
@@ -1002,9 +1008,9 @@ CONTAINS
              
                 sum_occupied = zero_c
                 
-!!$                WRITE(*,*) 'Update density: n1=',n1,'n2=',n2
-!!$                WRITE(*,*) 'Update density: fermi_index =',fermi_index_hfbasis(l,jindex)  
-!!$                WRITE(*,*) 'Update density: hf_transform(l,jindex,n1,n2) =',hf_transform(l,jindex,n1,n2) 
+                WRITE(*,*) 'Update density: l=',l,'n1=',n1,'n2=',n2
+                WRITE(*,*) 'Update density: fermi_index =',fermi_index_hfbasis(l,jindex)  
+                WRITE(*,*) 'Update density: hf_transform(l,jindex,n1,n2) =',hf_transform(l,jindex,n1,n2) 
 
                 DO II = 0,fermi_index_hfbasis(l,jindex)  !hf_transform should be sorted according to hf sp-energies in each block
 
@@ -1117,6 +1123,8 @@ CONTAINS
 
     Etot = 0.0_r_kind
 
+    WRITE(*,*) 'hf_total_energy: Ho_lmax = ',Ho_lmax
+
     DO l=0,Ho_lmax
        DO jindex = 0,1
           IF(l==0 .and. jindex==1) CYCLE
@@ -1124,7 +1132,7 @@ CONTAINS
           DO n1 = 0,(Ho_Nmax-l)/2
              Etot = Etot + Ho_hbaromega*(2.0_r_kind*n1+l+1.5_r_kind)*(j2+1)*density_matrix(l,jindex,n1,n1)
 
-!!$             WRITE(*,*) 'n1=',n1,'density_matrix(l,jindex,n1,n1) = ',density_matrix(l,jindex,n1,n1)
+             WRITE(*,*) 'l',l,'n1=',n1,'density_matrix(l,jindex,n1,n1) = ',density_matrix(l,jindex,n1,n1)
 
              DO n2 = 0,(Ho_Nmax-l)/2
 

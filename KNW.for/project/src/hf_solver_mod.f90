@@ -20,7 +20,7 @@ CONTAINS
   hbaromega = 10.0_r_kind
   iteration_max = 20
   tol = 1e-15_r_kind
-  num_part = 2
+  num_part = 8
   !lmax = 0
   !nmax = 1
   Nmax = 3
