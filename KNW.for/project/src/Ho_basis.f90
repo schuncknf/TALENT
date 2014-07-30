@@ -27,7 +27,10 @@ MODULE Ho_basis
   END type hf_state
 
   REAL(kind=r_kind), protected :: Ho_b, Ho_hbaromega
-  INTEGER, protected :: Ho_nmax, Ho_lmax, Ho_size_all  !TODO change Ho_nmax to array containing different nmax for different l
+  INTEGER, protected :: Ho_Nmax, Ho_lmax, Ho_size_all  
+  ! Ho_Nmax means the major osc. qn from this version on!
+
+
 
   REAL(kind=r_kind), allocatable, protected:: h_sp(:,:) !used in testing/coulomb excersize
 
@@ -47,9 +50,17 @@ MODULE Ho_basis
 
   INTEGER, allocatable, protected :: fermi_index_hfbasis(:,:) !l,jindex
   COMPLEX(kind=r_kind), allocatable, protected :: hf_hamiltonian(:,:,:,:) !l,jindex,n,npr
-  COMPLEX(kind=r_kind), allocatable, protected :: Ho_two_body_matel(:,:,:,:,:,:) !l,jindex,n1,n2,n3,n4
+  
 
- !Check the symmtetries of the two-body matrix elements, this form might be wrong. Should work in the case of l=0 j=0.5.
+  COMPLEX(kind=r_kind), allocatable, protected :: Ho_two_body_matel(:,:,:,:,:,:) !l,jindex,n1,n2,n3,n4
+  !Check the symmtetries of the two-body matrix elements, this form might be wrong. Should work in the case of l=0 j=0.5.
+
+  !The symmetries of the rot invariant interaction gives that we need the following structure
+  COMPLEX(kind=r_kind), allocatable, protected :: Ho_two_body_matels(:)
+  INTEGER, protected :: Ho_size_TBME
+  !Ho_two_body_matels(:,:,:,:,:,:,:,:) !l,jindex, lpr, jindexpr, n1,n2,n3,n4
+
+
   COMPLEX(kind=r_kind), allocatable, protected :: hf_gamma(:,:,:,:)
   INTEGER, protected :: hf_num_part_request
 
@@ -59,6 +70,36 @@ CONTAINS
 !!$  SUBROUTINE sort_hf
 !!$    
 !!$  END SUBROUTINE sort_hf
+
+  !as fortran does not support matrices with more than 7 dimensions this function
+  !returns the index in the collapsed 8-dim array to where the matrix element is stored
+  INTEGER FUNCTION TBME_index(l,jindex,lpr,jindexpr,n1,n2,n3,n4)
+    IMPLICIT NONE
+    INTEGER, intent(in) :: l,jindex,lpr,jindexpr,n1,n2,n3,n4
+
+    INTEGER :: size_block, size_block_2, size_block_4
+
+    TBME_index = 1
+
+    !n1,n3 belong to l,j
+    !n2,n4 belong to lpr,jpr
+
+    size_block = Ho_Nmax/2+1
+    size_block_2 = size_block**2
+    size_block_4 = size_block_2**2
+
+    TBME_index = TBME_index + l*2*(Ho_lmax+1)*2*size_block_4 &
+         + jindex*(Ho_lmax+1)*2*size_block_4 &
+         + lpr*2*size_block_4 + jindexpr*size_block_4 &
+         + (n1 + size_block*n3)*size_block_2 &
+         + n2 + size_block*n4
+         
+    
+
+
+  END FUNCTION TBME_index
+
+
 
   SUBROUTINE hf_calculate_delta(delta)
     IMPLICIT NONE
@@ -124,7 +165,7 @@ CONTAINS
        DO jindex = 0,1
           IF(l==0 .and. jindex==1) CYCLE
 
-          DO n=0,Ho_nmax
+          DO n=0,(Ho_Nmax-l)/2
              hf_states_all(II)%l = l
              hf_states_all(II)%jindex = jindex
              hf_states_all(II)%n = II
@@ -231,7 +272,7 @@ CONTAINS
 
     particle_number = 0
     
-    N_major_max = 2*Ho_nmax + Ho_lmax
+    !N_major_max = 2*Ho_nmax + Ho_lmax !changed def of Ho_Nmax
 
     density_matrix = (0.0_r_kind,0.0_r_kind)
 
@@ -239,13 +280,13 @@ CONTAINS
     WRITE(*,*) 'hf_init_dens: filling states'
     WRITE(*,'(A3,A3,A3)') 'n','l','2j'
 
-    Ho_fill_shells :  DO l = 0,N_major_max
+    Ho_fill_shells :  DO l = 0,Ho_lmax
        DO jindex = 0,1
           IF(l==0 .and. jindex==1) CYCLE
 
-          DO n = 0,(N_major_max - l)/2
+          DO n = 0,(Ho_Nmax - l)/2
 
-             IF(n > Ho_nmax .or. l > Ho_lmax) CYCLE
+             !IF(n > Ho_nmax .or. l > Ho_lmax) CYCLE !unnencecary with changed def of Nmax
 
              density_matrix(l,jindex,n,n) = (1.0_r_kind,0.0_r_kind)
              particle_number = particle_number + Ho_degeneracy(l,jindex)
@@ -310,8 +351,8 @@ CONTAINS
           IF(l==0 .and. jindex==1) CYCLE
 
           
-          DO n1 = 0,Ho_nmax
-             DO n2 = n1,Ho_nmax
+          DO n1 = 0,(Ho_Nmax-l)/2
+             DO n2 = n1,(Ho_Nmax-l)/2
              !DO n2 = 0,Ho_nmax
              
                 sum_occupied = zero_c
@@ -344,7 +385,7 @@ CONTAINS
   SUBROUTINE hf_update_hamiltonian
     IMPLICIT NONE
 
-    INTEGER :: l,jindex,n1,n2,n3,n4
+    INTEGER :: l,jindex,n1,n2,n3,n4,lpr,jindexpr,deg
     COMPLEX(kind=r_kind), parameter :: zero_c = (0.0_r_kind,0.0_r_kind)
     COMPLEX(kind=r_kind) :: Gamma
 
@@ -355,22 +396,46 @@ CONTAINS
     DO l=0,Ho_lmax
        DO jindex = 0,1
           IF(l==0 .and. jindex==1) CYCLE
-          DO n1 = 0,Ho_nmax
-             DO n2 = n1,Ho_nmax
-             !DO n2 = 0,Ho_nmax
-                
-                Gamma = zero_c
-                DO n3 = 0,Ho_nmax
-                   DO n4 = 0,Ho_nmax 
-                      
-                      !for the l=0 subspace
-                      Gamma = Gamma + Ho_two_body_matel(l,jindex,n1,n4,n2,n3)*density_matrix(l,jindex,n3,n4) 
-                      !
 
+          DO n1 = 0,(Ho_Nmax-l)/2
+             DO n2 = n1,(Ho_Nmax-l)/2
+                !DO n2 = 0,Ho_nmax
+
+                Gamma = zero_c
+                DO lpr = 0,Ho_lmax
+                   DO jindexpr = 0,1
+                      IF(lpr==0 .and. jindexpr==1) CYCLE
+                      deg = Ho_degeneracy(lpr,jindexpr)
+
+                      DO n3 = 0,(Ho_Nmax-lpr)/2
+                         DO n4 = 0,(Ho_Nmax-lpr)/2 
+
+                            !for the l=0 subspace
+                            !Gamma = Gamma + Ho_two_body_matel(l,jindex,n1,n4,n2,n3)*density_matrix(l,jindex,n3,n4) 
+                            !General
+                            Gamma = Gamma + deg*Ho_two_body_matels(TBME_index(l,jindex,lpr,jindexpr,n1,n4,n2,n3))*density_matrix(lpr,jindexpr,n3,n4) 
+
+!!$                            !for debug
+!!$                            WRITE(*,*) 'n1,n2,n3,n4 = ',n1,n2,n3,n4
+!!$                            WRITE(*,*) TBME_index(l,jindex,lpr,jindexpr,n1,n2,n3,n4)
+!!$                            WRITE(*,*) Ho_two_body_matel(l,jindex,n1,n2,n3,n4)
+!!$                            WRITE(*,*) Ho_two_body_matels(TBME_index(l,jindex,lpr,jindexpr,n1,n2,n3,n4))
+!!$                            !end for debug
+
+                            !
+
+
+
+
+
+                         END DO
+                      END DO
                    END DO
                 END DO
 
-                !for the l=0 subspace
+                !WRITE(*,*) 'Gamma = ',Gamma
+
+                !
                 hf_gamma(l,jindex,n1,n2) = Gamma
                 hf_gamma(l,jindex,n2,n1) = CONJG(Gamma)
                 !
@@ -379,19 +444,19 @@ CONTAINS
                 !hf_hamiltonian(l,jind,n1,n2) = Ho_one_body_matel(l,jind,n1,n2) + Gamma                
                 hf_hamiltonian(l,jindex,n1,n2) = Gamma 
                 hf_hamiltonian(l,jindex,n2,n1) = CONJG(Gamma)!CONJG(hf_hamiltonian(l,jindex,n1,n2))
-                
+
 
              END DO
-            
+
           END DO
        END DO
     END DO
 
-     DO l=0,Ho_lmax
+    DO l=0,Ho_lmax
        DO jindex = 0,1
           IF(l==0 .and. jindex==1) CYCLE
-          DO n1 = 0,Ho_nmax
-              hf_hamiltonian(l,jindex,n1,n1) = hf_hamiltonian(l,jindex,n1,n1) + Ho_hbaromega*(2*n1+l+1.5_r_kind)
+          DO n1 = 0,(Ho_Nmax-l)/2
+             hf_hamiltonian(l,jindex,n1,n1) = hf_hamiltonian(l,jindex,n1,n1) + Ho_hbaromega*(2*n1+l+1.5_r_kind)
           END DO
        END DO
     END DO
@@ -411,16 +476,16 @@ CONTAINS
        DO jindex = 0,1
           IF(l==0 .and. jindex==1) CYCLE
           j2 = 2*l + (-1)**jindex
-          DO n1 = 0,Ho_nmax
+          DO n1 = 0,(Ho_Nmax-l)/2
              Etot = Etot + Ho_hbaromega*(2.0_r_kind*n1+l+1.5_r_kind)*(j2+1)*density_matrix(l,jindex,n1,n1)
 
 !!$             WRITE(*,*) 'n1=',n1,'density_matrix(l,jindex,n1,n1) = ',density_matrix(l,jindex,n1,n1)
 
-             DO n2 = 0,Ho_nmax
+             DO n2 = 0,(Ho_Nmax-l)/2
 
                 Etot = Etot + 0.5_r_kind*(j2+1.0_r_kind)*density_matrix(l,jindex,n2,n1)*hf_gamma(l,jindex,n1,n2)
-                
-                
+
+
              END DO
           END DO
        END DO
@@ -433,7 +498,7 @@ CONTAINS
     IMPLICIT NONE
 
     REAL(kind=r_kind) :: Etot
-    INTEGER :: l,jindex,n1,n2,j2,n3,n4    
+    INTEGER :: l,jindex,n1,n2,j2,n3,n4,lpr,jindexpr,j2pr    
 
     Etot = 0.0_r_kind
     
@@ -441,24 +506,39 @@ CONTAINS
        DO jindex = 0,1
           IF(l==0 .and. jindex==1) CYCLE
           j2 = 2*l + (-1)**jindex
-          DO n1 = 0,Ho_nmax
-             Etot = Etot + Ho_hbaromega*(2.0_r_kind*n1+l+1.5_r_kind)*(j2+1)*density_matrix(l,jindex,n1,n1)
+          DO lpr=0,Ho_lmax
+             DO jindexpr = 0,1
+                IF(lpr==0 .and. jindexpr==1) CYCLE
+                j2pr = 2*lpr + (-1)**jindexpr
+
+
+                DO n1 = 0,(Ho_Nmax-l)/2
+                   Etot = Etot + Ho_hbaromega*(2.0_r_kind*n1+l+1.5_r_kind)*(j2+1)*density_matrix(l,jindex,n1,n1)
 
 !!$             WRITE(*,*) 'n1=',n1,'density_matrix(l,jindex,n1,n1) = ',density_matrix(l,jindex,n1,n1)
 
-             DO n2 = 0,Ho_nmax
-                DO n3 = 0,Ho_nmax
-                   DO n4 = 0,Ho_nmax
+                   DO n2 = 0,(Ho_nmax-lpr)/2
+                      DO n3 = 0,(Ho_nmax-l)/2
+                         DO n4 = 0,(Ho_nmax-lpr)/2
+                            ! l = 0 subspace
+                            ! Etot = Etot + 0.5_r_kind*(j2+1.0_r_kind)*density_matrix(l,jindex,n3,n1)*Ho_two_body_matel(l,jindex,n1,n2,n3,n4)*density_matrix(l,jindex,n4,n2)
 
-                      Etot = Etot + 0.5_r_kind*(j2+1.0_r_kind)*density_matrix(l,jindex,n3,n1)*Ho_two_body_matel(l,jindex,n1,n2,n3,n4)*density_matrix(l,jindex,n4,n2)
+                            !general
+                            Etot = Etot + 0.5_r_kind*(j2+1.0_r_kind)*(j2pr+1.0_r_kind)&
+                                 *density_matrix(l,jindex,n3,n1)&
+                                 *Ho_two_body_matels(TBME_index(l,jindex,lpr,jindexpr,n1,n2,n3,n4))&
+                                 *density_matrix(l,jindex,n4,n2)
 
 
+                         END DO
+                      END DO
                    END DO
                 END DO
              END DO
           END DO
        END DO
     END DO
+
 
 
   END SUBROUTINE hf_total_energy_v2
@@ -472,7 +552,7 @@ CONTAINS
     REAL(kind=r_kind), ALLOCATABLE :: rwork(:)
     COMPLEX(kind=r_kind), ALLOCATABLE :: h_block(:,:)
     REAL(kind=r_kind), ALLOCATABLE :: e_block(:)
-    INTEGER :: lwork, info
+    INTEGER :: lwork, info, size_block
     !INTEGER :: count
 
     INTERFACE 
@@ -490,29 +570,33 @@ CONTAINS
        DO jindex = 0,1
           IF(l==0 .and. jindex==1) CYCLE
 
-          ALLOCATE(h_block(Ho_nmax+1,Ho_nmax+1))
-          ALLOCATE(e_block(Ho_nmax+1))
+          size_block = (Ho_Nmax-l)/2+1
 
-          h_block(:,:) = hf_hamiltonian(l,jindex,:,:)
+          !ALLOCATE(h_block(Ho_nmax+1,Ho_nmax+1))
+          !ALLOCATE(e_block(Ho_nmax+1))
+
+          ALLOCATE(h_block(size_block,size_block),e_block(size_block))
+
+          h_block(:,:) = hf_hamiltonian(l,jindex,0:size_block-1,0:size_block-1)
           
 
                 ALLOCATE(work(1))
-                ALLOCATE(rwork( max(1,3*(Ho_nmax+1)-2) ) )
+                ALLOCATE(rwork( max(1,3*size_block-2) ) )
                 lwork = -1
 
-                CALL zheev('V','U',Ho_nmax+1,h_block ,Ho_nmax+1,e_block,work,lwork,rwork,info)
+                CALL zheev('V','U',size_block,h_block ,size_block,e_block,work,lwork,rwork,info)
 
                 lwork = work(1)
                 DEALLOCATE(work)
                 ALLOCATE(work(lwork))
 
-                CALL zheev('V','U',Ho_nmax+1, h_block,Ho_nmax+1,e_block,work,lwork,rwork,info)
+                CALL zheev('V','U',size_block, h_block,size_block,e_block,work,lwork,rwork,info)
 
                 DEALLOCATE(work)
                 DEALLOCATE(rwork)
 
-                hf_transform(l,jindex,0:Ho_nmax,0:Ho_nmax) = h_block(:,:)
-                hf_energies(l,jindex,0:Ho_nmax) = e_block(:)
+                hf_transform(l,jindex,0:size_block-1,0:size_block-1) = h_block(:,:)
+                hf_energies(l,jindex,0:size_block-1) = e_block(:)
                 DEALLOCATE(h_block,e_block)
 
 !!$                !debug
@@ -543,10 +627,9 @@ CONTAINS
        STOP
     END IF
 
-
-    Ho_nmax = nmax
+   
     Ho_lmax = lmax
-
+    Ho_Nmax = 2*nmax+lmax
  
     IF(.not. present(hbaromega)) THEN
 
@@ -583,7 +666,7 @@ CONTAINS
   SUBROUTINE hf_init
     IMPLICIT NONE
 
-    INTEGER :: l,jindex
+    INTEGER :: l,jindex,n1,n2,n3,n4,max_n
 
     COMPLEX(kind=r_kind) :: zero_c = (0.0_r_kind,0.0_r_kind)
     REAL(kind=r_kind) :: zero_r = 0.0_r_kind
@@ -598,26 +681,26 @@ CONTAINS
     WRITE(*,*) 'Ho_lmax = ',Ho_lmax
     WRITE(*,*) 'Ho_nmax = ',Ho_nmax
 
-    ALLOCATE(hf_transform(0:Ho_lmax,0:1,0:Ho_nmax,0:Ho_nmax))
+    max_n = Ho_nmax/2
+
+    ALLOCATE(hf_transform(0:Ho_lmax,0:1,0:max_n,0:max_n))
     hf_transform = zero_c
-    ALLOCATE(density_matrix(0:Ho_lmax,0:1,0:Ho_nmax,0:Ho_nmax))
+    ALLOCATE(density_matrix(0:Ho_lmax,0:1,0:max_n,0:max_n))
     density_matrix = zero_c
-    ALLOCATE(density_matrix_old(0:Ho_lmax,0:1,0:Ho_nmax,0:Ho_nmax))
+    ALLOCATE(density_matrix_old(0:Ho_lmax,0:1,0:max_n,0:max_n))
     density_matrix_old = zero_c
-    ALLOCATE(hf_energies(0:Ho_lmax,0:1,0:Ho_nmax))
+    ALLOCATE(hf_energies(0:Ho_lmax,0:1,0:max_n))
     hf_energies = zero_r
-    ALLOCATE(hf_energies_old(0:Ho_lmax,0:1,0:Ho_nmax))
+    ALLOCATE(hf_energies_old(0:Ho_lmax,0:1,0:max_n))
     hf_energies_old = zero_r
 
     Ho_size_all = 0
 
-
-
-     DO l=0,Ho_lmax
+    DO l=0,Ho_lmax
         DO jindex = 0,1
            IF(l==0 .and. jindex==1) CYCLE
 
-           Ho_size_all = Ho_size_all + Ho_nmax + 1
+           Ho_size_all = Ho_size_all + (Ho_Nmax-l)/2 + 1
 
         END DO
      END DO
@@ -631,20 +714,26 @@ CONTAINS
      ALLOCATE(hf_energies_all_sort(0:Ho_size_all-1))
 
      ALLOCATE(fermi_index_hfbasis(0:Ho_lmax,0:1))
-     ALLOCATE(hf_hamiltonian(0:Ho_lmax,0:1,0:Ho_nmax,0:Ho_nmax))
+     ALLOCATE(hf_hamiltonian(0:Ho_lmax,0:1,0:max_n,0:max_n))
      hf_hamiltonian = zero_c
-     ALLOCATE(hf_gamma(0:Ho_lmax,0:1,0:Ho_nmax,0:Ho_nmax))
+     ALLOCATE(hf_gamma(0:Ho_lmax,0:1,0:max_n,0:max_n))
      hf_gamma = zero_c
-     ALLOCATE(Ho_two_body_matel(0:Ho_lmax,0:1,0:Ho_nmax,0:Ho_nmax,0:Ho_nmax,0:Ho_nmax))
-       
-
+     ALLOCATE(Ho_two_body_matel(0:Ho_lmax,0:1,0:max_n,0:max_n,0:max_n,0:max_n))
      Ho_two_body_matel = zero_c
+
+
+
+     Ho_size_TBME = (Ho_lmax+1)*2*(Ho_lmax+1)*2*(max_n+1)**4
+
+     ALLOCATE(Ho_two_body_matels(Ho_size_TBME))
+     Ho_two_body_matels = zero_c
 
      !should give 0,1,and 2 based on orthogonality of radial wfs
      !CALL calculate_two_body_matels_GL(1e-5_r_kind,1.0_r_kind)
-     
-     CALL calculate_two_body_matels_GL(kappa_R,0.5_r_kind*V_0R)
-     CALL calculate_two_body_matels_GL(kappa_S,0.5_r_kind*V_0S)
+
+     IF(Ho_lmax == 0) THEN     
+        CALL calculate_two_body_matels_GL(kappa_R,0.5_r_kind*V_0R)
+        CALL calculate_two_body_matels_GL(kappa_S,0.5_r_kind*V_0S)
 
 !!$     Ho_two_body_matel = (0.0_r_kind,0.0_r_kind)
 !!$      
@@ -654,6 +743,32 @@ CONTAINS
 !!$
 !!$     !should give 0,1,and 2 based on orthogonality of radial wfs
 !!$     !CALL calculate_two_body_matels(1e-5_r_kind,1.0_r_kind)
+
+
+        !DO l=0,Ho_lmax
+        !DO jindex = 0,1
+        !IF(l==0 .and. jindex==1) CYCLE
+        l = 0
+        jindex = 0
+        DO n1 = 0,Ho_nmax/2
+           DO n2 = 0,Ho_nmax/2
+              DO n3 = 0,Ho_nmax/2
+                 DO n4 = 0,Ho_nmax/2
+
+
+                    Ho_two_body_matels(TBME_index(l,jindex,l,jindex,n1,n2,n3,n4)) = 0.5_r_kind*Ho_two_body_matel(l,jindex,n1,n2,n3,n4)
+
+
+                 END DO
+              END DO
+           END DO
+        END DO
+
+        !END DO
+        !END DO
+     END IF
+
+
 
 
   END SUBROUTINE hf_init
@@ -714,10 +829,10 @@ CONTAINS
   
     DO term = 1,no_terms
        pf = prefactor(term)
-       DO n1 = 0,Ho_nmax
-          DO n2 = 0,Ho_nmax
-             DO n3 = 0,Ho_nmax
-                DO n4 = 0,Ho_nmax
+       DO n1 = 0,Ho_Nmax/2
+          DO n2 = 0,Ho_Nmax/2
+             DO n3 = 0,Ho_Nmax/2
+                DO n4 = 0,Ho_Nmax/2
 
 !!$                   !for debug
 !!$                   WRITE(*,*) 'n1=',n1,'n2=',n2,'n3=',n3,'n4=',n4
@@ -799,10 +914,10 @@ CONTAINS
 
     WRITE(*,*) 'Two-body matrix elements'
     
-    DO n1 = 0,Ho_nmax
-       DO n2 = 0,Ho_nmax
-          DO n3 = 0,Ho_nmax
-             DO n4 = 0,Ho_nmax
+    DO n1 = 0,Ho_Nmax/2
+       DO n2 = 0,Ho_Nmax/2
+          DO n3 = 0,Ho_Nmax/2
+             DO n4 = 0,Ho_Nmax/2
                 
                 WRITE(*,'(4I2,2F20.14)') n1,n2,n3,n4,REAL(Ho_two_body_matel(l,jindex,n1,n2,n3,n4),kind=r_kind),AIMAG(Ho_two_body_matel(l,jindex,n1,n2,n3,n4))
 
@@ -880,10 +995,10 @@ CONTAINS
   
     DO term = 1,no_terms
        pf = prefactor(term)
-       DO n1 = 0,Ho_nmax
-          DO n2 = 0,Ho_nmax
-             DO n3 = 0,Ho_nmax
-                DO n4 = 0,Ho_nmax
+       DO n1 = 0,Ho_Nmax/2
+          DO n2 = 0,Ho_Nmax/2
+             DO n3 = 0,Ho_Nmax/2
+                DO n4 = 0,Ho_Nmax/2
 !!$
 !!$                   !for debug
 !!$                   WRITE(*,*) 'n1=',n1,'n2=',n2,'n3=',n3,'n4=',n4
@@ -973,10 +1088,10 @@ CONTAINS
 
     WRITE(1,*) 'Two-body matrix elements'
     
-    DO n1 = 0,Ho_nmax!MIN(1,Ho_nmax)
-       DO n2 = 0,Ho_nmax!MIN(1,Ho_nmax)
-          DO n3 = 0,Ho_nmax!MIN(1,Ho_nmax)
-             DO n4 = 0,Ho_nmax!MIN(1,Ho_nmax)
+    DO n1 = 0,Ho_Nmax/2!MIN(1,Ho_nmax)
+       DO n2 = 0,Ho_Nmax/2!MIN(1,Ho_nmax)
+          DO n3 = 0,Ho_Nmax/2!MIN(1,Ho_nmax)
+             DO n4 = 0,Ho_Nmax/2!MIN(1,Ho_nmax)
                 
                 WRITE(1,'(4I2,2F20.12)') n1,n2,n3,n4,REAL(Ho_two_body_matel(l,jindex,n1,n2,n3,n4),kind=r_kind),AIMAG(Ho_two_body_matel(l,jindex,n1,n2,n3,n4))
 
@@ -1071,10 +1186,10 @@ CONTAINS
        s1 = scaling_1(term)
        s2 = scaling_2(term)
        pf = prefactor(term)
-       DO n1 = 0,Ho_nmax
-          DO n2 = 0,Ho_nmax
-             DO n3 = 0,Ho_nmax
-                DO n4 = 0,Ho_nmax
+       DO n1 = 0,Ho_Nmax/2
+          DO n2 = 0,Ho_Nmax/2
+             DO n3 = 0,Ho_Nmax/2
+                DO n4 = 0,Ho_Nmax/2
 
                    WRITE(*,*) 'n1=',n1,'n2=',n2,'n3=',n3,'n4=',n4
 

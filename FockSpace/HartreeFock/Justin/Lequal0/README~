@@ -1,0 +1,37 @@
+TEAM FOCK SPACE
+Justin 
+Maciej
+Chunli
+
+This folder will be used for the Hartree-Fock project.  The main program at the
+momemnt is HF.cpp. This program can be compiled with
+
+g++ -o HF.exe HF.cpp -larmadillo -std=c++11
+
+and ran with
+
+./HF.exe spFile.dat mtxFile.dat
+
+where 'spFile.dat' and 'mtxFile.dat' are input files that contain some play
+single-particle states and some play mtx elements.  The executables spSetup.exe
+and mtxSetup.exe create these files.  So the set up of the single particle
+labeling scheme, and the creation of the matrix elements are actually done in
+a different program, just creating the files.  Then HF.exe reads in these files
+and gets to work.  At the moment, I think everything finally works.  With the
+test example for two neutrons in a harmonic oscillator well interacting via the
+Minnesota potential, the final energy of 25.139312 MeV was achieved with my
+code.  To get this recent, m*c^2 = 938.9059 Mev, h_bar*c = 197.32891 Mev*fm,
+and h_bar*Omega = 10 MeV were used.  Also, the single particle space for the
+particles used are the n=0,1,2,3,4 oscillator shells with spin up & down allowed
+in each of these shells, for a total of 10 single particle states for the basis.
+A gauss_legendre intergrating scheme is used that was pulled from online from
+Pawel Holodorobko. A final to do for this would would be to either include a 
+tangent remap for the legendre integrating scheme, or to perhaps use laguerre.
+
+mtxSetup.cpp is compiled with:
+
+g++ -o mtxSetup.exe gauss_legendre.o mtxSetup.cpp
+
+and spSetup.cpp is compiled with:
+
+g++ -o spSetup.exe spSetup.cpp

@@ -1,0 +1,52 @@
+HF-Solver, l=0
+=======================
+
+This code solve the HF equation for a spherical nucleus with orbital momentum l=0
+
+How to make it work ?
+=======================
+0/ Generate the quadrature coefficients and weights.
+----------------------------------------------------
+To generate the quadrature coefficients up to order 500 type in the terminal:
+cd ../gen_legendre
+./legendre_rule.sh
+./genFiles.sh
+
+cd ../gen_laguerre
+./gen_laguerre_rule.sh
+./genFiles.sh
+
+1/ Install dependancies:
+-----------------------
+The following library must be installed on your computer:
+- boost (at least the unit tests + the maths part of it)
+- gsl
+- armadillo
+
+Example of installation on Fedora:
+sudo yum install gsl-devel.x86_64
+sudo yum install armadillo-devel.x86_64
+sudo yum install boost-devel.x86_64
+
+2/ Compile the code :
+---------------------
+To compile the code:
+make
+
+To compile the test suite:
+make tests
+
+3/ Run it:
+----------
+For the main function:
+./main
+
+For the test suite:
+./testMain
+
+Different usefull options can be passed to the test suite. For exemple to run only one test:
+./testMain --run_test=testName
+Other options can be found at: 
+http://www.boost.org/doc/libs/1_46_0/libs/test/doc/html/utf/user-guide.html
+
+

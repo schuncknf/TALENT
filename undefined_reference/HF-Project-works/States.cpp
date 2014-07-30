@@ -4,9 +4,11 @@
 using namespace std;
 using namespace arma;
 
-States::States(int N_basis, int system)     // System:  0: n; 1: n,l,m; 2: n,l,m,s; 3: n,l,m,s,t, 4: n,s
+States::States(int N_basis, int sys)     // System:  0: n; 1: n,l,m; 2: n,l,m,s; 3: n,l,m,s,t, 4: n,s; 7: n,l,j,m_j
         {
-        int n,l,m,s,t,N=0,J=0, j, N_max;
+        system = sys;
+        int n,l,m,s,t,N=0,J=0, N_max, counter;
+        double j;
         state_matrix = zeros<mat>(N_basis,5);
         switch(system)
         {
@@ -113,6 +115,48 @@ States::States(int N_basis, int system)     // System:  0: n; 1: n,l,m; 2: n,l,m
               state_matrix(i,3) = 2*i/N_basis-.5;
             }
          break;
-        }
+
+        case 7:
+
+            N = 0;
+            n = 0;
+            l = 0;
+            j = 0;
+            m = 0;
+
+            for(counter = 0; N < N_basis; counter++){
+                for(l = counter; l > -1; l = l - 2){
+
+                    n = (N - l)/2;
+
+                    for(j = l - 0.5; j <  l + 1.; j++){
+                        for(m = -j; m < j + 1.; m++){
+
+                            state_matrix(N,0) = n;
+                            state_matrix(N,1) = l;
+                            state_matrix(N,2) = j;
+                            state_matrix(N,3) = m;
+
+                            N++;
+
+                            if(N > N_basis - 1){
+                                break;
+                            }
+                        }
+
+                        if(N > N_basis - 1){
+                            break;
+                        }
+                    }
+
+                    if(N > N_basis - 1){
+                        break;
+                    }
+                }
+            }
+
+            break;
+
+         }
         cout <<endl<<endl<<"mapping:   "<<endl<< state_matrix << endl;
-        }
+    }

@@ -7,13 +7,10 @@
 #include <iomanip>
 
 #include <gsl/gsl_math.h>
-#include <gsl/gsl_sf_gamma.h>
 #include <gsl/gsl_sf_laguerre.h>
 #include <gsl/gsl_errno.h>
 
-#include <boost/math/special_functions/laguerre.hpp>
 #include <boost/math/special_functions/hermite.hpp>
-
 
 #include "constants.h"
 

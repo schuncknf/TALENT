@@ -1,0 +1,20 @@
+   ----> Oscillator parameters, Model space and single-particle data
+Mass number A of chosen nucleus (important for CoM corrections):          2
+Oscillator length and energy: 0.203644E+01  0.100000E+02
+ Min and max value of partial wave ang. mom           0          10
+ Max value of relative orb mom or cm orb mom,  l or L=           11
+ Max value of relative n:           4
+ Max value of 2*n + l+ cm 2*N +L for large space:           8
+ Max value of 2*n + l+ cm 2*N +L for model space:           8
+ Total number of single-particle orbits          10
+Legend:         n     l     2j   tz    2n+l  HO-energy     evalence     particle/hole  inside/outside
+Number:   1     0     0     1    -1     0    0.150000E+02  0.000000E+00  particle    inside    
+Number:   2     0     0     1     1     0    0.150000E+02  0.000000E+00  particle    inside    
+Number:   3     1     0     1    -1     2    0.350000E+02  0.000000E+00  particle    inside    
+Number:   4     1     0     1     1     2    0.350000E+02  0.000000E+00  particle    inside    
+Number:   5     2     0     1    -1     4    0.550000E+02  0.000000E+00  particle    inside    
+Number:   6     2     0     1     1     4    0.550000E+02  0.000000E+00  particle    inside    
+Number:   7     3     0     1    -1     6    0.750000E+02  0.000000E+00  particle    inside    
+Number:   8     3     0     1     1     6    0.750000E+02  0.000000E+00  particle    inside    
+Number:   9     4     0     1    -1     8    0.950000E+02  0.000000E+00  particle    inside    
+Number:  10     4     0     1     1     8    0.950000E+02  0.000000E+00  particle    inside    
