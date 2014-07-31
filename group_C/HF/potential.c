@@ -67,8 +67,7 @@ void V_me(Vi1_t *V, double hw)
   // a,b are n-quantum numbers in i1=(j1,l1) subspace
   // c,d are n-quantum numbers in i2=(j2,l2) subspace
   int i1, i2, ir1, ir2, a, b, c, d, L;
-  double r1, r2, mw, rm2, rp2;
-  double sum1R, sum1S, sum2R, sum2S, bess, coef;
+  double r1, r2, mw, rm2, rp2, sumR, sumS, coef;
   double ***sho_nlr, *halfint1, *halfint2, *coef1, *coef2;
   Vi2_t *Vi2;
   mw = hw / H2M;
@@ -115,12 +114,12 @@ void V_me(Vi1_t *V, double hw)
         Vi2 = V[i1].V_ab[a][b].Vi2;
         for (i2 = 0; i2 <= i1; i2++) {  // j,l of the second pair
           for (L = Vi2[i2].Lmin; L <= Vi2[i2].Lmax; L += 2) {
-            // Clebsch-Gordan coeficients and 6j symbols for exchange term
+            // Clebsch-Gordan coeficients and 6j symbols for the exchange term
             coef = gsl_sf_coupling_3j(V[i1].l1*2,Vi2[i2].l2*2,2*L,0,0,0);
             coef1[L] = (2*L+1) * coef * coef;
             coef = gsl_sf_coupling_6j(V[i1]._2j1, Vi2[i2]._2j2, 2*L,
                                       Vi2[i2].l2*2, V[i1].l1*2, 1);
-            coef2[L] = coef1[L] * coef * coef;
+            coef1[L] *= 1. - (V[i1].l1*2 + 1) * (Vi2[i2].l2*2 + 1) * coef * coef;
           }
           for (c = 0; c < Vi2[i2].N; c++) {
             for (ir1 = 0; ir1 < gl.N; ir1++) {
@@ -130,45 +129,36 @@ void V_me(Vi1_t *V, double hw)
                 r2 = gl.x[ir2];
                 rm2 = (r1-r2) * (r1-r2);
                 rp2 = 2 * r1 * r2;
-                sum1R = 0.; sum1S = 0.;  // storage for terms from L-expansion
-                sum2R = 0.; sum2S = 0.;
+                sumR = 0.; sumS = 0.;  // storage for terms from L-expansion
                 for (L = Vi2[i2].Lmin; L <= Vi2[i2].Lmax; L += 2) {
-                  bess = gsl_sf_bessel_il_scaled(L, kR*rp2);
-                  sum1R += bess * coef1[L];
-                  sum2R += bess * coef2[L];
-                  bess = gsl_sf_bessel_il_scaled(L, kS*rp2);
-                  sum1S += bess * coef1[L];
-                  sum2S += bess * coef2[L];
+                  sumR += gsl_sf_bessel_il_scaled(L, kR*rp2) * coef1[L];
+                  sumS += gsl_sf_bessel_il_scaled(L, kS*rp2) * coef1[L];
                 }
-                coef = (V[i1].l1*2 + 1) * (Vi2[i2].l2*2 + 1);
-                sum2R *= coef;
-                sum2S *= coef;
                 halfint2[ir1] += gl.w[ir2] * r2 * r2 * sho_nlr[c][Vi2[i2].l2][ir2] * sho_nlr[b][V[i1].l1][ir2]
-                              * (V0R * exp(-kR*rm2) * (sum1R - sum2R) / 2
-                               - V0S * exp(-kS*rm2) * (sum1S - sum2S) / 2);
+                              * 0.5 * (V0R * exp(-kR*rm2) * sumR - V0S * exp(-kS*rm2) * sumS);
               }
               halfint2[ir1] *= sho_nlr[a][V[i1].l1][ir1];
             }
             for (d = 0; d < Vi2[i2].N; d++) {
-              sum1R = 0.;  // direct integral
-              sum2R = 0.;  // exchange integral
-              for (ir2 = 0; ir2 < gl.N; ir2++) {
-                r1 = r2 = gl.x[ir1=ir2]; // exchange integral is done over r1
-                sum1R += gl.w[ir2] * halfint1[ir2] * r2
-                         * sho_nlr[c][Vi2[i2].l2][ir2] * sho_nlr[d][Vi2[i2].l2][ir2];
-                sum2R += gl.w[ir1] * halfint2[ir1] * r1 * r1
-                         * sho_nlr[d][Vi2[i2].l2][ir1];
+              sumR = 0.;
+              sumS = 0.;
+              for (ir1 = 0; ir1 < gl.N; ir1++) {
+                r1 = gl.x[ir1]; // direct integral is done over r2, exchange over r1
+                sumR += gl.w[ir1] * (
+                        halfint1[ir1] * sho_nlr[c][Vi2[i2].l2][ir1]   // direct integral
+                        + halfint2[ir1] * r1  // exchange integral
+                        ) * r1 * sho_nlr[d][Vi2[i2].l2][ir1];
               }
-              sum1S = (sum1R + sum2R) * (Vi2[i2]._2j2 + 1); // direct + exchange term
+              sumS = sumR * (Vi2[i2]._2j2 + 1);
               // term (2j+1) is from the summation over m-degenerate density matrices
-              V[i1].V_ab[a][b].Vi2[i2].V_cd[c][d] = sum1S;
+              V[i1].V_ab[a][b].Vi2[i2].V_cd[c][d] = sumS;
               if (a != b)
-                V[i1].V_ab[b][a].Vi2[i2].V_cd[d][c] = sum1S;
+                V[i1].V_ab[b][a].Vi2[i2].V_cd[d][c] = sumS;
               if (i1 > i2) {  // symmetry V_acbd = V_cadb
-                sum2S = (sum1R + sum2R) * (V[i1]._2j1 + 1);
-                V[i2].V_ab[c][d].Vi2[i1].V_cd[a][b] = sum2S;
+                sumR *= V[i1]._2j1 + 1;
+                V[i2].V_ab[c][d].Vi2[i1].V_cd[a][b] = sumR;
                 if (a != b)
-                  V[i2].V_ab[d][c].Vi2[i1].V_cd[b][a] = sum2S;
+                  V[i2].V_ab[d][c].Vi2[i1].V_cd[b][a] = sumR;
               }
             }  // d
           }    // c
