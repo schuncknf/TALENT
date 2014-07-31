@@ -20,16 +20,15 @@ IMPLICIT NONE
  ENDDO
  CLOSE(10)
 !
+100 FORMAT(13X, I3,2X,  5(1X,I3))
  IFLAG=0!;NR=1
  OPEN(10,FILE=NAMA2)
  DO WHILE(IFLAG==0)
-    READ(10,FMT=*,IOSTAT=IFLAG)TEMP1,TEMP2,ORB,A,B,C,D,E
+    READ(10,FMT=100,IOSTAT=IFLAG)ORB,A,B,C,D,E
     IF(IFLAG==0)THEN
        IF(E==-1) E=0
        MLABEL(A,B,C,D,E)=ORB
-!       write(*,*)a,b,c,d,e
     ENDIF
-!    NR=NR+1  
  ENDDO
  CLOSE(10)
 !
@@ -44,21 +43,16 @@ IMPLICIT NONE
  INTEGER ::M,MP,I1,I2,I3,I4,T
  REAL(DP)::RES
  T=1;RES=0.0D0
- !write(*,*)n1,n2,n3,n4,l,j,lp,jp
  DO M=-J,J,2
     DO MP=-JP,JP,2
        I1=MLABEL(N1,L,J,M,T);   I3=MLABEL(N3,L,J,M,T)
        I2=MLABEL(N2,LP,JP,MP,T);I4=MLABEL(N4,LP,JP,MP,T)
-!write(*,*)i1p,i2p,i3p,i4p,n4,l,j,m
        RES=RES+VMTAB(I1,I2,I3,I4)!-vmtab(i1,i2,i4,i3)
-!if(l==0.and.lp==4.and.n1==1)then
-!    write(*,*)vmtab(i1,i2,i3,i4),i1,i2,i3,i4
-!    stop
-!endif
     ENDDO
  ENDDO
-! stop
+!
  RES=RES/((J+1)*(JP+1))
+ RETURN
 END SUBROUTINE V2MMAT_NLJ
 
 SUBROUTINE INDEX_BUILD(IORB)!N1,N3,L,J <-> A, TOTAL A NUMBER
@@ -113,8 +107,6 @@ IMPLICIT NONE
  NAMA='VM-scheme.dat';NAMA2='spM.dat'
  CALL V2MFILE(TRIM(NAMA),TRIM(NAMA2))!READ V2 TABLE FROM FILE
  CALL INDEX_BUILD(IORB)  !BUILD INDEX
-! write(*,*)iorb;stop
  CALL VMAT_AB(IORB)      !BUILD AVERAGE V2 MATRIX
-! stop
  RETURN
 END SUBROUTINE

@@ -29,17 +29,17 @@ IMPLICIT NONE
 !FIND L,J,L',JP' LABEL
   NL=B_LABEL(I)%NL; L=B_LABEL(I)%L; S=B_LABEL(I)%S
  NLP=B_LABEL(J)%NL;LP=B_LABEL(J)%L;SP=B_LABEL(J)%S
+!write(*,*)i,j
 !
  DO N1=0,NL
    DO N2=0,NLP
       DO N3=0,NL
          DO N4=0,NLP
-if(i==j)then
+!if(i==j)then
            A=JORB(N1,N3,L,S);B=JORB(N2,N4,LP,SP)
            VTEMP(N1,N2,N3,N4)=V2B_UU(A,B)
-!if(n1<=2.and.n2<=2.and.n3<=2.and.n4<=2)then
-! vtemp(n1,n2,n3,n4)=0.0d0
- endif
+! vtemp(n1,n2,n1,n2)=-1.0d0
+! endif
          ENDDO
       ENDDO
    ENDDO
@@ -153,11 +153,7 @@ IMPLICIT NONE
     CALL V2_RESHAPE(A,B)
     CALL VMEAN_BASIC(NL,NLP,VTEMP,RHO_UU(:,:,B),VM_TEMP)
     VMEAN_UU(0:NL,0:NL)=VMEAN_UU(0:NL,0:NL)+VM_TEMP(0:NL,0:NL)
-!    if(a==0.and.b==0)then
-!     write(*,*)vmean_uu(0:nl,0:nl),nl,b_label(b)%l,b_label(b)%s
-!    endif
  ENDDO
-! WRITE(*,*)VMEAN_UU(0:nl,0:nl),b_label(a)%l,b_label(a)%s
  RETURN
 END SUBROUTINE VMEAN_A 
 
@@ -178,9 +174,6 @@ IMPLICIT NONE
  CALL VMEAN_A(A)
  CALL T1_RESHAPE(A)
  HMAT_UU(:,:)=TTEMP(:,:)+VMEAN_UU(:,:)!TU MAT IS DIAGONAL IN AND INDEPENDENT FROM SPIN
-!WRITE(*,*)vmean_UU(0:b_label(a)%nl,0:b_label(a)%nl),b_label(a)%l,b_label(a)%s 
-! hmat_uu(:,:)=ttemp(:,:)
-!stop
  RETURN
 END SUBROUTINE HMAT_A 
 
