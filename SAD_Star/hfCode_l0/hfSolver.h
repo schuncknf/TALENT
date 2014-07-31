@@ -16,7 +16,7 @@ public:
     HfSolver();
     ~HfSolver();
 
-    void setParam(double b, int nMax, int nPart, int lMax);
+    void setParam(double b, int nMax, int nPart);
     void run(double& HFEnergy);
 
     void read2BodyMat(VMinnesotaMatrixGenerator::TwoBodyMat& mat, string file);
@@ -24,7 +24,6 @@ public:
 private:
     double b_;
     int nMax_;
-    int lMax_;
     int nPart_;
 
 };

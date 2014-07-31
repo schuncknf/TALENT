@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
       printf("Nmax gives the maximal N = 2n+l (to calculate the basis size)\n");
       printf("occ_i gives the number of occupied shells with given j,l\n");
       printf("(j,l) shells are sorted like this:\n");
-      printf("s1/2, p1/2, p3/2, d3/2, d5/2, f3/2, f5/2, ...\n\n");
+      printf("s1/2, p1/2, p3/2, d3/2, d5/2, f5/2, f7/2, ...\n\n");
       printf("program will not change the given occupation numbers\n");
       printf("even if some empty level acquires lower energy\n");
       return 1;

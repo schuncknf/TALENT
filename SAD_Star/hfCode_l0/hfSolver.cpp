@@ -14,33 +14,29 @@ HfSolver::~HfSolver(){
 
 
 //------------------------------------------------------------------------------
-void HfSolver::setParam(double b, int nMax, int nPart, int lMax){
+void HfSolver::setParam(double b, int nMax, int nPart){
     b_=b;
     nMax_= nMax;
     nPart_= nPart;
-    lMax_= lMax;
 }
 
 
 //------------------------------------------------------------------------------
 void HfSolver::run(double& hfEnergy){
 
-    int dim= (nMax_+1);
-    int kSize= 2*lMax_+1;
+    int dim= 2*(nMax_+1);
+    mat h = zeros(dim, dim);
 
-    vector<mat> h (kSize, zeros(dim, dim));
-
-    mat densityI= h;
+    mat densityI= zeros(dim, dim);
     for(int i=0; i<nPart_; i++){
-        densityI[0](i,i)=1.;
+        densityI(i,i)=1.;
     }
-
     mat density= densityI;
     mat densityPrev= density;
-
     vec E = zeros(dim , 1) ;
-    vector<mat> diff= density;
-    vector<mat> D = h;
+
+    mat diff= density;
+    mat D = h;
 
     int maxIter= 1000;
     double threshold= 1e-6;

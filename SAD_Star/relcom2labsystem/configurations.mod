@@ -1,0 +1,606 @@
+GFORTRAN module version '6' created from renorm-modules.f90 on Wed Jul 30 13:58:49 2014
+MD5:2506af3daa2e9878d0b4fb5b34597f3e -- If you edit this, you'll get what you deserve.
+
+(() () () () () () () () () () () () () () () () () () () () () () ()
+() () () ())
+
+()
+
+()
+
+()
+
+()
+
+()
+
+(2 'all_orbit' 'single_particle_orbits' 'all_orbit' 1 ((VARIABLE
+UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN IMPLICIT-SAVE 0 0) (DERIVED 3 0 0
+DERIVED ()) 0 0 () () 0 () () () 0 0)
+4 'allocate_relcm_array' 'single_particle_orbits' 'allocate_relcm_array'
+1 ((PROCEDURE UNKNOWN-INTENT MODULE-PROC DECL UNKNOWN 0 0 SUBROUTINE
+IMPLICIT_PURE) (UNKNOWN 0 0 0 UNKNOWN ()) 5 0 (6 7) () 0 () () () 0 0)
+8 'allocate_sp_array' 'single_particle_orbits' 'allocate_sp_array' 1 ((
+PROCEDURE UNKNOWN-INTENT MODULE-PROC DECL UNKNOWN 0 0 SUBROUTINE
+IMPLICIT_PURE) (UNKNOWN 0 0 0 UNKNOWN ()) 9 0 (10 11) () 0 () () () 0 0)
+12 'ang_mom_functions' 'ang_mom_functions' 'ang_mom_functions' 1 ((
+MODULE UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN UNKNOWN 0 0) (UNKNOWN 0 0 0
+UNKNOWN ()) 0 0 () () 0 () () () 0 0)
+13 'atomic_strength' 'constants' 'atomic_strength' 1 ((VARIABLE
+UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN IMPLICIT-SAVE 0 0) (REAL 8 0 0 REAL
+()) 0 0 () () 0 () () () 0 0)
+14 'bohr_r' 'constants' 'bohr_r' 1 ((PARAMETER UNKNOWN-INTENT
+UNKNOWN-PROC UNKNOWN IMPLICIT-SAVE 0 0) (REAL 8 0 0 REAL ()) 0 0 () (
+CONSTANT (REAL 8 0 0 REAL ()) 0 '0.d8c04096addfd8@-1') () 0 () () () 0 0)
+15 'cib' 'constants' 'cib' 1 ((VARIABLE UNKNOWN-INTENT UNKNOWN-PROC
+UNKNOWN IMPLICIT-SAVE 0 0) (CHARACTER 1 0 0 CHARACTER ((CONSTANT (
+INTEGER 4 0 0 INTEGER ()) 0 '100'))) 0 0 () () 0 () () () 0 0)
+16 'commons_to_angmom' 'ang_mom_functions' 'commons_to_angmom' 1 ((
+PROCEDURE UNKNOWN-INTENT MODULE-PROC DECL UNKNOWN 0 0 SUBROUTINE) (
+UNKNOWN 0 0 0 UNKNOWN ()) 0 0 () () 0 () () () 0 0)
+17 'configuration_descriptor' 'configurations' 'configuration_descriptor'
+1 ((DERIVED UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN UNKNOWN 0 0 POINTER_COMP)
+(UNKNOWN 0 0 0 UNKNOWN ()) 0 0 () () 0 ((18 'number_confs' (INTEGER 4 0
+0 INTEGER ()) () (UNKNOWN-FL UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN UNKNOWN
+0 0) UNKNOWN-ACCESS ()) (19 'config_ab' (INTEGER 4 0 0 INTEGER ()) (1 0
+DEFERRED () ()) (UNKNOWN-FL UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN UNKNOWN
+0 0 DIMENSION POINTER) UNKNOWN-ACCESS ())) PUBLIC (() () () ()) () 0 0
+27111962)
+20 'configuration_relcm' 'configurations' 'configuration_relcm' 1 ((
+DERIVED UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN UNKNOWN 0 0 POINTER_COMP) (
+UNKNOWN 0 0 0 UNKNOWN ()) 0 0 () () 0 ((21 'nconfs_relcm' (INTEGER 4 0 0
+INTEGER ()) (1 0 DEFERRED () ()) (UNKNOWN-FL UNKNOWN-INTENT UNKNOWN-PROC
+UNKNOWN UNKNOWN 0 0 DIMENSION POINTER) UNKNOWN-ACCESS ()) (22 'relcm_ab'
+(INTEGER 4 0 0 INTEGER ()) (2 0 DEFERRED () () () ()) (UNKNOWN-FL
+UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN UNKNOWN 0 0 DIMENSION POINTER)
+UNKNOWN-ACCESS ()) (23 'rel_ab' (INTEGER 4 0 0 INTEGER ()) (2 0 DEFERRED
+() () () ()) (UNKNOWN-FL UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN UNKNOWN 0 0
+DIMENSION POINTER) UNKNOWN-ACCESS ()) (24 'nconfs_rel' (INTEGER 4 0 0
+INTEGER ()) (1 0 DEFERRED () ()) (UNKNOWN-FL UNKNOWN-INTENT UNKNOWN-PROC
+UNKNOWN UNKNOWN 0 0 DIMENSION POINTER) UNKNOWN-ACCESS ()) (25
+'nconfs_relmodel' (INTEGER 4 0 0 INTEGER ()) (1 0 DEFERRED () ()) (
+UNKNOWN-FL UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN UNKNOWN 0 0 DIMENSION
+POINTER) UNKNOWN-ACCESS ())) PUBLIC (() () () ()) () 0 0 52053016)
+26 'configurations' 'configurations' 'configurations' 1 ((MODULE
+UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN UNKNOWN 0 0) (UNKNOWN 0 0 0 UNKNOWN
+()) 0 0 () () 0 () () () 0 0)
+27 'constants' 'constants' 'constants' 1 ((MODULE UNKNOWN-INTENT
+UNKNOWN-PROC UNKNOWN UNKNOWN 0 0) (UNKNOWN 0 0 0 UNKNOWN ()) 0 0 () () 0
+() () () 0 0)
+28 'coulomb_included' 'constants' 'coulomb_included' 1 ((VARIABLE
+UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN IMPLICIT-SAVE 0 0) (CHARACTER 1 0 0
+CHARACTER ((CONSTANT (INTEGER 4 0 0 INTEGER ()) 0 '100'))) 0 0 () () 0 ()
+() () 0 0)
+29 'csb' 'constants' 'csb' 1 ((VARIABLE UNKNOWN-INTENT UNKNOWN-PROC
+UNKNOWN IMPLICIT-SAVE 0 0) (CHARACTER 1 0 0 CHARACTER ((CONSTANT (
+INTEGER 4 0 0 INTEGER ()) 0 '100'))) 0 0 () () 0 () () () 0 0)
+30 'cutoff' 'constants' 'cutoff' 1 ((VARIABLE UNKNOWN-INTENT
+UNKNOWN-PROC UNKNOWN IMPLICIT-SAVE 0 0) (REAL 8 0 0 REAL ()) 0 0 () () 0
+() () () 0 0)
+31 'deallocate_relcm_array' 'single_particle_orbits'
+'deallocate_relcm_array' 1 ((PROCEDURE UNKNOWN-INTENT MODULE-PROC DECL
+UNKNOWN 0 0 SUBROUTINE IMPLICIT_PURE) (UNKNOWN 0 0 0 UNKNOWN ()) 32 0 (
+33) () 0 () () () 0 0)
+34 'deallocate_sp_array' 'single_particle_orbits' 'deallocate_sp_array'
+1 ((PROCEDURE UNKNOWN-INTENT MODULE-PROC DECL UNKNOWN 0 0 SUBROUTINE
+IMPLICIT_PURE) (UNKNOWN 0 0 0 UNKNOWN ()) 35 0 (36) () 0 () () () 0 0)
+37 'dp' 'constants' 'dp' 1 ((PARAMETER UNKNOWN-INTENT UNKNOWN-PROC
+UNKNOWN IMPLICIT-SAVE 0 0) (INTEGER 4 0 0 INTEGER ()) 0 0 () (CONSTANT (
+INTEGER 4 0 0 INTEGER ()) 0 '8') () 0 () () () 0 0)
+38 'dpc' 'constants' 'dpc' 1 ((PARAMETER UNKNOWN-INTENT UNKNOWN-PROC
+UNKNOWN IMPLICIT-SAVE 0 0) (INTEGER 4 0 0 INTEGER ()) 0 0 () (CONSTANT (
+INTEGER 4 0 0 INTEGER ()) 0 '8') () 0 () () () 0 0)
+39 'e_mass' 'constants' 'e_mass' 1 ((PARAMETER UNKNOWN-INTENT
+UNKNOWN-PROC UNKNOWN IMPLICIT-SAVE 0 0) (REAL 8 0 0 REAL ()) 0 0 () (
+CONSTANT (REAL 8 0 0 REAL ()) 0 '0.7cc16eb020c49c@5') () 0 () () () 0 0)
+40 'e_start_g' 'constants' 'e_start_g' 1 ((VARIABLE UNKNOWN-INTENT
+UNKNOWN-PROC UNKNOWN IMPLICIT-SAVE 0 0 ALLOCATABLE DIMENSION) (REAL 8 0
+0 REAL ()) 0 0 () (1 0 DEFERRED () ()) 0 () () () 0 0)
+41 'electron_data' 'single_particle_orbits' 'electron_data' 1 ((
+VARIABLE UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN IMPLICIT-SAVE 0 0) (
+DERIVED 3 0 0 DERIVED ()) 0 0 () () 0 () () () 0 0)
+42 'find_spdata_relcm' 'configurations' 'find_spdata_relcm' 1 ((
+PROCEDURE UNKNOWN-INTENT MODULE-PROC DECL UNKNOWN 0 0 SUBROUTINE
+IMPLICIT_PURE) (UNKNOWN 0 0 0 UNKNOWN ()) 43 0 (44) () 0 () () () 0 0)
+45 'gmosh' 'ang_mom_functions' 'gmosh' 1 ((PROCEDURE UNKNOWN-INTENT
+MODULE-PROC DECL UNKNOWN 0 0 FUNCTION IMPLICIT_PURE) (REAL 8 0 0 REAL ())
+46 0 (47 48 49 50 51 52 53 54 55 56) () 45 () () () 0 0)
+57 'hb2ip' 'constants' 'hb2ip' 1 ((PARAMETER UNKNOWN-INTENT UNKNOWN-PROC
+UNKNOWN IMPLICIT-SAVE 0 0) (REAL 8 0 0 REAL ()) 0 0 () (CONSTANT (REAL 8
+0 0 REAL ()) 0 '0.297895d1b0a6ce@2') () 0 () () () 0 0)
+58 'hbar_omega' 'constants' 'hbar_omega' 1 ((VARIABLE UNKNOWN-INTENT
+UNKNOWN-PROC UNKNOWN IMPLICIT-SAVE 0 0) (REAL 8 0 0 REAL ()) 0 0 () () 0
+() () () 0 0)
+59 'hbarc' 'constants' 'hbarc' 1 ((PARAMETER UNKNOWN-INTENT UNKNOWN-PROC
+UNKNOWN IMPLICIT-SAVE 0 0) (REAL 8 0 0 REAL ()) 0 0 () (CONSTANT (REAL 8
+0 0 REAL ()) 0 '0.c553b42cc2d6a8@2') () 0 () () () 0 0)
+60 'iso' 'partial_waves' 'iso' 1 ((VARIABLE UNKNOWN-INTENT UNKNOWN-PROC
+UNKNOWN IMPLICIT-SAVE 0 0 DIMENSION) (INTEGER 4 0 0 INTEGER ()) 0 0 () (
+1 0 EXPLICIT (CONSTANT (INTEGER 4 0 0 INTEGER ()) 0 '1') (CONSTANT (
+INTEGER 4 0 0 INTEGER ()) 0 '200')) 0 () () () 0 0)
+61 'itzmax' 'constants' 'itzmax' 1 ((VARIABLE UNKNOWN-INTENT
+UNKNOWN-PROC UNKNOWN IMPLICIT-SAVE 0 0) (INTEGER 4 0 0 INTEGER ()) 0 0 ()
+() 0 () () () 0 0)
+62 'itzmin' 'constants' 'itzmin' 1 ((VARIABLE UNKNOWN-INTENT
+UNKNOWN-PROC UNKNOWN IMPLICIT-SAVE 0 0) (INTEGER 4 0 0 INTEGER ()) 0 0 ()
+() 0 () () () 0 0)
+63 'j_lab_max' 'constants' 'j_lab_max' 1 ((VARIABLE UNKNOWN-INTENT
+UNKNOWN-PROC UNKNOWN IMPLICIT-SAVE 0 0) (INTEGER 4 0 0 INTEGER ()) 0 0 ()
+() 0 () () () 0 0)
+64 'j_lab_min' 'constants' 'j_lab_min' 1 ((VARIABLE UNKNOWN-INTENT
+UNKNOWN-PROC UNKNOWN IMPLICIT-SAVE 0 0) (INTEGER 4 0 0 INTEGER ()) 0 0 ()
+() 0 () () () 0 0)
+65 'jang_rel' 'partial_waves' 'jang_rel' 1 ((VARIABLE UNKNOWN-INTENT
+UNKNOWN-PROC UNKNOWN IMPLICIT-SAVE 0 0 DIMENSION) (INTEGER 4 0 0 INTEGER
+()) 0 0 () (1 0 EXPLICIT (CONSTANT (INTEGER 4 0 0 INTEGER ()) 0 '1') (
+CONSTANT (INTEGER 4 0 0 INTEGER ()) 0 '200')) 0 () () () 0 0)
+66 'jmax' 'constants' 'jmax' 1 ((VARIABLE UNKNOWN-INTENT UNKNOWN-PROC
+UNKNOWN IMPLICIT-SAVE 0 0) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () ()
+() 0 0)
+67 'jmin' 'constants' 'jmin' 1 ((VARIABLE UNKNOWN-INTENT UNKNOWN-PROC
+UNKNOWN IMPLICIT-SAVE 0 0) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () ()
+() 0 0)
+68 'kind' '(intrinsic)' 'kind' 1 ((PROCEDURE UNKNOWN-INTENT UNKNOWN-PROC
+UNKNOWN UNKNOWN 0 0 FUNCTION) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 68 ()
+() () 0 0)
+69 'lab_lmax' 'constants' 'lab_lmax' 1 ((VARIABLE UNKNOWN-INTENT
+UNKNOWN-PROC UNKNOWN IMPLICIT-SAVE 0 0) (INTEGER 4 0 0 INTEGER ()) 0 0 ()
+() 0 () () () 0 0)
+70 'lab_nmax' 'constants' 'lab_nmax' 1 ((VARIABLE UNKNOWN-INTENT
+UNKNOWN-PROC UNKNOWN IMPLICIT-SAVE 0 0) (INTEGER 4 0 0 INTEGER ()) 0 0 ()
+() 0 () () () 0 0)
+71 'lmax' 'constants' 'lmax' 1 ((VARIABLE UNKNOWN-INTENT UNKNOWN-PROC
+UNKNOWN IMPLICIT-SAVE 0 0) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () ()
+() 0 0)
+72 'make_configurations_relcm' 'configurations'
+'make_configurations_relcm' 1 ((PROCEDURE UNKNOWN-INTENT MODULE-PROC
+DECL UNKNOWN 0 0 SUBROUTINE) (UNKNOWN 0 0 0 UNKNOWN ()) 0 0 () () 0 () ()
+() 0 0)
+73 'mass_nucleus' 'constants' 'mass_nucleus' 1 ((VARIABLE UNKNOWN-INTENT
+UNKNOWN-PROC UNKNOWN IMPLICIT-SAVE 0 0) (INTEGER 4 0 0 INTEGER ()) 0 0 ()
+() 0 () () () 0 0)
+74 'mscheme_basis' 'single_particle_orbits' 'mscheme_basis' 1 ((
+VARIABLE UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN IMPLICIT-SAVE 0 0) (
+DERIVED 3 0 0 DERIVED ()) 0 0 () () 0 () () () 0 0)
+75 'n_body_int' 'constants' 'n_body_int' 1 ((VARIABLE UNKNOWN-INTENT
+UNKNOWN-PROC UNKNOWN IMPLICIT-SAVE 0 0) (CHARACTER 1 0 0 CHARACTER ((
+CONSTANT (INTEGER 4 0 0 INTEGER ()) 0 '100'))) 0 0 () () 0 () () () 0 0)
+76 'n_cm_mom' 'constants' 'n_cm_mom' 1 ((VARIABLE UNKNOWN-INTENT
+UNKNOWN-PROC UNKNOWN IMPLICIT-SAVE 0 0) (INTEGER 4 0 0 INTEGER ()) 0 0 ()
+() 0 () () () 0 0)
+77 'n_rel' 'constants' 'n_rel' 1 ((VARIABLE UNKNOWN-INTENT UNKNOWN-PROC
+UNKNOWN IMPLICIT-SAVE 0 0) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () ()
+() 0 0)
+78 'n_startenergy_g' 'constants' 'n_startenergy_g' 1 ((VARIABLE
+UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN IMPLICIT-SAVE 0 0) (INTEGER 4 0 0
+INTEGER ()) 0 0 () () 0 () () () 0 0)
+79 'n_startenergy_veff' 'constants' 'n_startenergy_veff' 1 ((VARIABLE
+UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN IMPLICIT-SAVE 0 0) (INTEGER 4 0 0
+INTEGER ()) 0 0 () () 0 () () () 0 0)
+80 'n_total' 'constants' 'n_total' 1 ((VARIABLE UNKNOWN-INTENT
+UNKNOWN-PROC UNKNOWN IMPLICIT-SAVE 0 0) (INTEGER 4 0 0 INTEGER ()) 0 0 ()
+() 0 () () () 0 0)
+81 'nchans' 'partial_waves' 'nchans' 1 ((PARAMETER UNKNOWN-INTENT
+UNKNOWN-PROC UNKNOWN IMPLICIT-SAVE 0 0) (INTEGER 4 0 0 INTEGER ()) 0 0 ()
+(CONSTANT (INTEGER 4 0 0 INTEGER ()) 0 '200') () 0 () () () 0 0)
+82 'neutron_data' 'single_particle_orbits' 'neutron_data' 1 ((VARIABLE
+UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN IMPLICIT-SAVE 0 0) (DERIVED 3 0 0
+DERIVED ()) 0 0 () () 0 () () () 0 0)
+83 'nlmax' 'constants' 'nlmax' 1 ((VARIABLE UNKNOWN-INTENT UNKNOWN-PROC
+UNKNOWN IMPLICIT-SAVE 0 0) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () ()
+() 0 0)
+84 'nlmax_model' 'constants' 'nlmax_model' 1 ((VARIABLE UNKNOWN-INTENT
+UNKNOWN-PROC UNKNOWN IMPLICIT-SAVE 0 0) (INTEGER 4 0 0 INTEGER ()) 0 0 ()
+() 0 () () () 0 0)
+85 'nmax' 'constants' 'nmax' 1 ((VARIABLE UNKNOWN-INTENT UNKNOWN-PROC
+UNKNOWN IMPLICIT-SAVE 0 0) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () ()
+() 0 0)
+86 'no_channels' 'partial_waves' 'no_channels' 1 ((VARIABLE
+UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN IMPLICIT-SAVE 0 0) (INTEGER 4 0 0
+INTEGER ()) 0 0 () () 0 () () () 0 0)
+87 'number_configurations_rel' 'configurations'
+'number_configurations_rel' 1 ((PROCEDURE UNKNOWN-INTENT MODULE-PROC
+DECL UNKNOWN 0 0 SUBROUTINE IMPLICIT_PURE) (UNKNOWN 0 0 0 UNKNOWN ()) 88
+0 (89) () 0 () () () 0 0)
+90 'number_configurations_relcm' 'configurations'
+'number_configurations_relcm' 1 ((PROCEDURE UNKNOWN-INTENT MODULE-PROC
+DECL UNKNOWN 0 0 SUBROUTINE IMPLICIT_PURE) (UNKNOWN 0 0 0 UNKNOWN ()) 91
+0 (92) () 0 () () () 0 0)
+93 'number_electrons' 'constants' 'number_electrons' 1 ((VARIABLE
+UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN IMPLICIT-SAVE 0 0) (INTEGER 4 0 0
+INTEGER ()) 0 0 () () 0 () () () 0 0)
+94 'number_gmatrix_confs' 'configurations' 'number_gmatrix_confs' 1 ((
+PROCEDURE UNKNOWN-INTENT MODULE-PROC DECL UNKNOWN 0 0 SUBROUTINE) (
+UNKNOWN 0 0 0 UNKNOWN ()) 95 0 (96 97 98 99) () 0 () () () 0 0)
+100 'number_homega_exct' 'constants' 'number_homega_exct' 1 ((VARIABLE
+UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN IMPLICIT-SAVE 0 0) (INTEGER 4 0 0
+INTEGER ()) 0 0 () () 0 () () () 0 0)
+101 'number_mscheme_confs' 'configurations' 'number_mscheme_confs' 1 ((
+PROCEDURE UNKNOWN-INTENT MODULE-PROC DECL UNKNOWN 0 0 SUBROUTINE) (
+UNKNOWN 0 0 0 UNKNOWN ()) 102 0 (103 104 105 106) () 0 () () () 0 0)
+107 'number_nocore_confs' 'configurations' 'number_nocore_confs' 1 ((
+PROCEDURE UNKNOWN-INTENT MODULE-PROC DECL UNKNOWN 0 0 SUBROUTINE) (
+UNKNOWN 0 0 0 UNKNOWN ()) 108 0 (109 110 111 112) () 0 () () () 0 0)
+113 'number_sp_confs' 'configurations' 'number_sp_confs' 1 ((PROCEDURE
+UNKNOWN-INTENT MODULE-PROC DECL UNKNOWN 0 0 SUBROUTINE) (UNKNOWN 0 0 0
+UNKNOWN ()) 114 0 (115 116 117 118) () 0 () () () 0 0)
+119 'orb_lrel_max' 'partial_waves' 'orb_lrel_max' 1 ((VARIABLE
+UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN IMPLICIT-SAVE 0 0 DIMENSION) (
+INTEGER 4 0 0 INTEGER ()) 0 0 () (1 0 EXPLICIT (CONSTANT (INTEGER 4 0 0
+INTEGER ()) 0 '1') (CONSTANT (INTEGER 4 0 0 INTEGER ()) 0 '200')) 0 () ()
+() 0 0)
+120 'orb_lrel_min' 'partial_waves' 'orb_lrel_min' 1 ((VARIABLE
+UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN IMPLICIT-SAVE 0 0 DIMENSION) (
+INTEGER 4 0 0 INTEGER ()) 0 0 () (1 0 EXPLICIT (CONSTANT (INTEGER 4 0 0
+INTEGER ()) 0 '1') (CONSTANT (INTEGER 4 0 0 INTEGER ()) 0 '200')) 0 () ()
+() 0 0)
+121 'oscl' 'constants' 'oscl' 1 ((VARIABLE UNKNOWN-INTENT UNKNOWN-PROC
+UNKNOWN IMPLICIT-SAVE 0 0) (REAL 8 0 0 REAL ()) 0 0 () () 0 () () () 0 0)
+122 'p_mass' 'constants' 'p_mass' 1 ((PARAMETER UNKNOWN-INTENT
+UNKNOWN-PROC UNKNOWN IMPLICIT-SAVE 0 0 DIMENSION) (REAL 8 0 0 REAL ()) 0
+0 () (ARRAY (REAL 8 0 0 REAL ()) 1 (((CONSTANT (REAL 8 0 0 REAL ()) 0
+'0.3aa45b61bb05fa@3') ()) ((CONSTANT (REAL 8 0 0 REAL ()) 0
+'0.3aaeb318fc5048@3') ()) ((CONSTANT (REAL 8 0 0 REAL ()) 0
+'0.3ab90cd20afa30@3') ())) ('3')) (1 0 EXPLICIT (CONSTANT (INTEGER 4 0 0
+INTEGER ()) 0 '-1') (CONSTANT (INTEGER 4 0 0 INTEGER ()) 0 '1')) 0 () ()
+() 0 0)
+123 'p_massave' 'constants' 'p_massave' 1 ((PARAMETER UNKNOWN-INTENT
+UNKNOWN-PROC UNKNOWN IMPLICIT-SAVE 0 0) (REAL 8 0 0 REAL ()) 0 0 () (
+CONSTANT (REAL 8 0 0 REAL ()) 0 '0.3aaeb318fc5048@3') () 0 () () () 0 0)
+124 'partial_waves' 'partial_waves' 'partial_waves' 1 ((MODULE
+UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN UNKNOWN 0 0) (UNKNOWN 0 0 0 UNKNOWN
+()) 0 0 () () 0 () () () 0 0)
+125 'pauli_operator' 'constants' 'pauli_operator' 1 ((VARIABLE
+UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN IMPLICIT-SAVE 0 0) (CHARACTER 1 0 0
+CHARACTER ((CONSTANT (INTEGER 4 0 0 INTEGER ()) 0 '100'))) 0 0 () () 0 ()
+() () 0 0)
+126 'physical_system' 'constants' 'physical_system' 1 ((VARIABLE
+UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN IMPLICIT-SAVE 0 0) (CHARACTER 1 0 0
+CHARACTER ((CONSTANT (INTEGER 4 0 0 INTEGER ()) 0 '100'))) 0 0 () () 0 ()
+() () 0 0)
+127 'pi' 'constants' 'pi' 1 ((PARAMETER UNKNOWN-INTENT UNKNOWN-PROC
+UNKNOWN IMPLICIT-SAVE 0 0) (REAL 8 0 0 REAL ()) 0 0 () (CONSTANT (REAL 8
+0 0 REAL ()) 0 '0.3243f6bffffffe@1') () 0 () () () 0 0)
+128 'pi_2' 'constants' 'pi_2' 1 ((PARAMETER UNKNOWN-INTENT UNKNOWN-PROC
+UNKNOWN IMPLICIT-SAVE 0 0) (REAL 8 0 0 REAL ()) 0 0 () (CONSTANT (REAL 8
+0 0 REAL ()) 0 '0.1921fb60000002@1') () 0 () () () 0 0)
+129 'pi_4' 'constants' 'pi_4' 1 ((PARAMETER UNKNOWN-INTENT UNKNOWN-PROC
+UNKNOWN IMPLICIT-SAVE 0 0) (REAL 8 0 0 REAL ()) 0 0 () (CONSTANT (REAL 8
+0 0 REAL ()) 0 '0.c90fdb00000000@0') () 0 () () () 0 0)
+130 'proton_data' 'single_particle_orbits' 'proton_data' 1 ((VARIABLE
+UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN IMPLICIT-SAVE 0 0) (DERIVED 3 0 0
+DERIVED ()) 0 0 () () 0 () () () 0 0)
+131 'rel_cm_data' 'single_particle_orbits' 'rel_cm_data' 1 ((DERIVED
+UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN UNKNOWN 0 0 POINTER_COMP) (UNKNOWN 0
+0 0 UNKNOWN ()) 0 0 () () 0 ((132 'nrel' (INTEGER 4 0 0 INTEGER ()) (1 0
+DEFERRED () ()) (UNKNOWN-FL UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN UNKNOWN
+0 0 DIMENSION POINTER) UNKNOWN-ACCESS ()) (133 'lrel' (INTEGER 4 0 0
+INTEGER ()) (1 0 DEFERRED () ()) (UNKNOWN-FL UNKNOWN-INTENT UNKNOWN-PROC
+UNKNOWN UNKNOWN 0 0 DIMENSION POINTER) UNKNOWN-ACCESS ()) (134 'max_value'
+(INTEGER 4 0 0 INTEGER ()) () (UNKNOWN-FL UNKNOWN-INTENT UNKNOWN-PROC
+UNKNOWN UNKNOWN 0 0) UNKNOWN-ACCESS ())) PUBLIC (() () () ()) () 0 0
+24587621)
+135 'rel_conf' 'configurations' 'rel_conf' 1 ((VARIABLE UNKNOWN-INTENT
+UNKNOWN-PROC UNKNOWN IMPLICIT-SAVE 0 0) (DERIVED 20 0 0 DERIVED ()) 0 0
+() () 0 () () () 0 0)
+136 'relcm_conf' 'configurations' 'relcm_conf' 1 ((VARIABLE
+UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN IMPLICIT-SAVE 0 0) (DERIVED 20 0 0
+DERIVED ()) 0 0 () () 0 () () () 0 0)
+137 'relcm_sp_data' 'single_particle_orbits' 'relcm_sp_data' 1 ((
+VARIABLE UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN IMPLICIT-SAVE 0 0) (
+DERIVED 131 0 0 DERIVED ()) 0 0 () () 0 () () () 0 0)
+138 'setup_channels' 'partial_waves' 'setup_channels' 1 ((PROCEDURE
+UNKNOWN-INTENT MODULE-PROC DECL UNKNOWN 0 0 SUBROUTINE) (UNKNOWN 0 0 0
+UNKNOWN ()) 0 0 () () 0 () () () 0 0)
+139 'setup_channelsndelta' 'partial_waves' 'setup_channelsndelta' 1 ((
+PROCEDURE UNKNOWN-INTENT MODULE-PROC DECL UNKNOWN 0 0 SUBROUTINE) (
+UNKNOWN 0 0 0 UNKNOWN ()) 0 0 () () 0 () () () 0 0)
+140 'setup_configurations_rel' 'configurations' 'setup_configurations_rel'
+1 ((PROCEDURE UNKNOWN-INTENT MODULE-PROC DECL UNKNOWN 0 0 SUBROUTINE) (
+UNKNOWN 0 0 0 UNKNOWN ()) 141 0 (142) () 0 () () () 0 0)
+143 'setup_configurations_relcm' 'configurations'
+'setup_configurations_relcm' 1 ((PROCEDURE UNKNOWN-INTENT MODULE-PROC
+DECL UNKNOWN 0 0 SUBROUTINE) (UNKNOWN 0 0 0 UNKNOWN ()) 144 0 (145) () 0
+() () () 0 0)
+146 'setup_gmatrix_configurations' 'configurations'
+'setup_gmatrix_configurations' 1 ((PROCEDURE UNKNOWN-INTENT MODULE-PROC
+DECL UNKNOWN 0 0 SUBROUTINE) (UNKNOWN 0 0 0 UNKNOWN ()) 147 0 (148 149
+150 151) () 0 () () () 0 0)
+152 'setup_mscheme_configurations' 'configurations'
+'setup_mscheme_configurations' 1 ((PROCEDURE UNKNOWN-INTENT MODULE-PROC
+DECL UNKNOWN 0 0 SUBROUTINE) (UNKNOWN 0 0 0 UNKNOWN ()) 153 0 (154 155
+156 157) () 0 () () () 0 0)
+158 'setup_nocore_configurations' 'configurations'
+'setup_nocore_configurations' 1 ((PROCEDURE UNKNOWN-INTENT MODULE-PROC
+DECL UNKNOWN 0 0 SUBROUTINE) (UNKNOWN 0 0 0 UNKNOWN ()) 159 0 (160 161
+162 163) () 0 () () () 0 0)
+164 'setup_sp_configurations' 'configurations' 'setup_sp_configurations'
+1 ((PROCEDURE UNKNOWN-INTENT MODULE-PROC DECL UNKNOWN 0 0 SUBROUTINE) (
+UNKNOWN 0 0 0 UNKNOWN ()) 165 0 (166 167 168 169) () 0 () () () 0 0)
+3 'single_particle_descript' 'single_particle_orbits'
+'single_particle_descript' 1 ((DERIVED UNKNOWN-INTENT UNKNOWN-PROC
+UNKNOWN UNKNOWN 0 0 POINTER_COMP) (UNKNOWN 0 0 0 UNKNOWN ()) 0 0 () () 0
+((170 'total_orbits' (INTEGER 4 0 0 INTEGER ()) () (UNKNOWN-FL
+UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN UNKNOWN 0 0) UNKNOWN-ACCESS ()) (
+171 'nn' (INTEGER 4 0 0 INTEGER ()) (1 0 DEFERRED () ()) (UNKNOWN-FL
+UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN UNKNOWN 0 0 DIMENSION POINTER)
+UNKNOWN-ACCESS ()) (172 'll' (INTEGER 4 0 0 INTEGER ()) (1 0 DEFERRED ()
+()) (UNKNOWN-FL UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN UNKNOWN 0 0
+DIMENSION POINTER) UNKNOWN-ACCESS ()) (173 'jj' (INTEGER 4 0 0 INTEGER ())
+(1 0 DEFERRED () ()) (UNKNOWN-FL UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN
+UNKNOWN 0 0 DIMENSION POINTER) UNKNOWN-ACCESS ()) (174 'itzp' (INTEGER 4
+0 0 INTEGER ()) (1 0 DEFERRED () ()) (UNKNOWN-FL UNKNOWN-INTENT
+UNKNOWN-PROC UNKNOWN UNKNOWN 0 0 DIMENSION POINTER) UNKNOWN-ACCESS ()) (
+175 'nshell' (INTEGER 4 0 0 INTEGER ()) (1 0 DEFERRED () ()) (
+UNKNOWN-FL UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN UNKNOWN 0 0 DIMENSION
+POINTER) UNKNOWN-ACCESS ()) (176 'mvalue' (INTEGER 4 0 0 INTEGER ()) (1
+0 DEFERRED () ()) (UNKNOWN-FL UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN
+UNKNOWN 0 0 DIMENSION POINTER) UNKNOWN-ACCESS ()) (177 'baryon_spin' (
+INTEGER 4 0 0 INTEGER ()) (1 0 DEFERRED () ()) (UNKNOWN-FL
+UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN UNKNOWN 0 0 DIMENSION POINTER)
+UNKNOWN-ACCESS ()) (178 'orbit_status' (CHARACTER 1 0 0 CHARACTER ((
+CONSTANT (INTEGER 4 0 0 INTEGER ()) 0 '10'))) (1 0 DEFERRED () ()) (
+UNKNOWN-FL UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN UNKNOWN 0 0 DIMENSION
+POINTER) UNKNOWN-ACCESS ()) (179 'model_space' (CHARACTER 1 0 0
+CHARACTER ((CONSTANT (INTEGER 4 0 0 INTEGER ()) 0 '10'))) (1 0 DEFERRED
+() ()) (UNKNOWN-FL UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN UNKNOWN 0 0
+DIMENSION POINTER) UNKNOWN-ACCESS ()) (180 'e' (REAL 8 0 0 REAL ()) (1 0
+DEFERRED () ()) (UNKNOWN-FL UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN UNKNOWN
+0 0 DIMENSION POINTER) UNKNOWN-ACCESS ()) (181 'evalence' (REAL 8 0 0
+REAL ()) (1 0 DEFERRED () ()) (UNKNOWN-FL UNKNOWN-INTENT UNKNOWN-PROC
+UNKNOWN UNKNOWN 0 0 DIMENSION POINTER) UNKNOWN-ACCESS ())) PUBLIC (() ()
+() ()) () 0 0 49615266)
+182 'single_particle_orbits' 'single_particle_orbits'
+'single_particle_orbits' 1 ((MODULE UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN
+UNKNOWN 0 0) (UNKNOWN 0 0 0 UNKNOWN ()) 0 0 () () 0 () () () 0 0)
+183 'sjs' 'ang_mom_functions' 'sjs' 1 ((PROCEDURE UNKNOWN-INTENT
+MODULE-PROC DECL UNKNOWN 0 0 FUNCTION) (REAL 8 0 0 REAL ()) 184 0 (185
+186 187 188 189 190) () 183 () () () 0 0)
+191 'snj' 'ang_mom_functions' 'snj' 1 ((PROCEDURE UNKNOWN-INTENT
+MODULE-PROC DECL UNKNOWN 0 0 FUNCTION IMPLICIT_PURE) (REAL 8 0 0 REAL ())
+192 0 (193 194 195 196 197 198 199 200 201) () 191 () () () 0 0)
+202 'sort_configs' 'configurations' 'sort_configs' 1 ((PROCEDURE
+UNKNOWN-INTENT MODULE-PROC DECL UNKNOWN 0 0 SUBROUTINE) (UNKNOWN 0 0 0
+UNKNOWN ()) 203 0 (204 205) () 0 () () () 0 0)
+206 'spherical_harmonics' 'ang_mom_functions' 'spherical_harmonics' 1 (
+(PROCEDURE UNKNOWN-INTENT MODULE-PROC DECL UNKNOWN 0 0 FUNCTION
+IMPLICIT_PURE) (REAL 8 0 0 REAL ()) 207 0 (208 209 210) () 206 () () ()
+0 0)
+211 'spin_rel' 'partial_waves' 'spin_rel' 1 ((VARIABLE UNKNOWN-INTENT
+UNKNOWN-PROC UNKNOWN IMPLICIT-SAVE 0 0 DIMENSION) (INTEGER 4 0 0 INTEGER
+()) 0 0 () (1 0 EXPLICIT (CONSTANT (INTEGER 4 0 0 INTEGER ()) 0 '1') (
+CONSTANT (INTEGER 4 0 0 INTEGER ()) 0 '200')) 0 () () () 0 0)
+212 'square_calculation' 'constants' 'square_calculation' 1 ((VARIABLE
+UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN IMPLICIT-SAVE 0 0) (LOGICAL 4 0 0
+LOGICAL ()) 0 0 () () 0 () () () 0 0)
+213 'starting_energy' 'constants' 'starting_energy' 1 ((VARIABLE
+UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN IMPLICIT-SAVE 0 0) (REAL 8 0 0 REAL
+()) 0 0 () () 0 () () () 0 0)
+214 'theta_rot' 'constants' 'theta_rot' 1 ((PARAMETER UNKNOWN-INTENT
+UNKNOWN-PROC UNKNOWN IMPLICIT-SAVE 0 0) (REAL 8 0 0 REAL ()) 0 0 () (
+CONSTANT (REAL 8 0 0 REAL ()) 0 '0.00000000000000@0') () 0 () () () 0 0)
+215 'tjs' 'ang_mom_functions' 'tjs' 1 ((PROCEDURE UNKNOWN-INTENT
+MODULE-PROC DECL UNKNOWN 0 0 FUNCTION IMPLICIT_PURE) (REAL 8 0 0 REAL ())
+216 0 (217 218 219 220 221 222) () 215 () () () 0 0)
+223 'type_of_pot' 'constants' 'type_of_pot' 1 ((VARIABLE UNKNOWN-INTENT
+UNKNOWN-PROC UNKNOWN IMPLICIT-SAVE 0 0) (CHARACTER 1 0 0 CHARACTER ((
+CONSTANT (INTEGER 4 0 0 INTEGER ()) 0 '100'))) 0 0 () () 0 () () () 0 0)
+224 'type_of_renormv' 'constants' 'type_of_renormv' 1 ((VARIABLE
+UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN IMPLICIT-SAVE 0 0) (CHARACTER 1 0 0
+CHARACTER ((CONSTANT (INTEGER 4 0 0 INTEGER ()) 0 '100'))) 0 0 () () 0 ()
+() () 0 0)
+225 'vector_trcoefficients' 'ang_mom_functions' 'vector_trcoefficients'
+1 ((PROCEDURE UNKNOWN-INTENT MODULE-PROC DECL UNKNOWN 0 0 FUNCTION) (
+REAL 8 0 0 REAL ()) 226 0 (227 228 229 230 231 232 233 234 235 236) ()
+225 () () () 0 0)
+33 'this_array' '' 'this_array' 32 ((VARIABLE INOUT UNKNOWN-PROC UNKNOWN
+UNKNOWN 0 0 DUMMY) (DERIVED 131 0 0 DERIVED ()) 0 0 () () 0 () () () 0 0)
+36 'this_array' '' 'this_array' 35 ((VARIABLE INOUT UNKNOWN-PROC UNKNOWN
+UNKNOWN 0 0 DUMMY) (DERIVED 3 0 0 DERIVED ()) 0 0 () () 0 () () () 0 0)
+7 'n' '' 'n' 5 ((VARIABLE IN UNKNOWN-PROC UNKNOWN UNKNOWN 0 0 DUMMY) (
+INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+6 'this_array' '' 'this_array' 5 ((VARIABLE INOUT UNKNOWN-PROC UNKNOWN
+UNKNOWN 0 0 DUMMY) (DERIVED 131 0 0 DERIVED ()) 0 0 () () 0 () () () 0 0)
+10 'this_array' '' 'this_array' 9 ((VARIABLE INOUT UNKNOWN-PROC UNKNOWN
+UNKNOWN 0 0 DUMMY) (DERIVED 3 0 0 DERIVED ()) 0 0 () () 0 () () () 0 0)
+11 'n' '' 'n' 9 ((VARIABLE IN UNKNOWN-PROC UNKNOWN UNKNOWN 0 0 DUMMY) (
+INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+96 'ij' '' 'ij' 95 ((VARIABLE UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN
+UNKNOWN 0 0 DUMMY) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+97 'ipar' '' 'ipar' 95 ((VARIABLE UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN
+UNKNOWN 0 0 DUMMY) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+98 'itz' '' 'itz' 95 ((VARIABLE UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN
+UNKNOWN 0 0 DUMMY) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+99 'this' '' 'this' 95 ((VARIABLE INOUT UNKNOWN-PROC UNKNOWN UNKNOWN 0 0
+DUMMY) (DERIVED 17 0 0 DERIVED ()) 0 0 () () 0 () () () 0 0)
+47 'n' '' 'n' 46 ((VARIABLE IN UNKNOWN-PROC UNKNOWN UNKNOWN 0 0 DUMMY) (
+INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+50 'lc' '' 'lc' 46 ((VARIABLE IN UNKNOWN-PROC UNKNOWN UNKNOWN 0 0 DUMMY)
+(INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+49 'nc' '' 'nc' 46 ((VARIABLE IN UNKNOWN-PROC UNKNOWN UNKNOWN 0 0 DUMMY)
+(INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+53 'n2' '' 'n2' 46 ((VARIABLE IN UNKNOWN-PROC UNKNOWN UNKNOWN 0 0 DUMMY)
+(INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+52 'l1' '' 'l1' 46 ((VARIABLE IN UNKNOWN-PROC UNKNOWN UNKNOWN 0 0 DUMMY)
+(INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+51 'n1' '' 'n1' 46 ((VARIABLE IN UNKNOWN-PROC UNKNOWN UNKNOWN 0 0 DUMMY)
+(INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+55 'lr' '' 'lr' 46 ((VARIABLE IN UNKNOWN-PROC UNKNOWN UNKNOWN 0 0 DUMMY)
+(INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+54 'l2' '' 'l2' 46 ((VARIABLE IN UNKNOWN-PROC UNKNOWN UNKNOWN 0 0 DUMMY)
+(INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+48 'l' '' 'l' 46 ((VARIABLE IN UNKNOWN-PROC UNKNOWN UNKNOWN 0 0 DUMMY) (
+INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+189 'l_b' '' 'l_b' 184 ((VARIABLE IN UNKNOWN-PROC UNKNOWN UNKNOWN 0 0
+DUMMY) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+195 'ie' '' 'ie' 192 ((VARIABLE IN UNKNOWN-PROC UNKNOWN UNKNOWN 0 0
+DUMMY) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+190 'l_c' '' 'l_c' 184 ((VARIABLE IN UNKNOWN-PROC UNKNOWN UNKNOWN 0 0
+DUMMY) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+196 'ic' '' 'ic' 192 ((VARIABLE IN UNKNOWN-PROC UNKNOWN UNKNOWN 0 0
+DUMMY) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+188 'l_a' '' 'l_a' 184 ((VARIABLE IN UNKNOWN-PROC UNKNOWN UNKNOWN 0 0
+DUMMY) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+198 'if' '' 'if' 192 ((VARIABLE IN UNKNOWN-PROC UNKNOWN UNKNOWN 0 0
+DUMMY) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+199 'ig' '' 'ig' 192 ((VARIABLE IN UNKNOWN-PROC UNKNOWN UNKNOWN 0 0
+DUMMY) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+197 'id' '' 'id' 192 ((VARIABLE IN UNKNOWN-PROC UNKNOWN UNKNOWN 0 0
+DUMMY) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+187 'j_c' '' 'j_c' 184 ((VARIABLE IN UNKNOWN-PROC UNKNOWN UNKNOWN 0 0
+DUMMY) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+201 'it' '' 'it' 192 ((VARIABLE IN UNKNOWN-PROC UNKNOWN UNKNOWN 0 0
+DUMMY) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+218 'j_b' '' 'j_b' 216 ((VARIABLE IN UNKNOWN-PROC UNKNOWN UNKNOWN 0 0
+DUMMY) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+217 'j_a' '' 'j_a' 216 ((VARIABLE IN UNKNOWN-PROC UNKNOWN UNKNOWN 0 0
+DUMMY) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+200 'ih' '' 'ih' 192 ((VARIABLE IN UNKNOWN-PROC UNKNOWN UNKNOWN 0 0
+DUMMY) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+221 'm_b' '' 'm_b' 216 ((VARIABLE IN UNKNOWN-PROC UNKNOWN UNKNOWN 0 0
+DUMMY) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+228 'akk' '' 'akk' 226 ((VARIABLE IN UNKNOWN-PROC UNKNOWN UNKNOWN 0 0
+DUMMY) (REAL 8 0 0 REAL ()) 0 0 () () 0 () () () 0 0)
+227 'ak' '' 'ak' 226 ((VARIABLE IN UNKNOWN-PROC UNKNOWN UNKNOWN 0 0
+DUMMY) (REAL 8 0 0 REAL ()) 0 0 () () 0 () () () 0 0)
+230 'ak2' '' 'ak2' 226 ((VARIABLE IN UNKNOWN-PROC UNKNOWN UNKNOWN 0 0
+DUMMY) (REAL 8 0 0 REAL ()) 0 0 () () 0 () () () 0 0)
+229 'ak1' '' 'ak1' 226 ((VARIABLE IN UNKNOWN-PROC UNKNOWN UNKNOWN 0 0
+DUMMY) (REAL 8 0 0 REAL ()) 0 0 () () 0 () () () 0 0)
+222 'm_c' '' 'm_c' 216 ((VARIABLE IN UNKNOWN-PROC UNKNOWN UNKNOWN 0 0
+DUMMY) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+220 'm_a' '' 'm_a' 216 ((VARIABLE IN UNKNOWN-PROC UNKNOWN UNKNOWN 0 0
+DUMMY) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+232 'll' '' 'll' 226 ((VARIABLE IN UNKNOWN-PROC UNKNOWN UNKNOWN 0 0
+DUMMY) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+233 'lam' '' 'lam' 226 ((VARIABLE IN UNKNOWN-PROC UNKNOWN UNKNOWN 0 0
+DUMMY) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+236 'tisoz' '' 'tisoz' 226 ((VARIABLE IN UNKNOWN-PROC UNKNOWN UNKNOWN 0
+0 DUMMY) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+235 'l2' '' 'l2' 226 ((VARIABLE IN UNKNOWN-PROC UNKNOWN UNKNOWN 0 0
+DUMMY) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+234 'l1' '' 'l1' 226 ((VARIABLE IN UNKNOWN-PROC UNKNOWN UNKNOWN 0 0
+DUMMY) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+231 'l' '' 'l' 226 ((VARIABLE IN UNKNOWN-PROC UNKNOWN UNKNOWN 0 0 DUMMY)
+(INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+219 'j_c' '' 'j_c' 216 ((VARIABLE IN UNKNOWN-PROC UNKNOWN UNKNOWN 0 0
+DUMMY) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+56 'd' '' 'd' 46 ((VARIABLE IN UNKNOWN-PROC UNKNOWN UNKNOWN 0 0 DUMMY) (
+REAL 8 0 0 REAL ()) 0 0 () () 0 () () () 0 0)
+185 'j_a' '' 'j_a' 184 ((VARIABLE IN UNKNOWN-PROC UNKNOWN UNKNOWN 0 0
+DUMMY) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+186 'j_b' '' 'j_b' 184 ((VARIABLE IN UNKNOWN-PROC UNKNOWN UNKNOWN 0 0
+DUMMY) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+194 'ib' '' 'ib' 192 ((VARIABLE IN UNKNOWN-PROC UNKNOWN UNKNOWN 0 0
+DUMMY) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+193 'ia' '' 'ia' 192 ((VARIABLE IN UNKNOWN-PROC UNKNOWN UNKNOWN 0 0
+DUMMY) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+208 'm1' '' 'm1' 207 ((VARIABLE IN UNKNOWN-PROC UNKNOWN UNKNOWN 0 0
+DUMMY) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+210 'x' '' 'x' 207 ((VARIABLE IN UNKNOWN-PROC UNKNOWN UNKNOWN 0 0 DUMMY)
+(REAL 8 0 0 REAL ()) 0 0 () () 0 () () () 0 0)
+209 'l' '' 'l' 207 ((VARIABLE IN UNKNOWN-PROC UNKNOWN UNKNOWN 0 0 DUMMY)
+(INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+148 'ij' '' 'ij' 147 ((VARIABLE UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN
+UNKNOWN 0 0 DUMMY) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+149 'ipar' '' 'ipar' 147 ((VARIABLE UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN
+UNKNOWN 0 0 DUMMY) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+150 'itz' '' 'itz' 147 ((VARIABLE UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN
+UNKNOWN 0 0 DUMMY) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+151 'this' '' 'this' 147 ((VARIABLE INOUT UNKNOWN-PROC UNKNOWN UNKNOWN 0
+0 DUMMY) (DERIVED 17 0 0 DERIVED ()) 0 0 () () 0 () () () 0 0)
+103 'ij' '' 'ij' 102 ((VARIABLE UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN
+UNKNOWN 0 0 DUMMY) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+104 'ipar' '' 'ipar' 102 ((VARIABLE UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN
+UNKNOWN 0 0 DUMMY) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+105 'itz' '' 'itz' 102 ((VARIABLE UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN
+UNKNOWN 0 0 DUMMY) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+106 'this' '' 'this' 102 ((VARIABLE INOUT UNKNOWN-PROC UNKNOWN UNKNOWN 0
+0 DUMMY) (DERIVED 17 0 0 DERIVED ()) 0 0 () () 0 () () () 0 0)
+154 'ij' '' 'ij' 153 ((VARIABLE UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN
+UNKNOWN 0 0 DUMMY) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+155 'ipar' '' 'ipar' 153 ((VARIABLE UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN
+UNKNOWN 0 0 DUMMY) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+156 'itz' '' 'itz' 153 ((VARIABLE UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN
+UNKNOWN 0 0 DUMMY) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+157 'this' '' 'this' 153 ((VARIABLE INOUT UNKNOWN-PROC UNKNOWN UNKNOWN 0
+0 DUMMY) (DERIVED 17 0 0 DERIVED ()) 0 0 () () 0 () () () 0 0)
+89 'this' '' 'this' 88 ((VARIABLE INOUT UNKNOWN-PROC UNKNOWN UNKNOWN 0 0
+DUMMY) (DERIVED 20 0 0 DERIVED ()) 0 0 () () 0 () () () 0 0)
+109 'ij' '' 'ij' 108 ((VARIABLE UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN
+UNKNOWN 0 0 DUMMY) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+110 'ipar' '' 'ipar' 108 ((VARIABLE UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN
+UNKNOWN 0 0 DUMMY) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+111 'itz' '' 'itz' 108 ((VARIABLE UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN
+UNKNOWN 0 0 DUMMY) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+112 'this' '' 'this' 108 ((VARIABLE INOUT UNKNOWN-PROC UNKNOWN UNKNOWN 0
+0 DUMMY) (DERIVED 17 0 0 DERIVED ()) 0 0 () () 0 () () () 0 0)
+160 'ij' '' 'ij' 159 ((VARIABLE UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN
+UNKNOWN 0 0 DUMMY) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+161 'ipar' '' 'ipar' 159 ((VARIABLE UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN
+UNKNOWN 0 0 DUMMY) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+162 'itz' '' 'itz' 159 ((VARIABLE UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN
+UNKNOWN 0 0 DUMMY) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+163 'this' '' 'this' 159 ((VARIABLE INOUT UNKNOWN-PROC UNKNOWN UNKNOWN 0
+0 DUMMY) (DERIVED 17 0 0 DERIVED ()) 0 0 () () 0 () () () 0 0)
+115 'ij' '' 'ij' 114 ((VARIABLE UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN
+UNKNOWN 0 0 DUMMY) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+116 'ipar' '' 'ipar' 114 ((VARIABLE UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN
+UNKNOWN 0 0 DUMMY) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+117 'itz' '' 'itz' 114 ((VARIABLE UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN
+UNKNOWN 0 0 DUMMY) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+118 'this' '' 'this' 114 ((VARIABLE INOUT UNKNOWN-PROC UNKNOWN UNKNOWN 0
+0 DUMMY) (DERIVED 17 0 0 DERIVED ()) 0 0 () () 0 () () () 0 0)
+166 'ij' '' 'ij' 165 ((VARIABLE UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN
+UNKNOWN 0 0 DUMMY) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+167 'ipar' '' 'ipar' 165 ((VARIABLE UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN
+UNKNOWN 0 0 DUMMY) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+168 'itz' '' 'itz' 165 ((VARIABLE UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN
+UNKNOWN 0 0 DUMMY) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+169 'this' '' 'this' 165 ((VARIABLE INOUT UNKNOWN-PROC UNKNOWN UNKNOWN 0
+0 DUMMY) (DERIVED 17 0 0 DERIVED ()) 0 0 () () 0 () () () 0 0)
+204 'this' '' 'this' 203 ((VARIABLE INOUT UNKNOWN-PROC UNKNOWN UNKNOWN 0
+0 DUMMY) (DERIVED 17 0 0 DERIVED ()) 0 0 () () 0 () () () 0 0)
+205 'n_confs' '' 'n_confs' 203 ((VARIABLE UNKNOWN-INTENT UNKNOWN-PROC
+UNKNOWN UNKNOWN 0 0 DUMMY) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () ()
+() 0 0)
+142 'this' '' 'this' 141 ((VARIABLE INOUT UNKNOWN-PROC UNKNOWN UNKNOWN 0
+0 DUMMY) (DERIVED 20 0 0 DERIVED ()) 0 0 () () 0 () () () 0 0)
+92 'this' '' 'this' 91 ((VARIABLE INOUT UNKNOWN-PROC UNKNOWN UNKNOWN 0 0
+DUMMY) (DERIVED 20 0 0 DERIVED ()) 0 0 () () 0 () () () 0 0)
+145 'this' '' 'this' 144 ((VARIABLE INOUT UNKNOWN-PROC UNKNOWN UNKNOWN 0
+0 DUMMY) (DERIVED 20 0 0 DERIVED ()) 0 0 () () 0 () () () 0 0)
+44 'a' '' 'a' 43 ((VARIABLE OUT UNKNOWN-PROC UNKNOWN UNKNOWN 0 0 DUMMY)
+(INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+)
+
+('all_orbit' 0 2 'allocate_relcm_array' 0 4 'allocate_sp_array' 0 8
+'ang_mom_functions' 0 12 'atomic_strength' 0 13 'bohr_r' 0 14 'cib' 0 15
+'commons_to_angmom' 0 16 'configuration_descriptor' 0 17
+'configuration_relcm' 0 20 'configurations' 0 26 'constants' 0 27
+'coulomb_included' 0 28 'csb' 0 29 'cutoff' 0 30 'deallocate_relcm_array'
+0 31 'deallocate_sp_array' 0 34 'dp' 0 37 'dpc' 0 38 'e_mass' 0 39
+'e_start_g' 0 40 'electron_data' 0 41 'find_spdata_relcm' 0 42 'gmosh' 0
+45 'hb2ip' 0 57 'hbar_omega' 0 58 'hbarc' 0 59 'iso' 0 60 'itzmax' 0 61
+'itzmin' 0 62 'j_lab_max' 0 63 'j_lab_min' 0 64 'jang_rel' 0 65 'jmax' 0
+66 'jmin' 0 67 'kind' 0 68 'lab_lmax' 0 69 'lab_nmax' 0 70 'lmax' 0 71
+'make_configurations_relcm' 0 72 'mass_nucleus' 0 73 'mscheme_basis' 0
+74 'n_body_int' 0 75 'n_cm_mom' 0 76 'n_rel' 0 77 'n_startenergy_g' 0 78
+'n_startenergy_veff' 0 79 'n_total' 0 80 'nchans' 0 81 'neutron_data' 0
+82 'nlmax' 0 83 'nlmax_model' 0 84 'nmax' 0 85 'no_channels' 0 86
+'number_configurations_rel' 0 87 'number_configurations_relcm' 0 90
+'number_electrons' 0 93 'number_gmatrix_confs' 0 94 'number_homega_exct'
+0 100 'number_mscheme_confs' 0 101 'number_nocore_confs' 0 107
+'number_sp_confs' 0 113 'orb_lrel_max' 0 119 'orb_lrel_min' 0 120 'oscl'
+0 121 'p_mass' 0 122 'p_massave' 0 123 'partial_waves' 0 124
+'pauli_operator' 0 125 'physical_system' 0 126 'pi' 0 127 'pi_2' 0 128
+'pi_4' 0 129 'proton_data' 0 130 'rel_cm_data' 0 131 'rel_conf' 0 135
+'relcm_conf' 0 136 'relcm_sp_data' 0 137 'setup_channels' 0 138
+'setup_channelsndelta' 0 139 'setup_configurations_rel' 0 140
+'setup_configurations_relcm' 0 143 'setup_gmatrix_configurations' 0 146
+'setup_mscheme_configurations' 0 152 'setup_nocore_configurations' 0 158
+'setup_sp_configurations' 0 164 'single_particle_descript' 0 3
+'single_particle_orbits' 0 182 'sjs' 0 183 'snj' 0 191 'sort_configs' 0
+202 'spherical_harmonics' 0 206 'spin_rel' 0 211 'square_calculation' 0
+212 'starting_energy' 0 213 'theta_rot' 0 214 'tjs' 0 215 'type_of_pot'
+0 223 'type_of_renormv' 0 224 'vector_trcoefficients' 0 225)
