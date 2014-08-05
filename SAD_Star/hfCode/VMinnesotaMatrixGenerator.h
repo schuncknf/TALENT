@@ -30,8 +30,10 @@ namespace VMinnesotaMatrixGenerator{
   typedef vector<vector< FourIndiceMat > > TwoBodyMat;
 
 
-  TwoBodyMat emptyMat(int nMax, int lMax);
-  void fillHMatrix(mat& H, mat& density, vector<vector<vector<vector<double> > > >& Vabcd, double& b);
-  void calc2BodyMat(TwoBodyMat& Vabcd, double& b, int order);
+  TwoBodyMat emptyTwoBodyMat(int NMax, int lMax);
+  FourIndiceMat emptyFourIndiceMat(int dim);
+
+  void fillHMatrix(vector<mat>& H, vector<mat>& density, TwoBodyMat& Vabcd, double& b, int lMax);
+  void calc2BodyMat(TwoBodyMat& Vabcd, double& b, int order, int NMax);
 }
 
