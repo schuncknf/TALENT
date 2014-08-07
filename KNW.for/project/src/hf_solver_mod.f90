@@ -20,11 +20,11 @@ CONTAINS
   hbaromega = 10.0_r_kind
   iteration_max = 20
   tol = 1e-15_r_kind
-  num_part = 8
-  !lmax = 0
-  !nmax = 1
-  Nmax = 3
-  lmax = 3
+  num_part = 2
+  lmax = 0
+  Nmax = 2
+  !Nmax = 2
+  !lmax = 2
 
   mixing = 0.0_r_kind
   
