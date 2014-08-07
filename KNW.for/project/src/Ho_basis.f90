@@ -720,43 +720,46 @@ CONTAINS
     CALL INIT_TALMI
     WRITE(*,*) '   Done'
 
-    WRITE(*,*) 'Precalucalting Talmi-Moshinsky brackets'
 
-    WRITE(*,*) 'talmi_index_max = ',talmi_index(2*Ho_Nmax+2,Ho_Nmax/2,Ho_Nmax,Ho_Nmax/2,Ho_Nmax,Ho_Nmax,2*Ho_Nmax,Ho_Nmax,2*Ho_nmax)
+! Takes to much space to calculate all possible j-coupled matels, need to restrict to the ones actually neeeded for HF
 
-    ALLOCATE( T(talmi_index(2*Ho_Nmax+1,Ho_Nmax/2,Ho_Nmax,Ho_Nmax/2,Ho_Nmax,Ho_Nmax,2*Ho_Nmax,Ho_Nmax,2*Ho_nmax)) )
-    T = 0.0_r_kind
-
-    DO l12 = 0, 2*Ho_Nmax
-       DO l1 = 0, Ho_Nmax
-          DO l2 = 0, Ho_Nmax
-             DO n1 = 0, (Ho_Nmax - l1)/2
-                DO n2 = 0, (Ho_Nmax - l2)/2
-                   E1 = 2*n1 + l1
-                   E2 = 2*n2 + l2
-                   Etot = E1 + E2
-
-
-                   DO l_rel = 0, Etot, 2
-                      DO L_CM = 0, Etot - l_rel
-                         DO N_CM = 0, (Etot - L_CM - l_rel)/2
-                            DO n_rel = 0, (Etot - 2*N_CM - L_CM - l_rel)/2
-
-                               E_CM = 2*N_CM + L_CM
-                               E_rel = 2*n_rel + l_rel
-
-                               T(talmi_index(l12,n1,l1,n2,l2,N_CM,L_CM,n_rel,l_rel)) = TMBR(E_CM,L_CM,E_rel,l_rel,E1,l1,E2,l2,l12)
-                            END DO
-                         END DO
-                      END DO
-                   END DO
-                END DO
-             END DO
-          END DO
-       END DO
-    END DO
-
-    WRITE(*,*) '   Done'
+!!$    WRITE(*,*) 'Precalucalting Talmi-Moshinsky brackets'
+!!$
+!!$    WRITE(*,*) 'talmi_index_max = ',talmi_index(2*Ho_Nmax+2,Ho_Nmax/2,Ho_Nmax,Ho_Nmax/2,Ho_Nmax,Ho_Nmax,2*Ho_Nmax,Ho_Nmax,2*Ho_nmax)
+!!$
+!!$    ALLOCATE( T(talmi_index(2*Ho_Nmax+1,Ho_Nmax/2,Ho_Nmax,Ho_Nmax/2,Ho_Nmax,Ho_Nmax,2*Ho_Nmax,Ho_Nmax,2*Ho_nmax)) )
+!!$    T = 0.0_r_kind
+!!$
+!!$    DO l12 = 0, 2*Ho_Nmax
+!!$       DO l1 = 0, Ho_Nmax
+!!$          DO l2 = 0, Ho_Nmax
+!!$             DO n1 = 0, (Ho_Nmax - l1)/2
+!!$                DO n2 = 0, (Ho_Nmax - l2)/2
+!!$                   E1 = 2*n1 + l1
+!!$                   E2 = 2*n2 + l2
+!!$                   Etot = E1 + E2
+!!$
+!!$
+!!$                   DO l_rel = 0, Etot, 2
+!!$                      DO L_CM = 0, Etot - l_rel
+!!$                         DO N_CM = 0, (Etot - L_CM - l_rel)/2
+!!$                            DO n_rel = 0, (Etot - 2*N_CM - L_CM - l_rel)/2
+!!$
+!!$                               E_CM = 2*N_CM + L_CM
+!!$                               E_rel = 2*n_rel + l_rel
+!!$
+!!$                               T(talmi_index(l12,n1,l1,n2,l2,N_CM,L_CM,n_rel,l_rel)) = TMBR(E_CM,L_CM,E_rel,l_rel,E1,l1,E2,l2,l12)
+!!$                            END DO
+!!$                         END DO
+!!$                      END DO
+!!$                   END DO
+!!$                END DO
+!!$             END DO
+!!$          END DO
+!!$       END DO
+!!$    END DO
+!!$
+!!$    WRITE(*,*) '   Done'
 
 
     WRITE(*,*) 'Precalcalcualting radial overlaps'
@@ -876,18 +879,31 @@ ELSE
 END IF
 
 
+
+ 
+
+
     WRITE(*,*) 'Calculating jj-coupled matrix elments'
-
-
-    WRITE(*,*) 'TBME_j_index_max = ', TBME_j_index(2*Ho_Nmax + 1, Ho_Nmax/2 + 1, Ho_Nmax + 1, 2, Ho_Nmax/2 + 1, Ho_Nmax + 1, 2, Ho_Nmax/2 + 1, Ho_Nmax + 1, 2, Ho_Nmax/2 + 1, Ho_Nmax + 1, 2) 
-
-    ALLOCATE(matels_j( TBME_j_index(2*Ho_Nmax + 1, Ho_Nmax/2 + 1, Ho_Nmax + 1, 2, Ho_Nmax/2 + 1, Ho_Nmax + 1, 2, Ho_Nmax/2 + 1, Ho_Nmax + 1, 2, Ho_Nmax/2 + 1, Ho_Nmax + 1, 2)))
-
-    matels_j = 0.0_r_kind
 
     !The following calcualates the two body matrix elements of the Minnesota in the most general case
     !For the HF only a small subset of the matrix elements are used
 
+    !-Takes way to much space, restricted to only relevant elements.
+
+    
+    !TBME_j_index(j12,n1,l1,jindex1,n2,l2,jindex2,n3,l3,jindex3,n4,l4,jindex4)
+    ! for HF l1 = l3, j1 = j3,  l2 = l4, j2 = j4    
+!!$    WRITE(*,*) 'TBME_j_index_max = ', TBME_j_index(2*Ho_Nmax + 1, Ho_Nmax/2 + 1, Ho_Nmax + 1, 2, Ho_Nmax/2 + 1, Ho_Nmax + 1, 2, Ho_Nmax/2 + 1, Ho_Nmax + 1, 2, Ho_Nmax/2 + 1,Ho_Nmax + 1, 2) 
+    
+    ! for HF l1 = l3, j1 = j3,  l2 = l4, j2 = j4 
+    !TBME_j_index_hf(j12,l1,jindex1,l2,jindex2,n1,n2,n3,n4)
+    WRITE(*,*) 'TMBE_j_index_hf_max = ',TBME_j_index_hf(2*Ho_Nmax + 1, Ho_Nmax + 1, 2, Ho_Nmax + 1, 2, Ho_Nmax/2 +1, Ho_Nmax/2 +1, Ho_Nmax/2 +1, Ho_Nmax/2 +1)
+    ALLOCATE(matels_j(TBME_j_index_hf(2*Ho_Nmax + 1, Ho_Nmax + 1, 2, Ho_Nmax + 1, 2, Ho_Nmax/2 +1, Ho_Nmax/2 +1, Ho_Nmax/2 +1, Ho_Nmax/2 +1)))
+
+    matels_j = 0.0_r_kind
+
+    
+    
     DO l12 = 0, 2*Ho_Nmax 
        DO l1 = 0, Ho_Nmax
           DO l2 = 0, Ho_Nmax
@@ -908,68 +924,68 @@ END IF
                                T12 = TMBR(E_CM,L_CM,E_rel12,l_rel,E1,l1,E2,l2,l12)
                                !T(talmi_index(l12,n1,l1,n2,l2,N_CM,L_CM,n_rel12,l_rel))
 
-                               DO l3 = 0, Ho_Nmax
-                                  DO l4 = 0, Ho_Nmax
-                                     DO n3 = 0, (Ho_Nmax - l3)/2
-                                        DO n4 = 0, (Ho_Nmax - l4)/2
-                                           E3 = 2*n3 + l3
-                                           E4 = 2*n4 + l4
-                                           Etot34 = E3 + E4
+                               !DO l3 = 0, Ho_Nmax
+                               l3 = l1
+                               !DO l4 = 0, Ho_Nmax
+                               l4 = l2
+                               DO n3 = 0, (Ho_Nmax - l3)/2
+                                  DO n4 = 0, (Ho_Nmax - l4)/2
+                                     E3 = 2*n3 + l3
+                                     E4 = 2*n4 + l4
+                                     Etot34 = E3 + E4
 
-                                           DO n_rel34 = 0, (Etot34 - 2*N_CM - L_CM - l_rel)/2
-                                              E_rel34 = 2*n_rel34 + l_rel
-                                              T34 = TMBR(E_CM,L_CM,E_rel34,l_rel,E3,l3,E4,l4,l12) 
-                                              !T(talmi_index(l12,n3,l3,n4,l4,N_CM,L_CM,n_rel34,l_rel))
+                                     DO n_rel34 = 0, (Etot34 - 2*N_CM - L_CM - l_rel)/2
+                                        E_rel34 = 2*n_rel34 + l_rel
+                                        T34 = TMBR(E_CM,L_CM,E_rel34,l_rel,E3,l3,E4,l4,l12) 
+                                        !T(talmi_index(l12,n3,l3,n4,l4,N_CM,L_CM,n_rel34,l_rel))
 
-                                              
-                                              RadInt = R(l_rel,n_rel12,n_rel34)
-                                              
 
-                                              DO jindex1 = 0,1
-                                                 IF(l1==0 .and. jindex1==1) CYCLE
-                                                 j1_2 = twoj(l1,jindex1)
-                                                 DO jindex2 = 0,1
-                                                    IF(l2==0 .and. jindex2==1) CYCLE
-                                                    j2_2 = twoj(l2,jindex2)
+                                        RadInt = R(l_rel,n_rel12,n_rel34)
 
-                                                    geom12 = sqrt(REAL(j1_2+1,kind=r_kind)*REAL(j2_2+1,kind=r_kind))&
-                                                         *sixj(2*l2,2*l1,2*l12,j1_2,j2_2,1)
 
-                                                    DO jindex3 = 0,1
-                                                       IF(l3==0 .and. jindex3==1) CYCLE
-                                                       j3_2 = twoj(l3,jindex3)
-                                                       DO jindex4 = 0,1
-                                                          IF(l4==0 .and. jindex4==1) CYCLE
-                                                          j4_2 = twoj(l4,jindex4)
+                                        DO jindex1 = 0,1
+                                           IF(l1==0 .and. jindex1==1) CYCLE
+                                           j1_2 = twoj(l1,jindex1)
+                                           DO jindex2 = 0,1
+                                              IF(l2==0 .and. jindex2==1) CYCLE
+                                              j2_2 = twoj(l2,jindex2)
 
-                                                          geom34 = sqrt(REAL(j3_2+1,kind=r_kind)*REAL(j4_2+1,kind=r_kind))&
-                                                               *sixj(2*l4,2*l3,2*l12,j3_2,j4_2,1)
+                                              geom12 = sqrt(REAL(j1_2+1,kind=r_kind)*REAL(j2_2+1,kind=r_kind))&
+                                                   *sixj(2*l2,2*l1,2*l12,j1_2,j2_2,1)
 
-                                                          matels_j(TBME_j_index(l12,n1,l1,jindex1,n2,l2,jindex2,n3,l3,jindex3,n4,l4,jindex4))= &
-                                                                matels_j(TBME_j_index(l12,n1,l1,jindex1,n2,l2,jindex2,n3,l3,jindex3,n4,l4,jindex4))&
-                                                                +REAL((-1)**(l1+l3+(j2_2+j4_2)/2+1),kind=r_kind)*geom12*geom34*T12*T34*RadInt
-                                                                
+                                              !DO jindex3 = 0,1
+                                              !   IF(l3==0 .and. jindex3==1) CYCLE
+                                              jindex3 = jindex1
+                                              j3_2 = twoj(l3,jindex3)
+                                              !DO jindex4 = 0,1
+                                              !   IF(l4==0 .and. jindex4==1) CYCLE
+                                              jindex4 = jindex2
+                                              j4_2 = twoj(l4,jindex4)
 
-                                                          !for debug
+                                              geom34 = sqrt(REAL(j3_2+1,kind=r_kind)*REAL(j4_2+1,kind=r_kind))&
+                                                   *sixj(2*l4,2*l3,2*l12,j3_2,j4_2,1)
+
+                                              matels_j(TBME_j_index_hf(l12,l1,jindex1,l2,jindex2,n1,n2,n3,n4))= &
+                                                   matels_j(TBME_j_index_hf(l12,l1,jindex1,l2,jindex2,n1,n2,n3,n4))&
+                                                   +REAL((-1)**(l1+l3+(j2_2+j4_2)/2+1),kind=r_kind)*geom12*geom34*T12*T34*RadInt
+
+
+                                              !for debug
 !!$                                                          IF( ABS(matels_j(TBME_j_index(l12,n1,l1,jindex1,n2,l2,jindex2,n3,l3,jindex3,n4,l4,jindex4))) > 1.0e-10 ) THEN 
 !!$                                                          WRITE(*,'(3I3,A1,3I3,A1,3I3,A1,3I3,A1,I3)') n1,l1,jindex1,'|',n2,l2,jindex2,'|',n3,l3,jindex3,'|',n4,l4,jindex4,'|',l12
 !!$                                                          WRITE(*,'(2F16.10)') matels_j(TBME_j_index(l12,n1,l1,jindex1,n2,l2,jindex2,n3,l3,jindex3,n4,l4,jindex4)), RadInt
 !!$                                                          WRITE(*,'(4F12.6)') geom12, geom34, T12, T34
 !!$                                                          
 !!$                                                          END IF
+!!$
+!!$                                                          IF(n1 == 0 .and. n2 == 0 .and. n3 == 0 .and. n4 == 0 .and. l1 == 0 .and. l2 == 0 .and. l3 == 0 .and. l4 == 0) THEN
+!!$                                                             WRITE(*,'(3I3,A1,3I3,A1,3I3,A1,3I3,A1,I3)') n1,l1,jindex1,'|',n2,l2,jindex2,'|',n3,l3,jindex3,'|',n4,l4,jindex4,'|',l12
+!!$                                                          WRITE(*,'(2F16.10)') matels_j(TBME_j_index(l12,n1,l1,jindex1,n2,l2,jindex2,n3,l3,jindex3,n4,l4,jindex4)), RadInt
+!!$                                                          WRITE(*,'(4F12.6)') geom12, geom34, T12, T34
+!!$
+!!$                                                          END IF
 
-                                                          IF(n1 == 0 .and. n2 == 0 .and. n3 == 0 .and. n4 == 0 .and. l1 == 0 .and. l2 == 0 .and. l3 == 0 .and. l4 == 0) THEN
-                                                             WRITE(*,'(3I3,A1,3I3,A1,3I3,A1,3I3,A1,I3)') n1,l1,jindex1,'|',n2,l2,jindex2,'|',n3,l3,jindex3,'|',n4,l4,jindex4,'|',l12
-                                                          WRITE(*,'(2F16.10)') matels_j(TBME_j_index(l12,n1,l1,jindex1,n2,l2,jindex2,n3,l3,jindex3,n4,l4,jindex4)), RadInt
-                                                          WRITE(*,'(4F12.6)') geom12, geom34, T12, T34
 
-                                                          END IF
-
-
-                                                       END DO
-                                                    END DO
-                                                 END DO
-                                              END DO
                                            END DO
                                         END DO
                                      END DO
@@ -984,6 +1000,10 @@ END IF
           END DO
        END DO
     END DO
+    !END DO
+    !END DO
+    !END DO
+    !END DO
 
     WRITE(*,*) '   Done'
 
@@ -1015,7 +1035,7 @@ END IF
                                !j2_2 = 2*lpr+(-1)**jindexpr
 
 
-                               matel_val = matel_val + REAL((2*l12+1),kind=r_kind)/REAL(deg1,kind=r_kind) *matels_j(TBME_j_index(l12,n1,l1,jindex1,n2,l2,jindex2,n3,l1,jindex1,n4,l2,jindex2))                            
+                               matel_val = matel_val + REAL((2*l12+1),kind=r_kind)/REAL(deg1,kind=r_kind) *matels_j(TBME_j_index_hf(l12,l1,jindex1,l2,jindex2,n1,n2,n3,n4))                            
                                
 
                             END DO
@@ -1045,7 +1065,7 @@ END IF
 
 
 
-    DEALLOCATE(T)
+    !DEALLOCATE(T)
     DEALLOCATE(matels_j)
 
 
@@ -1094,6 +1114,26 @@ END IF
     + dim_n*n3  + n4    
     
   END FUNCTION TBME_j_index
+
+
+  INTEGER FUNCTION TBME_j_index_hf(j12,l1,jindex1,l2,jindex2,n1,n2,n3,n4)
+    IMPLICIT NONE
+    INTEGER, intent(in) :: j12,n1,l1,jindex1,n2,l2,jindex2,n3,n4
+
+    INTEGER :: dim_j12, dim_n, dim_l, dim_ji
+
+    dim_j12 = 2*Ho_Nmax + 3
+    dim_n = Ho_Nmax/2 +1
+    dim_l = Ho_Nmax + 1
+    dim_ji = 2
+
+    TBME_j_index_hf = 1 + j12*dim_ji**2*dim_l**2*dim_n**4 &    
+    + (dim_ji*jindex1 + jindex2)*dim_l**2*dim_n**4 &    
+    + (dim_l*l1 + l2)*dim_n**4 &
+    + (dim_n*n1 + n2)*dim_n**2 &
+    + dim_n*n3  + n4    
+    
+  END FUNCTION TBME_j_index_hf
 
 
 
