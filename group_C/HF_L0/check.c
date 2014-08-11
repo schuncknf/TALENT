@@ -11,3 +11,4 @@ sum += rho[i][i];
 printf ("\nTr[rho] = %e\n\n", sum);
 return;
 }
+

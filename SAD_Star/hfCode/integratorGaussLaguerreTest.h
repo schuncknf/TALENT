@@ -18,7 +18,8 @@ struct IntegratorGaussLaguerreFixture{
   
     IntegratorGaussLaguerreFixture()
     {
-        integrator_.readTables("../gen_laguerre");
+        integrator_.setTableDir("../gen_laguerre");
+        //integrator_.readTables();
     }
  
     ~IntegratorGaussLaguerreFixture(){

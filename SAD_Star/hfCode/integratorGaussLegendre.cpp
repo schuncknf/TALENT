@@ -16,9 +16,32 @@ IntegratorGaussLegendre::~IntegratorGaussLegendre()
 //------------------------------------------------------------------------------
 void IntegratorGaussLegendre::setOrder(int n){
   order_=n;
+
+  if(weights_.count(n)<1){
+      ostringstream weightFile;
+      weightFile<<tableDir_<<"/gauss-legendre_n"<<n<<"_w.txt";
+      ifstream wInput(weightFile.str().c_str());
+
+      ostringstream abscissaFile;
+      abscissaFile<<tableDir_<<"/gauss-legendre_n"<<n<<"_x.txt";
+      ifstream xInput(abscissaFile.str().c_str());
+
+      if(wInput && xInput){
+          this->readTab(weightFile.str(), weights_, n);
+          this->readTab(abscissaFile.str(), abscissa_, n);
+      }
+
+      wInput.close();
+      xInput.close();
+  }
 }
 
 
+
+//------------------------------------------------------------------------------
+void IntegratorGaussLegendre::setTableDir(string dir){
+    tableDir_= dir;
+}
 
 //------------------------------------------------------------------------------
 void IntegratorGaussLegendre::readTables(string tableDir){

@@ -61,19 +61,12 @@ double SphericalHOFunc::norm(int n, int l){
     }
     double logOddProd= log(oddProd);
 
-//    double logOddProd=0;
-//    for(int i=3; i< 2*n+2*l+2; i+=2){
-//        logOddProd+= log(i);
-//    }
-
-    double log2Pow= LOG2 * (2. + n + l);
-
-    double logPiSqr= LOGPI/2.;
-
-    double res= exp( logFacVal + log2Pow - logPiSqr - logOddProd -3.*logb_);
+    double res= exp( logFacVal + LOG2*(2. + n + l) - LOGPI/2. - logOddProd -3.*logb_);
 
     return sqrt (res);
 }
+
+
 //------------------------------------------------------------------------------
 double SphericalHOFunc::logFac(int n){
   int prod(1);
@@ -81,11 +74,6 @@ double SphericalHOFunc::logFac(int n){
       prod*= i;
   }
     return log(prod);
-//    double sum(0);
-//    for(int i=2; i<n+1; i++){
-//        sum+= log(i);
-//    }
-//    return sum;
 }
 
 
@@ -98,30 +86,23 @@ int SphericalHOFunc::fac(int n){
   return prod;
 }
 
+
 //------------------------------------------------------------------------------
 double SphericalHOFunc::laguerrel0(int n, double x){
-//    return gsl_sf_laguerre_n(n, l+0.5, qsq);
-    //cout<<gsl_sf_laguerre_n(n, 0.5, x)<<"  "<<double(1-2*n%2)/(fac(n)*pow(2,2*n+1)*sqrt(x))* boost::math::hermite(2*n+1, sqrt(x))<<endl;
-    //cout<<"n"<<n<<" fac"<<fac(n)<<" s"<<double(1-2*n%2)<<"po "<<pow(2,n+1)<<endl;
+    int pow2=2;
+    for(int i=1; i<2*n+1; i++){
+        pow2*=2;
+    }
+    double sqx= sqrt(x);
 
-    double res= double(1-n%2 *2)/(fac(n)*pow(2,2*n+1)*sqrt(x))* boost::math::hermite(2*n+1, sqrt(x));
+
+//    double res=(1-n%2 *2)/(fac(n)* pow2* sqrtx)*  boost::math::hermite(2*n+1, sqrtx);
 //    if(res != gsl_sf_laguerre_n(n, 0.5, x)){
-//        cout<<n<<"  "<<res<<"  "<<gsl_sf_laguerre_n(n, 0.5, x)<<endl;
+//            cout<<n<<"  "<<res<<"  "<<gsl_sf_laguerre_n(n, 0.5, x)<<endl;
 //    }
-    return res;
+
+    return  double(1-n%2 *2)/(sqx * fac(n) * pow2 ) * boost::math::hermite(2*n+1, sqx);
+    //return gsl_sf_laguerre_n(n, 0.5, x);
 }
 
 
-////------------------------------------------------------------------------------
-//double SphericalHOFunc::logDoubleFac(int n){
-//    double res(0);
-//    int k= n/2;
-//    int i0=1;
-//    if(2*k == n){
-//        i0=2;
-//    }
-//      for(int i=i0; i<n+1; i+=2){
-//        res+= log(i);
-//    }
-//      return res;
-//}

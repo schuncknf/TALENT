@@ -16,6 +16,7 @@ DETAILS:
  INCLUSIONS
 */
 #include <iostream>
+#include <fstream>
 #include <armadillo>
 
 #include "integratorGaussLaguerre.h"
@@ -26,6 +27,7 @@ DETAILS:
 #include "VMinnesotaMatrixGenerator.h"
 
 using namespace arma; //for the armadillo library
+using namespace VMinnesotaMatrixGenerator;
 
 /*
  STRUCTURES
@@ -51,195 +53,203 @@ typedef struct {
     FUNCTIONS
 */
 
-//----------------------------------------------------------------------------------------------------------------------------------
-static double kR= 1.487; //1.487; //fm^-2
-static double v0R= 200.; //200.; //MeV
-static double kS= 0.465;//0.465; //fm^-2
-static double v0S= 91.85;//91.85; //MeV
-
-//----------------------------------------------------------------------------------------------------------------------------------
-double integrand(double& r1, double& r2, int n1, int n2, int n3, int n4, SphericalHOFunc& Rn, vector<double>& norm) {
-
-    double rm2= (r1-r2)*(r1-r2);
-    double rp2= (r1+r2)*(r1+r2);
-    double gaussR= +v0R/4./kR * (exp(-kR*rm2) - exp(-kR*rp2));
-    double gaussS= -v0S/4./kS * (exp(-kS*rm2) - exp(-kS*rp2));
-    double Rn1Rn2= Rn.eval(n1, 0, r1, norm[n1]) * Rn.eval(n2, 0, r2, norm[n2]);
-
-    double VD=   0.5*(gaussR+ gaussS)* Rn1Rn2* Rn.eval(n3, 0, r1, norm[n3])* Rn.eval(n4, 0, r2, norm[n4])* r1*r2;
-    double VEPr= 0.5*(gaussR+ gaussS)* Rn1Rn2* Rn.eval(n4, 0, r1, norm[n4])* Rn.eval(n3, 0, r2, norm[n3])* r1*r2;
-
-    //if(std::isnan(term1) || std::isnan(term2) ){
-//            cout<<"Pb: in integrand: one nan factor:"<<endl;
-//            cout<<"Rn1 "<<Rn.eval(n1, 0, r1)<<endl;
-//            cout<<"Rn2 "<<Rn.eval(n2, 0, r2)<<endl;
-//            cout<<"Rn3 "<<Rn.eval(n3, 0, r1)<<endl;
-//            cout<<"Rn4 "<<n4<<"  "<<Rn.eval(n4, 0, r2)<<endl;
-//            cout<<"gR "<<gaussR<<endl;
-//            cout<<"gS "<<gaussS<<endl;
-//            cout<<"Rn1 "<<RnFactor1<<endl;
-//            cout<<"Rn2 "<<RnFactor2<<endl;
-//            cout<<"norm n1 "<<n1<<"  "<<p->norm[n1]<<endl;
-//            cout<<"integrand= "<<VD<<" "<<VEPr<<endl;
-
-    //}
-    return VD + VEPr;
-}
-
-//----------------------------------------------------------------------------------------------------------------------------------
-double integrandTest(double& r1, double& r2, int& n1, int& n2, int& n3, int& n4, SphericalHOFunc& Rn, vector<double>& norm) {
-  return r1*r1*exp(-r1)*exp(-r1*r2);
-}
-
-//----------------------------------------------------------------------------------------------------------------------------------
-double integrandR1R2(double r2, void * params){
-    Struct1 * p= (Struct1*) params;
-//    cout<<"nval= "<<p->n1<<" "<<p->n2<<" "<<p->n3<<" "<<p->n4<<endl;
-
-    return integrand(p->r1, r2, p->n1, p->n2, p->n3, p->n4, p->Rn, p->norm);
+//------------------------------------------------------------------------------
+FourIndiceMat VMinnesotaMatrixGenerator::emptyFourIndiceMat(int dim){
+    return FourIndiceMat( (dim), vector<vector<vector<double> > >((dim), vector<vector<double> >((dim), vector<double>((dim), 0.))));
 }
 
 
 //----------------------------------------------------------------------------------------------------------------------------------
-double integrandR1(double r1, void * params){
-
-    Struct2 * p= (Struct2*) params;
-    p->parameters->r1= r1;
-
-
-    //double aMax=2e3 * p->Rn.getB();
-    //return p->integrator.integrate(p->integrandR1R2, 0., aMax);
-    return p->integrator.integrate0ToInf(p->integrandR1R2);
+TwoBodyMat VMinnesotaMatrixGenerator::emptyTwoBodyMat(int NMax, int lMax){
+    FourIndiceMat fourIMat= emptyFourIndiceMat(NMax/2 +1); // No need of all this space because nMax depends on l ...
+    TwoBodyMat res(2*lMax+2,  vector<FourIndiceMat>(2*lMax+2, fourIMat));
+    return res;
 }
 
 
-//----------------------------------------------------------------------------------------------------------------------------------
-void VMinnesotaMatrixGenerator::calc2BodyMat(TwoBodyMat& Vabcd, double b){
-    int dim= Vabcd.size();
-
-    // Struct1
-    SphericalHOFunc Rn;
-    Rn.setB(b);
-
-    vector<double> norm;
-    for(int i=0; i<dim; i++){
-        norm.push_back(Rn.norm(i,0));
-        cout<<"norm "<<Rn.norm(i,0)<<endl;
+//------------------------------------------------------------------------------
+void readMortenMatrix(FourIndiceMat& fourIMat, string fileName){
+    ifstream valInput(fileName.c_str());
+    if(!valInput){
+        throw logic_error("in VMinnesotaMatrixGenerator::readMortenMatrix, file missing");
     }
 
-    Struct1* param1= new Struct1;
-    param1->norm= norm;
-    param1->Rn= Rn;
+    // Skip 2 first lines
+    string word;
+    getline(valInput, word);
+    getline(valInput, word);
 
-    // Struct2
-    gsl_function intR1R2Func;
-    intR1R2Func.function= integrandR1R2;
-    intR1R2Func.params= param1;
+    int a,b,c,d;
+    double val;
 
-    IntegratorGaussLegendre integrator;
-    integrator.readTables("../gen_legendre");
-    integrator.setOrder(150);
+    while(!valInput.eof()){
+        valInput>>a>>b>>c>>d>>val;
 
-    Struct2 * param2= new Struct2;
-    param2->integrator= integrator;
-    param2->integrandR1R2= intR1R2Func;
-    param2->parameters= param1;
+        fourIMat[a][b][c][d]= val;
+//        fourIMat[a][b][d][c]= -val;
 
-    // Loop on matrix elements
-    gsl_function intR1Func;
-    intR1Func.function= integrandR1;
-    intR1Func.params= param2;
+//        fourIMat[b][a][c][d]= -val;
+//        fourIMat[b][a][d][c]= val;
 
-    TwoBodyMat isFilled (dim, vector<vector<vector<double> > >(dim, vector<vector<double> >(dim, vector<double>(dim, 0.))));
+//        fourIMat[c][d][a][b]= val;
+//        fourIMat[c][d][b][a]= -val;
 
-//// Test:
-//    double val= integrator.integrate0ToInf(intR1Func);
-//    cout<<"double itegration tests: 1= "<<setprecision(15)<<val<<endl;
-//    cout<<"diff= "<<1-val<<endl;
-//    //end test
+//        fourIMat[d][c][a][b]= -val;
+//        fourIMat[d][c][b][a]= val;
 
 
-    for(int n1 = 0; n1 < dim; n1++ ) {
-        param1->n1= n1;
-        cout<<"n1 "<<n1<<endl;
-        for (int n2 = n1; n2 < dim; n2++) {
-           param1->n2=n2;
-            for(int n3=0; n3<dim; n3++){ //n1
-                param1->n3=n3;
-                for(int n4=n3; n4<dim; n4++){ //max(n3,n2)
-                    param1->n4=n4;
+//        int i1= 2* l[a] + (1+s[a])/2;
+//        int i2= 2* l[b] + (1+s[b])/2;
+//        double twoJ= s[a]+2*l[a];
+//        double twoJPrime= s[b]+2*l[b];
 
-                    // Calc element:
-                    if( isFilled[n1][n2][n3][n4] < 0.5){
-                        double elem= integrator.integrate0ToInf(intR1Func);
+    }
 
-                        Vabcd[n1][n2][n3][n4]= elem;
-                        Vabcd[n1][n2][n4][n3]= elem;
+//    // Antisymmetry test
+//    for(int a=0; a<21; a++){
+//        for(int b=0; b<21; b++){
+//            for(int c=0; c<21; c++){
+//                for(int d=0; d<21; d++){
 
-                        Vabcd[n2][n1][n3][n4]= elem;
-                        Vabcd[n2][n1][n4][n3]= elem;
-
-                        Vabcd[n3][n4][n1][n2]= elem;
-                        Vabcd[n3][n4][n2][n1]= elem;
-
-                        Vabcd[n4][n3][n1][n2]= elem;
-                        Vabcd[n4][n3][n2][n1]= elem;
-
-                        isFilled[n1][n2][n3][n4]= 1.;
-                        isFilled[n1][n2][n4][n3]= 1.;
-
-                        isFilled[n2][n1][n3][n4]= 1.;
-                        isFilled[n2][n1][n4][n3]= 1.;
-
-                        isFilled[n3][n4][n1][n2]= 1.;
-                        isFilled[n3][n4][n2][n1]= 1.;
-
-                        isFilled[n4][n3][n1][n2]= 1.;
-                        isFilled[n4][n3][n2][n1]= 1.;
-
-//                        cout<<n1<<" "<<n2<<" "<<n3<<" "<<n4<<" "<<setprecision(25)<<elem<<endl;
-                    }
+//                    if(fourIMat[a][b][c][d] != - 200){
+//                        cout<<fourIMat[a][b][c][d]<<endl;
 
 
+//                    }
 
-                } //end n4
-            } // end n3
-        } // end n2
-    } // end n1
+//                }
+//            }
+//        }
+//    }
+}
 
 
+//------------------------------------------------------------------------------
+/**
+ *  The int vectors must be empty
+ */
+void readMortenIndiceTable(vector<int>& n, vector<int>& l, vector<int>& twoJ, vector<int>& twoMj, vector<int>& twoTau, string fileName){
+    ifstream legInput(fileName.c_str());
+    if(!legInput){
+        throw logic_error("in VMinnesotaMatrixGenerator::readMortenIndiceTable, file missing");
+    }
 
-    // Clean:
-    //delete param1;
-    //delete param2;
+    // Put dummy values in the 0 indice
+    n.push_back(-1);
+    l.push_back(0);
+    twoJ.push_back(0);
+    twoMj.push_back(0);
+    twoTau.push_back(0);
+
+    // Read values from file
+    int nVal, lVal,twoJVal, twoMjVal,twoTauVal;
+    string word;
+
+    getline(legInput, word);
+    while(!legInput.eof()){
+        legInput>>word>>word>>word;
+        legInput>>nVal>>lVal>>twoJVal>>twoMjVal>>twoTauVal;
+//        cout<<nVal<<" "<<lVal<<endl;
+
+        n.push_back(nVal);
+        l.push_back(lVal);
+        twoJ.push_back(twoJVal);
+        twoMj.push_back(twoMjVal);
+        twoTau.push_back(twoTauVal);
+    }
+}
+
+//------------------------------------------------------------------------------
+int getMortenInd(vector<int>& n, vector<int>& l, vector<int>& twoJ, vector<int>& twoMj, vector<int>& twoTau, int nVal, int lVal, int twoJVal, int twoMjVal, int twoTauVal){
+    int i=0;
+    while(i<int(n.size()) && (n[i]!=nVal || l[i]!= lVal || twoJ[i]!= twoJVal || twoMj[i]!= twoMjVal || twoTau[i]!=twoTauVal) ){
+        i++;
+    }
+    if(i == int(n.size())){
+        throw logic_error("In getMortenInd, quantum number not in the table");
+    }
+    return i;
 }
 
 //----------------------------------------------------------------------------------------------------------------------------------
-double hElem(int i, int j, mat& density, vector<vector<vector<vector<double> > > >& Vabcd, double b){
-    double elem(0);
+void VMinnesotaMatrixGenerator::calc2BodyMat(TwoBodyMat& V, double& bParam, int order, int NMax){
+    // Launch the Morten's program
 
-    int sigma2= i%2;
-    int sigma4= j%2;
+    // Read Morten's matrix elements
+    cout<<"read table"<<endl;
+    vector<int> n,l,twoJ,twoMj, twoTau;
+    readMortenIndiceTable(n, l, twoJ, twoMj, twoTau, "../relcom2labsystem/spM.dat");
 
-    // density dependent part
-    for(unsigned int n1=0; n1<density.n_cols/2; n1++){
-        for(unsigned int n3=0; n3<density.n_cols/2; n3++){
-            for(int sigma1=0; sigma1<2 ;sigma1++){
-                for(int sigma3=0; sigma3<2; sigma3++){
-                    double spin= ( (sigma1==sigma3)*(sigma2==sigma4) - (sigma1==sigma4)*(sigma2==sigma3) );
-                    elem+= 0.5*Vabcd[n1][i/2][n3][j/2]*spin* density(2*n3+sigma3, 2*n1+sigma1);
+    cout<<"read matrix"<<endl;
+    FourIndiceMat fourIMat= emptyFourIndiceMat(n.size());
+    readMortenMatrix(fourIMat, "../relcom2labsystem/VM-scheme.dat");
+
+    // Fill the V matrix
+    int kMax=2*NMax;
+    int kMin=0;
+    cout<<"kMax= "<<kMax<<endl;
+
+    double sum;
+    int i1, i2, i3, i4, twoJ1, twoJ2, l1, l2;
+    for(int k1=kMin; k1<=kMax; k1++){
+        l1= (k1+k1%2)/2;
+        twoJ1= k1-k1%2+1;
+
+        for(int k2=kMin; k2<=kMax; k2++){
+            l2= (k2+k2%2)/2;
+            twoJ2= k2-k2%2+1;
+
+            for(int n1=0; n1<= (NMax-l1)/2; n1++){
+                for(int n2=0; n2<= (NMax-l2)/2; n2++){
+                    for(int n3=0; n3<= (NMax-l1)/2; n3++){
+                        for(int n4=0; n4<= (NMax-l2)/2; n4++){
+
+                            sum=0;
+                            for(int twoMj1= -twoJ1; twoMj1<= twoJ1; twoMj1+=2){
+                                for(int twoMj2= -twoJ2; twoMj2<= twoJ2; twoMj2+=2){
+                                    i1= getMortenInd(n, l, twoJ, twoMj, twoTau, n1, l1, twoJ1, twoMj1, 1);
+                                    i2= getMortenInd(n, l, twoJ, twoMj, twoTau, n2, l2, twoJ2, twoMj2, 1);
+                                    i3= getMortenInd(n, l, twoJ, twoMj, twoTau, n3, l1, twoJ1, twoMj1, 1);
+                                    i4= getMortenInd(n, l, twoJ, twoMj, twoTau, n4, l2, twoJ2, twoMj2, 1);
+                                    sum+= fourIMat[i1][i2][i3][i4];
+                                }
+                            }// End sum over m1 m2
+
+                            V[k1][k2][n1][n2][n3][n4]= sum/double(twoJ1+1)/double(twoJ2+1);
+                        } // end n4
+                    }
                 }
+            }// end n1
+        } // end k2
+    } // end k1
+
+}
+
+
+//----------------------------------------------------------------------------------------------------------------------------------
+double hElem(int& k, int& i, int& j, vector<mat>& density, TwoBodyMat& V , double& b, int NMax){
+    double elem(0.);
+
+    int twoJ= k-k%2+1;
+   // Density dependent part
+    for(unsigned int kPrime=0; kPrime<density.size(); kPrime++){
+        int lPrime= (kPrime+kPrime%2)/2;
+        int twoJPrime= kPrime-kPrime%2+1;
+
+        for(unsigned int n2=0; n2<= (NMax-lPrime)/2; n2++){
+            for(unsigned int n4=0; n4<= (NMax-lPrime)/2; n4++){
+
+                elem+= V[k][kPrime][i][n2][j][n4] * density[kPrime](n4, n2) *(twoJPrime+1);
+//                cout<<V[k][kPrime][i][n2][j][n4]<<endl;
             }
-//            if(sigmaI == sigmaJ){
-//                elem+= 0.5*Vabcd[n1][i/2][n3][j/2]* density(2*n3, 2*n1);
-//            }
         }
     }
 
     // HO part
     double hbarOmega= HBARC*HBARC/MNC2/b/b;
     if(i == j){
-        elem+= (2.*(i/2) +1.5) * hbarOmega;
+        int l= (k+k%2)/2;
+        elem+= (2*i+ l + 1.5) * hbarOmega;
     }
 
     return elem;
@@ -248,15 +258,22 @@ double hElem(int i, int j, mat& density, vector<vector<vector<vector<double> > >
 
 
 //----------------------------------------------------------------------------------------------------------------------------------
-void VMinnesotaMatrixGenerator::fillHMatrix(mat& H, mat& density, vector<vector<vector<vector<double> > > >& Vabcd, double b) {
-    if(H.n_cols != density.n_cols || Vabcd.size() != density.n_cols/2){
-        throw invalid_argument( (string(__FILE__)+", "+__FUNCTION__+": H matrix has not the same size than density matrix").c_str());
-    }
+void VMinnesotaMatrixGenerator::fillHMatrix(vector<mat>& H, vector<mat>& density, TwoBodyMat& Vabcd, double& b, int lMax) {
+//    if(H[0].n_cols != density[0].n_cols || Vabcd.size() != density[0].n_cols){
+//        throw invalid_argument( (string(__FILE__)+", "+__FUNCTION__+": H matrix has not the same size than density matrix").c_str());
+//    }
+
+    int NMax= lMax;
 
     // Loop on matrix elements
-    for(int i = 0; i < int(H.n_cols); i++ ) {
-        for (int j = 0; j < int(H.n_cols); j++ ) {
-           H(i,j)= hElem(i, j, density, Vabcd, b);
+    for(int k= 0; k<= 2*lMax; k++){
+        int l= (k+k%2)/2;
+        for(int i = 0; i <= (NMax-l)/2; i++ ) {
+            for (int j = i+1; j <= (NMax-l)/2; j++ ) {
+               H[k](i,j)= hElem(k, i, j, density, Vabcd, b, NMax);
+               H[k](j,i)= H[k](i,j);
+            }
+            H[k](i,i)= hElem(k, i, i, density, Vabcd, b, NMax);
         }
     }
 

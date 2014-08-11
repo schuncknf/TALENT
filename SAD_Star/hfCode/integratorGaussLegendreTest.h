@@ -17,7 +17,8 @@ struct IntegratorGaussLegendreFixture{
   
     IntegratorGaussLegendreFixture()
     {
-        integrator_.readTables("../gen_legendre");
+        integrator_.setTableDir("../gen_legendre");
+        //integrator_.readTables();
     }
  
     ~IntegratorGaussLegendreFixture(){

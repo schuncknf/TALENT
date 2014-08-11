@@ -23,6 +23,7 @@ public:
 
     void readTables(string tabDir);
     void setOrder(int n);
+    void setTableDir(string dir);
 
     template<class T>
     double integrate(T& func, double a, double b) const;
@@ -33,6 +34,7 @@ public:
 
 private:
     int order_;
+    string tableDir_;
     map<int, vector<double> > weights_;
     map<int, vector<double> > abscissa_;
     void readTab(const string& file, map<int, vector<double> >& data, int n);

@@ -14,30 +14,56 @@ HfSolver::~HfSolver(){
 
 
 //------------------------------------------------------------------------------
-void HfSolver::setParam(double b, int nMax, int nPart){
+void HfSolver::setParam(double b, int NMax, int nPart){
     b_=b;
-    nMax_= nMax;
+    NMax_= NMax;
     nPart_= nPart;
+    lMax_= NMax;
 }
+
 
 //------------------------------------------------------------------------------
 void HfSolver::run(double& hfEnergy){
 
-    mat h = zeros(2*(nMax_+1), 2*(nMax_+1));
+    int nSize= NMax_/2+1;
+    int kSize= 2*lMax_+1;
 
-    mat densityI= zeros(2*(nMax_+1), 2*(nMax_+1));
-    for(int i=0; i<nPart_; i++){
-        densityI(i,i)=1.;
+    vector<mat> h;
+    for(int k=0; k<kSize; k++){
+        int l= (k+k%2)/2;
+        int nMax= (NMax_-l)/2;
+        h.push_back(zeros(nMax+1, nMax+1));
     }
-    mat density= densityI;
-    mat densityPrev= density;
-    vec E = zeros(2*(nMax_+1) , 1) ;
 
-    mat diff= density;
-    mat D = h;
 
-    int maxIter= 1000;
-    double threshold= 1e-12;
+    vector<mat> densityI= h;
+    int nPart= nPart_;
+    int k=0;
+    while(nPart>0 && k<kSize){
+        densityI[k](0,0)=1;
+        int twoJ= k-k%2+1;
+        nPart -= twoJ+1;
+        k++;
+    }
+
+    vector<mat> density= densityI;
+    vector<mat> densityPrev= density;
+
+    vector<vec> E;
+    for(int k=0; k<kSize; k++){
+        int l= (k+k%2)/2;
+        int nMax= (NMax_-l)/2;
+        E.push_back( zeros(nMax+1, 1));
+    }
+
+    vector<mat> diff= density;
+    vector<mat> D = h;
+
+    vector<int> nBarVec; // Will contain the nBar indice for the occupied HF states
+    vector<int> kVec; // Will contain the k indice for the occupied HF states
+
+    int maxIter= 100;
+    double threshold= 1e-6;
     double error=1e100;
     int dumpRate= 2;
     double alpha= 1.;
@@ -45,103 +71,160 @@ void HfSolver::run(double& hfEnergy){
     // Create the Vabcd Matrix
     cout<<"Vabcd matrix creation";
     cout<<flush;
-    VMinnesotaMatrixGenerator::TwoBodyMat Vabcd((nMax_+1), vector<vector<vector<double> > >((nMax_+1), vector<vector<double> >((nMax_+1), vector<double>((nMax_+1), 0.))));
-    //VMinnesotaMatrixGenerator::calc2BodyMat(Vabcd, b_);
-    read2BodyMat(Vabcd, "matBenchmark.dat");
-
+    VMinnesotaMatrixGenerator::TwoBodyMat Vabcd = VMinnesotaMatrixGenerator::emptyTwoBodyMat(NMax_, lMax_);
+    VMinnesotaMatrixGenerator::calc2BodyMat(Vabcd, b_, 50, NMax_);
+    //read2BodyMat(Vabcd, "./matels_hf.dat");
     cout<<"       OK"<<endl;
 
     // Hartree Fock loop
     int    hfIt = 0;
     while( hfIt < maxIter  &&  error > threshold) {
-        if(hfIt%dumpRate == 0){
-            cout << "hf-it= " << hfIt << "  e= "<<error<<" tr(rho)= "<<trace(density)<<" tr(hRho)= "<<trace(h*density)<<endl ;
-            //cout<<density<<endl;
-        }
 
         // Compute h
-        cout<<"fill h"<<endl;
-        VMinnesotaMatrixGenerator::fillHMatrix(h, density, Vabcd, b_);
+        VMinnesotaMatrixGenerator::fillHMatrix(h, density, Vabcd, b_, lMax_);
 
-        cout<<"diag"<<endl;
-        // Diagonalize
-        eig_sym(E, D, h) ; // "std" or "dc"
-
-        cout<<"density"<<endl;
-        // Compute the density matrix
-        for(int mu=0; mu<2*(nMax_+1); mu++){
-            for(int nu=0; nu<2*(nMax_+1); nu++){
-                density(mu,nu)= 0;
-                for(int i=0; i<nPart_; i++){
-                    density(mu,nu)+= D(mu,i)*D(nu,i);
-                }
+        // Output
+        if(hfIt%dumpRate == 0){
+            double trRho=0;
+            for(int k=0; k<kSize; k++){
+                int twoJ= k-k%2 +1;
+                trRho+= trace(density[k])* (twoJ+1);
             }
+            cout<< "hf-it= " << setprecision(6)<<setw(5)<< hfIt;
+            cout<< "  e= "<<setw(10)<<error<<"    tr(rho)= "<<setw(5)<<trRho<<endl;
+//            for(int i=0;i<kSize; i++){
+//                cout<<"rho["<<i<<"]"<<endl<<density[i]<<endl;
+//                cout<<"h["<<i<<"]"<<endl<<h[i]<<endl;
+//            }
+
+
         }
 
 
-        //density= density*(alpha)+ densityPrev*(1-alpha);
+        // Diagonalize
+        for(int k=0; k<kSize; k++){
+            eig_sym(E[k], D[k], h[k]) ; // "std" or "dc"
+        }
 
+        // List the HF occupied states:
+        nBarVec.clear();
+        kVec.clear();
+        findHFOccupiedStates(E, nBarVec, kVec);
 
-        diff= density -densityPrev;
-        error= norm(diff, 1);
-        densityPrev= density;
+        // Build the new density:
+        for(int k=0; k<kSize; k++){
+            int l= (k+k%2)/2;
+            // Compute the density matrix
+            for(int n4=0; n4<= (NMax_-l)/2; n4++){
+                for(int n2=0; n2<= (NMax_-l)/2; n2++){
+
+                    density[k](n4,n2)= 0.;
+                    // Sum over occupied HF states:
+                    for(unsigned int i=0; i<nBarVec.size(); i++){
+                        if(kVec[i] == k){
+                            density[k](n4,n2)+= D[k](n4, nBarVec[i])*D[k](n2, nBarVec[i]);
+                        }
+                    } // end sum
+
+                } // end n2
+            } // end n4
+        } // end k
+
+        // Mixing
+        for(int k=0; k<kSize; k++){
+            density[k]= density[k]*(alpha)+ densityPrev[k]*(1-alpha);
+        }
+
+        // Compute error
+        error=0;
+        for(int k=0; k<kSize; k++){
+            diff[k]= density[k] -densityPrev[k];
+            error+= norm(diff[k], 1);
+            densityPrev[k]= density[k];
+        }
+
         hfIt++;
     } // end while
 
 
-    // Calculate total energy
-    VMinnesotaMatrixGenerator::fillHMatrix(h, density, Vabcd, b_);
-    mat hRho= h*density;
-    hfEnergy=0.;
-    for(int i=0; i<2*(nMax_+1); i++){
-        hfEnergy+= hRho(i, i);
-    }
-    cout<<hRho<<endl;
-    cout<<"h"<<endl;
-    cout<<h<<endl;
-
-    cout<<"tr(rho) "<<trace(density)<<endl;
-    cout<<"tr(hrho) "<<trace(hRho)<<endl;
-    cout<<"tr(rho*h) "<<trace(density*h)<<endl;
-    cout<<"hRho= "<<endl;
-
-    double energy2=0;
-    int dim= 2*(nMax_+1);
-    for(int a=0; a<dim; a++){
-        for(int b=0; b<dim; b++){
-            for(int c=0; c<dim; c++){
-                for(int d=0; d<dim; d++){
-                    double spin=( (a%2==c%2)*(b%2==d%2) - (a%2==d%2)*(b%2==c%2) );
-                    energy2+= 0.5* spin * Vabcd[a/2][b/2][c/2][d/2]* density(d,b) *density(c,a);
-                }
-            }
+    // Calculate the total energy
+    hfEnergy=0;
+    for(int k=0; k<kSize; k++){
+        int l= (k+k%2)/2;
+        int twoJ= k-k%2 +1;
+        for(int n=0; n<= (NMax_-l)/2; n++){
+           // Sum over particules
+           for(unsigned int i=0; i<nBarVec.size(); i++){
+               if(k == kVec[i]){
+                   hfEnergy+= double(twoJ+1)* D[k](n, nBarVec[i])*D[k](n, nBarVec[i])* (2*n+ l + 1.5) * HBARC*HBARC/b_/b_/MNC2;
+                   //cout<<hfEnergy<<endl;
+               }
+           } // Sum over particules
         }
     }
-    for(int a=0; a<dim; a++){
-        energy2+= (a/2*2 +1.5)*10. * density(a,a);
+    for(unsigned int i=0; i<nBarVec.size(); i++){
+        int twoJ= kVec[i]-kVec[i]%2 +1;
+        hfEnergy+= E[kVec[i]](nBarVec[i])*double(twoJ+1);
+//        cout<<hfEnergy<<endl;
     }
-    cout<<"energy2= "<<energy2<<endl;
+    hfEnergy/=2.;
 
     // Output
     cout<<endl;
     if(hfIt == maxIter){
         cout<<"Warning: HF loop stoped after "<<maxIter<<" iterations, results may not be converged"<<endl;
     }
-    cout<<"Convergence reached at hf-it= "<<hfIt-1<<" e="<<error<<"   =>  HF energy = "<<hfEnergy<<endl;
+    cout<<"Convergence reached at hf-it= "<<hfIt-1<<" e="<<error<<"   =>  HF energy = "<<setprecision(10)<<hfEnergy<<endl;
 
 }
 
 
 //------------------------------------------------------------------------------
-void HfSolver::read2BodyMat(VMinnesotaMatrixGenerator::TwoBodyMat &mat, string file){
-    ifstream input(file.c_str());
-    int i,j,k,l;
-    double val;
-    while(!input.eof()){
-        input>>i>>j>>k>>l>>val;
-        double spin=( (i%2==k%2)*(j%2==l%2) - (i%2==l%2)*(j%2==k%2) );
-        if(abs(spin) >0.5){
-            mat[i/2][j/2][k/2][l/2]= val/spin;
+//void HfSolver::read2BodyMat(VMinnesotaMatrixGenerator::TwoBodyMat &mat, string file){
+
+
+//    ifstream input(file.c_str());
+//    if(!input){
+//        throw invalid_argument((string("File ")+file+" does not exist").c_str());
+//    }
+
+//    int i,j,k,l;
+//    double val;
+//    while(!input.eof()){
+//        input>>i>>j>>k>>l>>val;
+//        //cout<<i<<" "<<j<<" "<<k<<" "<<l<<" "<<val<<endl;
+//        mat[i][j][k][l]= val;
+//        input>>val;
+//    }
+//}
+
+
+//------------------------------------------------------------------------------
+void HfSolver::findHFOccupiedStates(vector<vec> E, vector<int> &nVec, vector<int> &kVec){
+    int nPart= nPart_;
+    int kSize= 2*lMax_+1;
+    while(nPart>0){
+        double eMin=1e100;
+        int kMin=-1;
+        int nBarMin=-1;
+        // Look for next minimum of energy
+        for(int k=0; k<kSize; k++){
+            int l= (k+k%2)/2;
+            for(int nBar=0; nBar<= (NMax_-l)/2; nBar++){
+                if(E[k](nBar) < eMin){
+                   eMin=  E[k](nBar);
+                   kMin= k;
+                   nBarMin= nBar;
+                }
+            }
         }
+        E[kMin][nBarMin]= 1e100;
+        nVec.push_back(nBarMin);
+        kVec.push_back(kMin);
+        int twoJMin= kMin-kMin%2+1;
+        nPart-= twoJMin +1;
+    }
+    if(nPart != 0){
+        throw logic_error("In HfSolver::findHFOccupiedStates, non closed shell number of particules");
     }
 }

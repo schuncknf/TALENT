@@ -1,17 +1,13 @@
 #include <math.h>
 #include<iostream>
 
-#include <gsl/gsl_sf_gamma.h>
-#include <gsl/gsl_sf_laguerre.h>
-#include <gsl/gsl_integration.h>
-
-#include <armadillo>
-
-#include "VCoulombMatrixGenerator.h"
+#include "hfSolver.h"
+#include "constants.h"
+#include "VMinnesotaMatrixGenerator.h"
 
 using namespace std;
-using namespace arma;
-using namespace VCoulombMatrixGenerator;
+using namespace VMinnesotaMatrixGenerator;
+
 
 
 
@@ -19,18 +15,24 @@ using namespace VCoulombMatrixGenerator;
 // Hydrogen
 int main() {
 
-    int dim=20;
-    mat A(dim, dim, fill::zeros);
-    setMatrix(A, dim, 0.5);
+//    int nMax= 4;
+//    int lMax=0;
+//    int nPart= 2;
+    int NMax= 2;
+    int nPart= 8;
+    double hbarOmega= 10.;
+    double b= HBARC/sqrt(MNC2 * hbarOmega);
+    cout<<"b= "<<b<<endl;
 
+    double hfEnergy=0.;
 
-    vec eigval;
-    mat eigvec;
-    eig_sym(eigval, eigvec, A);
+    HfSolver solver;
+    solver.setParam(b, NMax, nPart);
+    solver.run(hfEnergy);
 
-    cout<<eigval[0]<<endl;
-
-
+//    TwoBodyMat V= VMinnesotaMatrixGenerator::emptyTwoBodyMat(nMax, lMax);
+//    int order= 50;
+//    VMinnesotaMatrixGenerator::calc2BodyMat( V,  b, order);
 
     return 0;
 }

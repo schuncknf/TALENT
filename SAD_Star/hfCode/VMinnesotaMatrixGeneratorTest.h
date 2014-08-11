@@ -35,25 +35,22 @@ BOOST_AUTO_TEST_CASE( benchmarkTest )
 {
     int nMax=4;
     double hbarOmega= 10.;
-    double b=HBARC/sqrt(MNC2*hbarOmega);
-    cout<<"b "<<setprecision(20)<<b<<endl;
-    cout<<"logb "<<log(b)<<endl;
-
-    cout<<setprecision(20)<<log(2)<<endl;
-    cout<<setprecision(20)<<log(M_PI)<<endl;
-    cout<<setprecision(20)<<(M_PI)<<endl;
+    double b= HBARC/sqrt(MNC2*hbarOmega);
 
     // Vabsd
     TwoBodyMat Vabcd(nMax+1, vector<vector<vector<double> > >(nMax+1, vector<vector<double> >(nMax+1, vector<double>(nMax+1, 0.))));
-    calc2BodyMat(Vabcd, b);
+    calc2BodyMat(Vabcd, b, 200);
 
     // Benchmark
     double error=0.;
 
-    ifstream input("matBenchmark.dat");
+    ifstream input("./2BodyMatBenchmark2.dat");
     int i1, i2, i3, i4;
     double elemBench;
 
+    if(!input){
+        throw logic_error("File 2BodyMatBenchmark2.dat does not exist");
+    }
     while(!input.eof()){
         input>>i1>>i2>>i3>>i4>>elemBench;
         double spin=( (i1%2==i3%2)*(i2%2==i4%2) - (i1%2==i4%2)*(i2%2==i3%2));
@@ -65,7 +62,7 @@ BOOST_AUTO_TEST_CASE( benchmarkTest )
     }
 
 
-    BOOST_CHECK_CLOSE(error+1., 1., 1e-6);
+    BOOST_CHECK_CLOSE(error+1., 1., 0.5);
 }
 
 

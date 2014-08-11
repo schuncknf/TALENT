@@ -36,7 +36,6 @@ BOOST_AUTO_TEST_CASE( benchmarkTest )
     int nPart= 2;
     double hbarOmega= 10.;
     double b= HBARC/sqrt(MNC2 * hbarOmega);
-    cout<<"b= "<<b<<endl;
 
     double hfEnergy=0.;
 
@@ -44,7 +43,7 @@ BOOST_AUTO_TEST_CASE( benchmarkTest )
     solver.setParam(b, nMax, nPart);
     solver.run(hfEnergy);
 
-    BOOST_CHECK_CLOSE(hfEnergy, 25.1393, 1e-3);
+    BOOST_CHECK_CLOSE(hfEnergy, 25.139312, 4e-6);
 }
 
 

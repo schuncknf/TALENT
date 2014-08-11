@@ -6,6 +6,7 @@
  * @brief This class solves the HF equation
  */
 
+#include <iomanip>
 #include "VMinnesotaMatrixGenerator.h"
 
 class HfSolver
@@ -17,12 +18,14 @@ public:
 
     void setParam(double b, int nMax, int nPart);
     void run(double& HFEnergy);
+    void findHFOccupiedStates(vector<vec> E, vector<int>& nVec, vector<int>& kVec);
 
-    void read2BodyMat(VMinnesotaMatrixGenerator::TwoBodyMat& mat, string file);
+//    void read2BodyMat(VMinnesotaMatrixGenerator::TwoBodyMat& mat, string file);
 
 private:
     double b_;
-    int nMax_;
+    int NMax_; // N=2n+l
+    int lMax_;
     int nPart_;
 
 };
