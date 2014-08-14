@@ -30,6 +30,7 @@ MODULE Ho_basis
   INTEGER, protected :: Ho_Nmax, Ho_lmax, Ho_size_all  
   ! Ho_Nmax means the major osc. qn from this version on!
 
+  INTEGER, allocatable, protected :: Ho_index(:,:,:)
 
 
   REAL(kind=r_kind), allocatable, protected:: h_sp(:,:) !used in testing/coulomb excersize
@@ -49,6 +50,9 @@ MODULE Ho_basis
   INTEGER, allocatable, protected :: hf_energies_all_sort(:)
 
   INTEGER, allocatable, protected :: fermi_index_hfbasis(:,:) !l,jindex
+
+  REAL(kind=r_kind) :: hf_e_fermi
+
   COMPLEX(kind=r_kind), allocatable, protected :: hf_hamiltonian(:,:,:,:) !l,jindex,n,npr
   
 
@@ -64,7 +68,261 @@ MODULE Ho_basis
   COMPLEX(kind=r_kind), allocatable, protected :: hf_gamma(:,:,:,:)
   INTEGER, protected :: hf_num_part_request
 
+  !vars related to RPA
+  REAL(kind=r_kind), protected :: RPA_E_cut
+  INTEGER, allocatable, protected :: RPA_size_ph(:,:) !parity, J
+  INTEGER, protected :: RPA_ph_J_max 
+
+  TYPE ph_state
+     REAL(kind = r_kind) :: e_ph
+     !INTEGER :: ph_J, ph_parity
+     INTEGER :: h_n, h_l, h_jindex
+     INTEGER :: p_n, p_l, p_jindex
+  END type ph_state
+  
+  TYPE ph_block
+     INTEGER :: size = 0
+     TYPE(ph_state), pointer :: ph_states(:) => null()
+  END type ph_block
+
+  TYPE(ph_block), allocatable, protected :: ph_blocks(:,:)
+  
+
 CONTAINS
+
+
+  SUBROUTINE RPA_init_ph_space(Ecut)
+    IMPLICIT NONE
+
+    REAL(kind=r_kind), intent(in) :: Ecut
+    REAL(kind=r_kind) :: e, p_e, h_e
+    INTEGER :: II, index
+    INTEGER :: no_hole_states, no_particle_states
+    INTEGER :: h_j2_max, p_j2_max, ph_J_max
+    INTEGER :: hh, h_index 
+    INTEGER :: pp, p_index 
+
+    INTEGER :: l,jindex,j2, h_n, h_l, h_jindex, h_j2, p_n, p_l, p_jindex, p_j2
+    INTEGER :: ph_J, ph_parity
+
+    INTEGER :: size_block
+
+
+    IF(Ecut <= 0 ) THEN !include all states
+       RPA_E_cut = hf_energies_all(hf_energies_all_sort(Ho_size_all - 1)) + 1.0_r_kind
+    ELSE
+       RPA_E_cut = hf_e_fermi + Ecut
+    END IF
+
+    WRITE(*,*) 'RPA_init_ph_space: '
+    WRITE(*,*) 'Ecut = ',Ecut
+    WRITE(*,*) 'e_fermi = ', hf_e_fermi
+    WRITE(*,*) 'RPA_E_cut = ',RPA_E_cut
+
+    no_hole_states = 0
+    no_particle_states = 0
+    
+    h_j2_max = 1
+    p_j2_max = 1
+    
+
+    DO II = 0,Ho_size_all-1
+       index = hf_energies_all_sort(II)
+       
+       e = hf_states_all(index)%e
+       l = hf_states_all(index)%l
+       jindex = hf_states_all(index)%jindex
+       j2 = 2*l + (-1)**jindex
+       
+       IF(e >= RPA_E_cut) EXIT
+
+       IF(e<=hf_e_fermi) THEN
+          no_hole_states = no_hole_states + 1 
+          IF(j2 > h_j2_max) h_j2_max = j2          
+       ELSE
+          no_particle_states = no_particle_states + 1          
+          IF(j2 > p_j2_max) p_j2_max = j2
+       END IF          
+
+    END DO
+    
+    ph_J_max = (h_j2_max + p_j2_max)/2
+    RPA_ph_J_max = ph_J_max
+
+    WRITE(*,*) 'Number of hole states = ',no_hole_states
+    WRITE(*,*) 'Number of particle states = ',no_particle_states   
+    WRITE(*,*) 'Maximum particle-hole angular momentum = ',RPA_ph_J_max
+    
+
+    ALLOCATE(RPA_size_ph(0:1,0:ph_J_max))
+    RPA_size_ph = 0
+    
+
+    !Counts the number of ph-states of a given parity and total J
+
+    DO hh = 0,no_hole_states-1
+       h_index = hf_energies_all_sort(hh)
+
+       h_l = hf_states_all(h_index)%l
+       h_jindex = hf_states_all(h_index)%jindex
+       h_j2 = 2*h_l + (-1)**h_jindex
+
+       DO pp = no_hole_states, no_hole_states + no_particle_states - 1
+          p_index = hf_energies_all_sort(pp)
+
+          p_l = hf_states_all(p_index)%l
+          p_jindex = hf_states_all(p_index)%jindex
+          p_j2 = 2*p_l + (-1)**p_jindex
+
+          !0 - even parity, 1 - odd parity
+          ph_parity = MOD(ABS(p_l + h_l),2)
+          
+
+          !for debug
+          !WRITE(*,*) 'h_j2 = ',h_j2, 'p_j2 = ',p_j2
+          !end for debug
+
+          DO ph_J = ABS( (h_j2-p_j2)/2 ), (h_j2+p_j2)/2
+          
+             RPA_size_ph(ph_parity,ph_J) = RPA_size_ph(ph_parity,ph_J) + 1
+
+          END DO
+
+
+       END DO
+    END DO
+
+    !Allocates the different size blocks of ph-states 
+    ALLOCATE(ph_blocks(0:1,0:RPA_ph_J_max))
+   
+    
+    WRITE(*,'(3A8)')'parity','Jph','number'
+    DO ph_parity = 0,1
+       DO ph_J = 0,ph_J_max
+
+          size_block = RPA_size_ph(ph_parity,ph_J) 
+          
+          WRITE(*,'(3I8)') ph_parity, ph_J, size_block
+
+          ph_blocks(ph_parity,ph_J)%size = size_block
+          
+          IF(size_block > 0) THEN
+             ALLOCATE(ph_blocks(ph_parity,ph_J)%ph_states(size_block))
+          END IF
+          
+          !for test
+          !IF( ASSOCIATED(ph_blocks(ph_parity,ph_J)%ph_states) ) WRITE(*,*) 'SIZE(ph_blocks(ph_parity,ph_J)%ph_states)=', SIZE(ph_blocks(ph_parity,ph_J)%ph_states) 
+          !end for test
+          
+       END DO
+    END DO
+
+    
+    RPA_size_ph(:,:) = 0 !use for indexing, should contian the correct sizes after loop
+    
+    !fills the ph-states with info
+     DO hh = 0,no_hole_states-1
+       h_index = hf_energies_all_sort(hh)
+
+       h_e = hf_states_all(h_index)%e
+       h_l = hf_states_all(h_index)%l
+       h_n = hf_states_all(h_index)%n
+       h_jindex = hf_states_all(h_index)%jindex
+       h_j2 = 2*h_l + (-1)**h_jindex
+
+       DO pp = no_hole_states, no_hole_states + no_particle_states - 1
+          p_index = hf_energies_all_sort(pp)
+
+          p_e =  hf_states_all(p_index)%e
+          p_l = hf_states_all(p_index)%l
+          p_n = hf_states_all(p_index)%n
+          p_jindex = hf_states_all(p_index)%jindex
+          p_j2 = 2*p_l + (-1)**p_jindex
+
+          !0 - even parity, 1 - odd parity
+          ph_parity = MOD(ABS(p_l + h_l),2)
+          
+
+          !for debug
+          !WRITE(*,*) 'h_j2 = ',h_j2, 'p_j2 = ',p_j2
+          !end for debug
+
+          DO ph_J = ABS( (h_j2-p_j2)/2 ), (h_j2+p_j2)/2
+          
+             IF(.not. ASSOCIATED(ph_blocks(ph_parity,ph_J)%ph_states) .or. ph_blocks(ph_parity,ph_J)%size <= 0) THEN
+                WRITE(*,*) 'Attempting to acces non-allocated ph_states array'
+                STOP
+             END IF
+             
+             RPA_size_ph(ph_parity,ph_J) = RPA_size_ph(ph_parity,ph_J) + 1
+             index = RPA_size_ph(ph_parity,ph_J)
+             ph_blocks(ph_parity,ph_J)%ph_states(index)%e_ph = p_e - h_e
+             ph_blocks(ph_parity,ph_J)%ph_states(index)%h_n = h_n
+             ph_blocks(ph_parity,ph_J)%ph_states(index)%h_l = h_l
+             ph_blocks(ph_parity,ph_J)%ph_states(index)%h_jindex = h_jindex
+             
+             ph_blocks(ph_parity,ph_J)%ph_states(index)%p_n = p_n
+             ph_blocks(ph_parity,ph_J)%ph_states(index)%p_l = p_l
+             ph_blocks(ph_parity,ph_J)%ph_states(index)%p_jindex = p_jindex
+             
+
+          END DO
+
+
+       END DO
+    END DO
+    
+    OPEN(unit=1,file="ph_states.info") 
+    WRITE(1,*) 'Particle hole states' 
+    WRITE(1,'(3A8)')'parity','Jph','number'
+    WRITE(1,'(4A10,A,3A10)') ' e_ph', 'h_n', 'h_l', 'h_jindex','|', 'p_n', 'p_l', 'p_jindex'
+    DO ph_parity = 0,1
+       DO ph_J = 0,ph_J_max
+
+          size_block = RPA_size_ph(ph_parity,ph_J)           
+          WRITE(1,'(3I8)') ph_parity, ph_J, size_block
+
+          DO II = 1,ph_blocks(ph_parity,ph_J)%size
+             WRITE(1,'(F10.6,3I10,A1,I9,2I10)') ph_blocks(ph_parity,ph_J)%ph_states(II)%e_ph,ph_blocks(ph_parity,ph_J)%ph_states(II)%h_n,ph_blocks(ph_parity,ph_J)%ph_states(II)%h_l,ph_blocks(ph_parity,ph_J)%ph_states(II)%h_jindex,'|',ph_blocks(ph_parity,ph_J)%ph_states(II)%p_n,ph_blocks(ph_parity,ph_J)%ph_states(II)%p_l,ph_blocks(ph_parity,ph_J)%ph_states(II)%p_jindex
+          END DO
+
+       END DO
+    END DO
+    CLOSE(1)
+    
+!!$    !for test
+!!$    DO ph_parity = 0,1
+!!$       DO ph_J = 0,ph_J_max
+!!$
+!!$          size_block = RPA_size_ph(ph_parity,ph_J) 
+!!$
+!!$          WRITE(*,'(3I8)') ph_parity, ph_J, size_block
+!!$       END DO
+!!$    END DO
+!!$    !for test
+!!$
+
+    
+
+
+    
+
+  END SUBROUTINE RPA_init_ph_space
+
+
+  SUBROUTINE RPA_init_matrix
+
+    IMPLICIT NONE
+
+
+    CALL calculate_matels_full
+
+
+  END SUBROUTINE RPA_init_matrix
+
+
+
+
 
 !!$  !sorts the  columns of the hf_transformation according to hf energies  
 !!$  SUBROUTINE sort_hf
@@ -703,6 +961,415 @@ CONTAINS
 
     INTEGER :: deg1,l12max, II, term, JJ
 
+    INTEGER :: i1,i2,i3,i4
+
+
+    REAL(kind=r_kind), ALLOCATABLE :: T(:), R(:,:,:)
+                                            !j12,i1,i2,i3,i4              !j13,i1,i2,i3,i4 (used for RPA)
+    REAL(kind=r_kind), ALLOCATABLE :: matels_j12(:,:,:,:,:),    matels_j13(:,:,:,:,:)
+
+    REAL(kind=r_kind), ALLOCATABLE :: P1(:), P2(:), scaled_gp(:)
+
+    REAL(kind=r_kind) :: T12,T34,RadInt,geom12,geom34,matel_val,r_val
+
+    REAL(kind=r_kind) :: kappa, V0, r_test
+    REAL(kind=r_kind), parameter :: Minnesota_kappas(2) =  (/ 1.487_r_kind, 0.465_r_kind /) !(/ 1.0e-15, 1.0e-15 /) !
+    REAL(kind=r_kind), parameter :: Minnesota_Vs(2) = (/ 200.0_r_kind, -91.85_r_kind /) ! (/0.5 , 0.5 /)!
+
+
+    WRITE(*,*) 'Calcualting matrix elements'
+
+
+    WRITE(*,*) '   Initializing Talmi module'
+    CALL INIT_TALMI
+    WRITE(*,*) '   Done'
+
+
+! Takes to much space to calculate all possible j-coupled matels, need to restrict to the ones actually neeeded for HF
+
+!!$    WRITE(*,*) 'Precalucalting Talmi-Moshinsky brackets'
+!!$
+!!$    WRITE(*,*) 'talmi_index_max = ',talmi_index(2*Ho_Nmax+2,Ho_Nmax/2,Ho_Nmax,Ho_Nmax/2,Ho_Nmax,Ho_Nmax,2*Ho_Nmax,Ho_Nmax,2*Ho_nmax)
+!!$
+!!$    ALLOCATE( T(talmi_index(2*Ho_Nmax+1,Ho_Nmax/2,Ho_Nmax,Ho_Nmax/2,Ho_Nmax,Ho_Nmax,2*Ho_Nmax,Ho_Nmax,2*Ho_nmax)) )
+!!$    T = 0.0_r_kind
+!!$
+!!$    DO l12 = 0, 2*Ho_Nmax
+!!$       DO l1 = 0, Ho_Nmax
+!!$          DO l2 = 0, Ho_Nmax
+!!$             DO n1 = 0, (Ho_Nmax - l1)/2
+!!$                DO n2 = 0, (Ho_Nmax - l2)/2
+!!$                   E1 = 2*n1 + l1
+!!$                   E2 = 2*n2 + l2
+!!$                   Etot = E1 + E2
+!!$
+!!$
+!!$                   DO l_rel = 0, Etot, 2
+!!$                      DO L_CM = 0, Etot - l_rel
+!!$                         DO N_CM = 0, (Etot - L_CM - l_rel)/2
+!!$                            DO n_rel = 0, (Etot - 2*N_CM - L_CM - l_rel)/2
+!!$
+!!$                               E_CM = 2*N_CM + L_CM
+!!$                               E_rel = 2*n_rel + l_rel
+!!$
+!!$                               T(talmi_index(l12,n1,l1,n2,l2,N_CM,L_CM,n_rel,l_rel)) = TMBR(E_CM,L_CM,E_rel,l_rel,E1,l1,E2,l2,l12)
+!!$                            END DO
+!!$                         END DO
+!!$                      END DO
+!!$                   END DO
+!!$                END DO
+!!$             END DO
+!!$          END DO
+!!$       END DO
+!!$    END DO
+!!$
+!!$    WRITE(*,*) '   Done'
+
+
+    WRITE(*,*) 'Precalcalcualting radial overlaps'
+
+
+    
+
+    ALLOCATE(R(0:2*Ho_Nmax,0:Ho_Nmax,0:Ho_Nmax))
+
+IF(.true.) THEN
+
+    WRITE(*,*) 'Using Gauss-Hermite quadrature'
+    CALL init_grid_GH(50) !larger than 70 causes errors
+    
+    ALLOCATE(P1(grid_size_GH),P2(grid_size_GH),scaled_gp(grid_size_GH))
+
+    R = 0.0_r_kind
+
+    DO term = 1,2
+
+       kappa = Minnesota_kappas(term)
+       V0 = Minnesota_Vs(term)
+
+       DO l_rel = 0, 2*Ho_Nmax
+          DO n_rel12 = 0, (2*Ho_Nmax - l_rel)/2
+             DO n_rel34 = 0, (2*Ho_Nmax - l_rel)/2
+
+                scaled_gp = grid_points_GH/sqrt(1.0_r_kind+Ho_b**2*2.0_r_kind*kappa)
+                CALL RadHO_poly(n_rel12,l_rel,1.0_r_kind,scaled_gp,P1,grid_size_GH)
+                CALL RadHO_poly(n_rel34,l_rel,1.0_r_kind,scaled_gp,P2,grid_size_GH)
+
+                r_val = 0.0_r_kind
+                DO II=1,grid_size_GH
+                   r_val = r_val + grid_weights_GH(II)*grid_points_GH(II)**2*P1(II)*P2(II)
+                END DO
+                R(l_rel,n_rel12,n_rel34) = R(l_rel,n_rel12,n_rel34) + V0*r_val/(1.0_r_kind + Ho_b**2*2.0_r_kind*kappa)**1.5_r_kind
+             END DO
+          END DO
+       END DO
+    END DO
+
+
+    DEALLOCATE(P1,P2,scaled_gp)
+
+    WRITE(*,*) '    Done'
+
+ELSE
+
+
+    WRITE(*,*) 'Using Gauss-Legendre quadrature'
+
+    CALL init_grid_GL(400)
+
+    ALLOCATE(P1(grid_size_GL),P2(grid_size_GL),scaled_gp(grid_size_GL))
+
+    scaled_gp = tan(pi/4.0_r_kind*(grid_points_GL+1.0_r_kind))
+
+    R = 0.0_r_kind
+
+    DO term = 1,2
+
+       kappa = Minnesota_kappas(term)
+       V0 = Minnesota_Vs(term)
+
+       DO l_rel = 0, 2*Ho_Nmax
+          DO n_rel12 = 0, (2*Ho_Nmax - l_rel)/2
+             DO n_rel34 = 0, (2*Ho_Nmax - l_rel)/2
+
+                CALL RadHO(n_rel12,l_rel,Ho_b,scaled_gp,P1,grid_size_GL)
+                CALL RadHO(n_rel34,l_rel,Ho_b,scaled_gp,P2,grid_size_GL)
+
+                r_val = 0.0_r_kind
+                DO II=1,grid_size_GL
+                   r_val = r_val + grid_weights_GL(II)*(scaled_gp(II)**2+1.0_r_kind)*scaled_gp(II)**2*P1(II)*P2(II)*V0*EXP(-2.0_r_kind*kappa*scaled_gp(II)**2)
+                END DO
+                R(l_rel,n_rel12,n_rel34) = R(l_rel,n_rel12,n_rel34) + pi/4.0_r_kind*r_val
+             END DO
+          END DO
+       END DO
+    END DO
+
+    WRITE(*,*) 'R(0,0,0)= ', R(0,0,0) 
+
+    !test
+    
+    CALL RadHO(0,0,Ho_b,scaled_gp,P1,grid_size_GL)
+    CALL RadHO(0,0,Ho_b,scaled_gp,P2,grid_size_GL)
+    r_test = 0.0
+    DO term = 1,2
+
+       kappa = Minnesota_kappas(term)
+       V0 = Minnesota_Vs(term)
+
+
+       r_val = 0.0_r_kind
+       DO II = 1,grid_size_GL
+          DO JJ = 1,grid_size_GL
+
+             r_val = r_val + grid_weights_GL(II)*(scaled_gp(II)**2+1.0_r_kind)*grid_weights_GL(JJ)*(scaled_gp(JJ)**2+1.0_r_kind)&
+                  *scaled_gp(II)*P1(II)**2*scaled_gp(JJ)*P2(JJ)**2*(EXP(-kappa*(scaled_gp(II)**2 + scaled_gp(JJ)**2) + 2.0*kappa*scaled_gp(II)*scaled_gp(JJ)) - EXP(-kappa*(scaled_gp(II)**2 + scaled_gp(JJ)**2) -2.0*kappa*scaled_gp(II)*scaled_gp(JJ)))/(4.0*kappa)
+
+          END DO
+       END DO
+       r_test = r_test + V0*pi**2/16.0*r_val
+
+    END DO
+
+    WRITE(*,*) 'r_test = ', r_test
+
+    !end test
+
+
+    DEALLOCATE(P1,P2,scaled_gp)
+
+    WRITE(*,*) '    Done'
+
+END IF
+
+
+
+ 
+
+
+    WRITE(*,*) 'Calculating jj-coupled matrix elments'
+
+    !The following calcualates the two body matrix elements of the Minnesota in the most general case
+    
+    !Need to invetigate symmteries to reduce the number of matels..
+
+    
+    IF(ALLOCATED(matels_j12)) DEALLOCATE(matels_j12)
+
+    l12max = 2*HO_lmax
+
+    ALLOCATE(matels_j12(0:l12max,Ho_size_all,Ho_size_all,Ho_size_all,Ho_size_all))
+
+
+    WRITE(*,*) 'Number of two-body matrix elements stored = ', (l12max+1)*Ho_size_all**4
+
+    matels_j12 = 0.0_r_kind
+
+    
+    
+    DO l12 = 0, 2*Ho_lmax
+       DO l1 = 0, Ho_lmax
+          DO l2 = 0, Ho_lmax
+             DO n1 = 0, (Ho_Nmax - l1)/2
+                DO n2 = 0, (Ho_Nmax - l2)/2
+                   E1 = 2*n1 + l1
+                   E2 = 2*n2 + l2
+                   Etot12 = E1 + E2
+
+                   DO l_rel = 0, Etot12, 2
+                      DO L_CM = 0, Etot12 - l_rel
+                         DO N_CM = 0, (Etot12 - L_CM - l_rel)/2
+                            DO n_rel12 = 0, (Etot12 - 2*N_CM - L_CM - l_rel)/2
+
+                               E_CM = 2*N_CM + L_CM
+                               E_rel12 = 2*n_rel12 + l_rel
+
+                               T12 = TMBR(E_CM,L_CM,E_rel12,l_rel,E1,l1,E2,l2,l12)
+                               !T(talmi_index(l12,n1,l1,n2,l2,N_CM,L_CM,n_rel12,l_rel))
+
+                               DO l3 = 0, Ho_lmax
+                               !l3 = l1
+                               DO l4 = 0, Ho_lmax
+                               !l4 = l2
+                               DO n3 = 0, (Ho_Nmax - l3)/2
+                                  DO n4 = 0, (Ho_Nmax - l4)/2
+                                     E3 = 2*n3 + l3
+                                     E4 = 2*n4 + l4
+                                     Etot34 = E3 + E4
+
+                                     DO n_rel34 = 0, (Etot34 - 2*N_CM - L_CM - l_rel)/2
+                                        E_rel34 = 2*n_rel34 + l_rel
+                                        T34 = TMBR(E_CM,L_CM,E_rel34,l_rel,E3,l3,E4,l4,l12) 
+                                        !T(talmi_index(l12,n3,l3,n4,l4,N_CM,L_CM,n_rel34,l_rel))
+
+
+                                        RadInt = R(l_rel,n_rel12,n_rel34)
+
+
+                                        DO jindex1 = 0,1
+                                           IF(l1==0 .and. jindex1==1) CYCLE
+                                           j1_2 = twoj(l1,jindex1)
+                                           DO jindex2 = 0,1
+                                              IF(l2==0 .and. jindex2==1) CYCLE
+                                              j2_2 = twoj(l2,jindex2)
+
+                                              geom12 = sqrt(REAL(j1_2+1,kind=r_kind)*REAL(j2_2+1,kind=r_kind))&
+                                                   *sixj(2*l2,2*l1,2*l12,j1_2,j2_2,1)
+
+                                              DO jindex3 = 0,1
+                                                 IF(l3==0 .and. jindex3==1) CYCLE
+                                              !jindex3 = jindex1
+                                              j3_2 = twoj(l3,jindex3)
+                                              DO jindex4 = 0,1
+                                                 IF(l4==0 .and. jindex4==1) CYCLE
+                                              !jindex4 = jindex2
+                                              j4_2 = twoj(l4,jindex4)
+
+                                              geom34 = sqrt(REAL(j3_2+1,kind=r_kind)*REAL(j4_2+1,kind=r_kind))&
+                                                   *sixj(2*l4,2*l3,2*l12,j3_2,j4_2,1)
+
+
+                                              i1 = Ho_index(l1,jindex1,n1)
+                                              i2 = Ho_index(l2,jindex2,n2)
+                                              i3 = Ho_index(l3,jindex3,n3)
+                                              i4 = Ho_index(l4,jindex4,n4)
+
+                                              matels_j12(l12,i1,i2,i3,i4) = matels_j12(l12,i1,i2,i3,i4)&
+                                                   +REAL((-1)**(l1+l3+(j2_2+j4_2)/2+1),kind=r_kind)*geom12*geom34*T12*T34*RadInt
+
+
+                                              !for debug
+!!$                                                          IF( ABS(matels_j(TBME_j_index(l12,n1,l1,jindex1,n2,l2,jindex2,n3,l3,jindex3,n4,l4,jindex4))) > 1.0e-10 ) THEN 
+!!$                                                          WRITE(*,'(3I3,A1,3I3,A1,3I3,A1,3I3,A1,I3)') n1,l1,jindex1,'|',n2,l2,jindex2,'|',n3,l3,jindex3,'|',n4,l4,jindex4,'|',l12
+!!$                                                          WRITE(*,'(2F16.10)') matels_j(TBME_j_index(l12,n1,l1,jindex1,n2,l2,jindex2,n3,l3,jindex3,n4,l4,jindex4)), RadInt
+!!$                                                          WRITE(*,'(4F12.6)') geom12, geom34, T12, T34
+!!$                                                          
+!!$                                                          END IF
+!!$
+!!$                                                          IF(n1 == 0 .and. n2 == 0 .and. n3 == 0 .and. n4 == 0 .and. l1 == 0 .and. l2 == 0 .and. l3 == 0 .and. l4 == 0) THEN
+!!$                                                             WRITE(*,'(3I3,A1,3I3,A1,3I3,A1,3I3,A1,I3)') n1,l1,jindex1,'|',n2,l2,jindex2,'|',n3,l3,jindex3,'|',n4,l4,jindex4,'|',l12
+!!$                                                          WRITE(*,'(2F16.10)') matels_j(TBME_j_index(l12,n1,l1,jindex1,n2,l2,jindex2,n3,l3,jindex3,n4,l4,jindex4)), RadInt
+!!$                                                          WRITE(*,'(4F12.6)') geom12, geom34, T12, T34
+!!$
+!!$                                                          END IF
+
+
+                                           END DO
+                                        END DO
+                                     END DO
+                                  END DO
+                               END DO
+                            END DO
+                         END DO
+                      END DO
+                   END DO
+                END DO
+             END DO
+          END DO
+       END DO
+    END DO
+    END DO
+    END DO
+    END DO
+    END DO
+
+    WRITE(*,*) '   Done'
+
+    WRITE(*,*) 'Calcualting matrix elements needed for HF'
+
+
+    !calculates sum_m2 <n1 l1 j1 m1, n2 l2 j2 m2 | v | n3 l1 j1 m1, n4 l2 j2 m2> 
+
+    DO l1=0,Ho_lmax
+       DO jindex1 = 0,1
+          IF(l1==0 .and. jindex1==1) CYCLE
+          deg1 = Ho_degeneracy(l1,jindex1)
+          DO l2 = 0,Ho_lmax
+             DO jindex2 = 0,1
+                IF(l2==0 .and. jindex2==1) CYCLE               
+
+                DO n1 = 0,(Ho_Nmax-l1)/2
+                   DO n2 = 0,(Ho_Nmax-l2)/2
+                      DO n3 = 0,(Ho_Nmax-l1)/2
+                         DO n4 = 0,(Ho_Nmax-l2)/2 
+
+                            matel_val = 0.0_r_kind
+                            
+                            l12max = l1 + l2
+                            
+
+                            DO l12 = 0,l12max
+                               !j2_1 = twoj(l1,jindex1)!2*l1+(-1)**jindex1
+                               !j2_2 = 2*lpr+(-1)**jindexpr
+
+                               
+                               i1 = Ho_index(l1,jindex1,n1)
+                               i2 = Ho_index(l2,jindex2,n2)
+                               i3 = Ho_index(l1,jindex1,n3)
+                               i4 = Ho_index(l2,jindex2,n4)
+
+                              
+
+
+                               matel_val = matel_val + REAL((2*l12+1),kind=r_kind)/REAL(deg1,kind=r_kind) *  matels_j12(l12,i1,i2,i3,i4)
+                               
+
+                            END DO
+                            !to conform to the definition in the talent notes
+                            matel_val = matel_val / REAL(twoj(l2,jindex2)+1,kind=r_kind)
+                            !
+
+                            Ho_two_body_matels(TBME_index(l1,jindex1,l2,jindex2,n1,n2,n3,n4)) =COMPLEX(matel_val,0.0_r_kind) 
+
+                            !for debug
+                            !IF(ABS(matel_val) > 1.0e-20) THEN
+                            !   WRITE(*,*) l,jindex,lpr,jindexpr,n1,n2,n3,n4,Ho_two_body_matels(TBME_index(l,jindex,lpr,jindexpr,n1,n2,n3,n4))
+                            !END IF
+                            !end for debug
+                            
+                         END DO
+                      END DO
+                   END DO
+                END DO
+             END DO
+          END DO
+       END DO
+    END DO
+
+    
+
+
+
+
+    WRITE(*,*) '   Done'
+
+
+
+
+    !DEALLOCATE(T)
+    DEALLOCATE(matels_j12)
+
+
+    WRITE(*,*) 'Finished calculating matrix elements'
+
+  END SUBROUTINE calculate_matels_full
+
+
+
+   SUBROUTINE calculate_matels_hf
+
+    USE talmi, only: TMBR, INIT_TALMI
+    USE geometric, only : sixj
+
+    IMPLICIT NONE
+
+    INTEGER :: l12,l1,l2,n1,n2,E1,E2,Etot,N_CM,L_CM,n_rel,l_rel,E_CM,E_rel  
+    INTEGER :: l3,l4,n3,n4,E3,E4,Etot34,n_rel34,E_rel34
+    INTEGER :: jindex1,j1_2, jindex2, j2_2, jindex3, j3_2, jindex4, j4_2
+    INTEGER :: n_rel12,E_rel12,Etot12
+
+    INTEGER :: deg1,l12max, II, term, JJ
+
     REAL(kind=r_kind), ALLOCATABLE :: T(:), matels_j(:), R(:,:,:)
     REAL(kind=r_kind), ALLOCATABLE :: P1(:), P2(:), scaled_gp(:)
 
@@ -1071,7 +1738,10 @@ END IF
 
     WRITE(*,*) 'Finished calculating matrix elements'
 
-  END SUBROUTINE calculate_matels_full
+  END SUBROUTINE calculate_matels_hf
+
+
+
   
   INTEGER FUNCTION talmi_index(l12,n1,l1,n2,l2,N_CM,L_CM,n_rel,l_rel)
     IMPLICIT NONE
@@ -1113,7 +1783,11 @@ END IF
     + (dim_n*n1 + n2)*dim_n**2 &
     + dim_n*n3  + n4    
     
-  END FUNCTION TBME_j_index
+  END FUNCTION TBME_j_index 
+  
+
+  
+
 
 
   INTEGER FUNCTION TBME_j_index_hf(j12,l1,jindex1,l2,jindex2,n1,n2,n3,n4)
@@ -1323,6 +1997,9 @@ END IF
 
     END DO
 
+    hf_e_fermi = e_fermi
+
+
     IF(N_request-particle_number /= 0) THEN
        WRITE(*,*) 'ERROR: Cannot get correct particle number by filling degenerate shells'
        WRITE(*,*) 'Requested particle number',N,'Actual particle number',particle_number 
@@ -1353,7 +2030,7 @@ END IF
        n = hf_states_all(index)%n
        l = hf_states_all(index)%l
        jindex = hf_states_all(index)%jindex
-       j2 = l + (-1)**jindex
+       j2 = 2*l + (-1)**jindex
        e = hf_states_all(index)%e
        occ = hf_states_all(index)%occ
 
@@ -1400,7 +2077,7 @@ END IF
              density_matrix(l,jindex,n,n) = (1.0_r_kind,0.0_r_kind)
              particle_number = particle_number + Ho_degeneracy(l,jindex)
 
-             WRITE(*,'(I3,I3,I3)') n,l,l+(-1)**jindex
+             WRITE(*,'(I3,I3,I3)') n,l,2*l+(-1)**jindex
 
 
              IF(particle_number >= N_request) THEN
@@ -1728,6 +2405,8 @@ END IF
     REAL(kind=r_kind), optional :: hbaromega
     INTEGER, intent(in) :: nmax, lmax
 
+    INTEGER :: l,jindex,n
+
     WRITE(*,*) 'Initializing ho basis'
    
     IF(lmax > Nmax) THEN
@@ -1766,12 +2445,82 @@ END IF
     WRITE(*,*) 'Ho_hbaromega = ',Ho_hbaromega
     WRITE(*,*) 'init_Ho_basis, done'
 
+    !calculating number of distinct states
+    Ho_size_all = 0
+
+    DO l=0,Ho_lmax
+       DO jindex = 0,1
+          IF(l==0 .and. jindex==1) CYCLE
+
+          Ho_size_all = Ho_size_all + (Ho_Nmax-l)/2 + 1
+
+       END DO
+    END DO
+
+    WRITE(*,*) 'Ho_size_all = ', Ho_size_all
+    IF(lmax == 0) THEN
+       WRITE(*,*) 'Ho_collective_index(Nmax,lmax,0) =', Ho_collective_index(Nmax,lmax,0)
+    ELSE
+       WRITE(*,*) 'Ho_collective_index(Nmax,lmax,1) =', Ho_collective_index(Nmax,lmax,1)
+    END IF   
+    
+
+
+    !Calculating lookuptable for collective index
+    
+    IF(allocated(Ho_index)) DEALLOCATE(Ho_index)
+    !Ho_index(l,jindex,n)
+    ALLOCATE(Ho_index(0:lmax,0:1,0:Nmax/2))
+    
+    Ho_index = -1
+
+    DO l=0,Ho_lmax
+       DO jindex = 0,1
+          IF(l==0 .and. jindex==1) CYCLE
+          DO n = 0,(Ho_Nmax - l)/2
+
+             Ho_index(l,jindex,n) = Ho_collective_index(l,jindex,n)
+          END DO
+
+       END DO
+    END DO
+
 
 
   END SUBROUTINE init_Ho_basis
 
-  SUBROUTINE hf_init
+  INTEGER FUNCTION Ho_collective_index(l,jindex,n)
     IMPLICIT NONE
+    INTEGER, intent(in) :: l,jindex,n
+
+    INTEGER :: lpr, jindexpr
+    INTEGER :: index
+
+    index = 1
+
+    DO lpr = 0,l-1
+       DO jindexpr = 0,1
+          IF (lpr == 0 .and. jindexpr == 1) CYCLE
+          index = index + (Ho_Nmax-lpr)/2 + 1
+       END DO
+    END DO
+
+    IF(jindex == 1 .and. l > 0) THEN
+       index = index + (Ho_Nmax - l)/2 + 1 + n
+    ELSE
+       index = index + n
+    END IF
+    
+    Ho_collective_index = index
+
+
+  END FUNCTION Ho_collective_index
+
+
+  SUBROUTINE hf_init(is_RPA)
+    IMPLICIT NONE
+
+    LOGICAL, intent(in) :: is_RPA
 
     INTEGER :: l,jindex,n1,n2,n3,n4,max_n
 
@@ -1803,16 +2552,17 @@ END IF
     ALLOCATE(hf_energies_old(0:Ho_lmax,0:1,0:max_n))
     hf_energies_old = zero_r
 
-    Ho_size_all = 0
-
-    DO l=0,Ho_lmax
-        DO jindex = 0,1
-           IF(l==0 .and. jindex==1) CYCLE
-
-           Ho_size_all = Ho_size_all + (Ho_Nmax-l)/2 + 1
-
-        END DO
-     END DO
+! moved to init_Ho_basis
+!!$    Ho_size_all = 0
+!!$
+!!$    DO l=0,Ho_lmax
+!!$        DO jindex = 0,1
+!!$           IF(l==0 .and. jindex==1) CYCLE
+!!$
+!!$           Ho_size_all = Ho_size_all + (Ho_Nmax-l)/2 + 1
+!!$
+!!$        END DO
+!!$     END DO
 
      ALLOCATE(hf_states_all(0:Ho_size_all-1)) 
      ALLOCATE(hf_energies_all(0:Ho_size_all-1))
@@ -1896,7 +2646,24 @@ END IF
      END IF
 
 
-     CALL  calculate_matels_full
+     
+     !if rpa is done need to calculate more matrix elements
+     !TODO: 
+     ! if(is_RPA) then should calc all necessary matels at once,
+     ! for now calculate first the ones needed for hf then the ones needed for rpa, some elemetns are calculated twice.
+     
+     !Ho_is_RPA  = is_RPA
+     !IF(Ho_is_RPA) THEN
+     !CALL calculate_matels_full
+     !ELSE 
+     !CALL calculate_matels_hf
+     !END IF
+     !
+     !end TODO
+     
+     !CALL calculate_matels_hf
+
+     CALL calculate_matels_full
 
 
      CALL print_TBMEs

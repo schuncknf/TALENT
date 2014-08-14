@@ -18,7 +18,7 @@ OPTS = -O3  -funroll-loops -ffast-math -g -fcheck=all -fbounds-check -ffree-form
 
 # Notice that use statements may only invoke modules lying further upp (to the left) 
 # in the list
-OBJECTS = types.o constants.o geometric.o talmi.o sorting.o symmat_mod.o numerical_integration.o Ho_basis.o hf_solver_mod.o hf_main.o
+OBJECTS = types.o constants.o geometric.o talmi.o sorting.o symmat_mod.o numerical_integration.o Ho_basis.o hf_solver_mod.o RPA_solver_mod.o  hf_main.o
 
 #.f90.o :
 #	$(FC) -c $(OPTS) $<
@@ -31,6 +31,9 @@ types.o : types.f90
 
 Ho_basis.o : Ho_basis.f90
 	$(FC) -c $(OPTS) $<
+
+#Ho_basis.o : Ho_basis.f95
+#	$(FC) -c $(OPTS) $<
 
 #Ho_basis.o : Ho_basis.f03
 #	$(FC) -c $(OPTS) $<
@@ -61,6 +64,9 @@ talmi.o : talmi.f90
 	$(FC) -c $(OPTS) $<
 
 geometric.o : geometric.f90
+	$(FC) -c $(OPTS) $<
+
+RPA_solver_mod.o : RPA_solver_mod.f90
 	$(FC) -c $(OPTS) $<
 
 

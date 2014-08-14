@@ -5,7 +5,7 @@ MODULE hf_solver_mod
 
 CONTAINS
 
-  SUBROUTINE hf_solver
+  SUBROUTINE hf_solver(num_part,hbaromega,b,Nmax,lmax,tol,iteration_max,mixing,is_RPA)
 
   IMPLICIT NONE
 
@@ -15,27 +15,41 @@ CONTAINS
   INTEGER :: iteration, iteration_max
   INTEGER :: num_part
   REAL(kind=r_kind) :: e_fermi, mixing, E_HF, E_HF_v2
+  LOGICAL :: is_RPA
 
-  b = 1.0_r_kind !maby have default value based on mass
-  hbaromega = 10.0_r_kind
-  iteration_max = 20
-  tol = 1e-15_r_kind
-  num_part = 8
-  lmax = 12
-  Nmax = 12
+  
+  !b = 1.0_r_kind !maby have default value based on mass
+  !hbaromega = 10.0_r_kind
+  !iteration_max = 20
+  !tol = 1e-15_r_kind
+  !num_part = 8
+  !lmax = 12
+  !Nmax = 12
   !Nmax = 2
   !lmax = 2
 
-  mixing = 0.0_r_kind
-  
+  !mixing = 0.0_r_kind
 
-  CALL init_Ho_basis(Nmax,lmax,b,hbaromega) !b is not used if hbaromega is supplied
-  !CALL init_Ho_basis(nmax,lmax,b)
+
+  IF(lmax < 0) THEN
+     lmax = Nmax
+  END IF
+
+ 
+  IF(b <=  0.0_r_kind) THEN
+
+     CALL init_Ho_basis(Nmax,lmax,b,hbaromega) !b is not used if hbaromega is supplied
+
+  ELSE
+     CALL init_Ho_basis(nmax,lmax,b)
+
+  END IF
 
   WRITE(*,*) 'hbarc = ',hbarc
   WRITE(*,*) 'neuron mass = ',mnc2
   
-  CALL hf_init
+  CALL hf_init(is_RPA) !generates matrix elements needed etc
+
   CALL hf_init_dens(num_part) !generates initial density matrix
   
   
