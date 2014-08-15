@@ -30,7 +30,7 @@ MODULE Ho_basis
   INTEGER, protected :: Ho_Nmax, Ho_lmax, Ho_size_all  
   ! Ho_Nmax means the major osc. qn from this version on!
 
-  INTEGER, allocatable, protected :: Ho_index(:,:,:)
+  INTEGER, allocatable, protected :: Ho_index(:,:,:) !l,jindex,n
 
 
   REAL(kind=r_kind), allocatable, protected:: h_sp(:,:) !used in testing/coulomb excersize
@@ -55,14 +55,21 @@ MODULE Ho_basis
 
   COMPLEX(kind=r_kind), allocatable, protected :: hf_hamiltonian(:,:,:,:) !l,jindex,n,npr
   
+  !MATRIX ELEMENTS USED IN l=0 test case
 
   COMPLEX(kind=r_kind), allocatable, protected :: Ho_two_body_matel(:,:,:,:,:,:) !l,jindex,n1,n2,n3,n4
   !Check the symmtetries of the two-body matrix elements, this form might be wrong. Should work in the case of l=0 j=0.5.
+
+  !MATRIX ELEMENTS USED FOR HF
 
   !The symmetries of the rot invariant interaction gives that we need the following structure
   COMPLEX(kind=r_kind), allocatable, protected :: Ho_two_body_matels(:)
   INTEGER, protected :: Ho_size_TBME
   !Ho_two_body_matels(:,:,:,:,:,:,:,:) !l,jindex, lpr, jindexpr, n1,n2,n3,n4
+  
+  !GENEREAL j12-COUPLED MATRIX ELEMENTS                                     
+  REAL(kind=r_kind), ALLOCATABLE, protected :: matels_j12(:,:,:,:,:) !j12,i1,i2,i3,i4           
+
 
 
   COMPLEX(kind=r_kind), allocatable, protected :: hf_gamma(:,:,:,:)
@@ -72,6 +79,10 @@ MODULE Ho_basis
   REAL(kind=r_kind), protected :: RPA_E_cut
   INTEGER, allocatable, protected :: RPA_size_ph(:,:) !parity, J
   INTEGER, protected :: RPA_ph_J_max 
+  LOGICAL, protected :: RPA_is_on
+  
+  !ph-j-coupled matrix elements in HF-basis !TODO change to stucuture where only the needed matrix elements are stored
+  COMPLEX(kind=r_kind), allocatable, protected :: RPA_matels_j13(:,:,:,:,:)  !j13,i1,i2,i3,i4 - total ph angular momentum, 4 collective ho indexes
 
   TYPE ph_state
      REAL(kind = r_kind) :: e_ph
@@ -86,7 +97,29 @@ MODULE Ho_basis
   END type ph_block
 
   TYPE(ph_block), allocatable, protected :: ph_blocks(:,:)
+
+  TYPE z_matrix
+     INTEGER :: dim = 0
+     COMPLEX(kind=r_kind), pointer :: mat(:,:) => null()
+  END type z_matrix
+
+  TYPE(z_matrix), allocatable, protected :: RPA_matrix(:,:) !parity, J_ph
+
+  TYPE z_vector
+     INTEGER :: len = 0
+     COMPLEX(kind=r_kind), pointer :: vec(:) => null()
+  END type z_vector  
   
+  TYPE(z_vector), allocatable, protected :: RPA_E(:,:)
+
+  TYPE z_rect_matrix
+     INTEGER :: rows = 0
+     INTEGER :: cols = 0
+     COMPLEX(kind=r_kind), pointer :: mat(:,:) => null()
+  END type z_rect_matrix
+
+  TYPE(z_rect_matrix), allocatable, protected :: RPA_X(:,:)
+  TYPE(z_rect_matrix), allocatable, protected :: RPA_Y(:,:)
 
 CONTAINS
 
@@ -310,15 +343,363 @@ CONTAINS
   END SUBROUTINE RPA_init_ph_space
 
 
-  SUBROUTINE RPA_init_matrix
+  SUBROUTINE RPA_init_matrix(v_scale)
+
+    USE geometric, only : sixj
 
     IMPLICIT NONE
 
+    REAL(kind=r_kind) :: v_scale !parameter to scale/attenuate the residual interaction
 
-    CALL calculate_matels_full
+    INTEGER :: l1,l2,n1,n2
+    INTEGER :: l3,l4,n3,n4
+    INTEGER :: jindex1,j1_2, jindex2, j2_2, jindex3, j3_2, jindex4, j4_2
+    INTEGER :: i1,i2,i3,i4
+    INTEGER :: j12,j12min,j12max,j13,j13min,j13max
+
+    INTEGER :: nu1,nu2,nu3,nu4
+    INTEGER :: x1,x2,x3,x4
+
+    INTEGER :: ph_J, ph_parity
+    INTEGER :: np,lp,jindexp,nh,lh,jindexh,np_pr,lp_pr,jindexp_pr,nh_pr,lh_pr,jindexh_pr
+
+    INTEGER :: II,JJ,dim
+
+
+    REAL(kind=r_kind) :: geom
+
+
+    WRITE(*,*) 'Recoupling matrix elements from pp to ph for RPA and trasnforming to HF basis'
+
+    IF(ALLOCATED(RPA_matels_j13)) DEALLOCATE(RPA_matels_j13)     
+
+    ALLOCATE(RPA_matels_j13(0:RPA_ph_J_max,Ho_size_all,Ho_size_all,Ho_size_all,Ho_size_all))
+
+
+    WRITE(*,*) 'Number of two-body matrix elements in hf basis stored for RPA= ', (RPA_ph_J_max+1)*Ho_size_all**4
+
+    RPA_matels_j13 = 0.0_r_kind
+
+    DO l1 = 0,Ho_lmax
+       DO jindex1 = 0,1
+          IF(l1 == 0 .and. jindex1 == 1) CYCLE
+
+          j1_2 = twoj(l1,jindex1)
+
+
+          DO l2 = 0,Ho_lmax
+             DO jindex2 = 0,1
+                IF(l2 == 0 .and. jindex2 == 1) CYCLE
+
+                j2_2 = twoj(l2,jindex2)                   
+
+                DO l3 = 0,Ho_lmax
+                   DO jindex3 = 0,1
+                      IF(l3 == 0 .and. jindex3 == 1) CYCLE
+
+                      j3_2 = twoj(l3,jindex3)
+
+                      DO l4 = 0,Ho_lmax
+                         DO jindex4 = 0,1
+                            IF(l4 == 0 .and. jindex4 == 1) CYCLE
+
+                            j4_2 = twoj(l4,jindex4)
+
+                            !restricitng summation based on triangular conditions
+                            j12max = MIN(l1+l2,(j1_2+j2_2)/2,l3+l4,(j3_2+j4_2)/2)
+                            j12min = MAX(ABS(l1-l2),ABS((j1_2-j2_2)/2),ABS(l3-l4),ABS((j3_2-j4_2)/2))
+
+                            j13max = MIN((j1_2+j3_2)/2,(j2_2+j4_2)/2,RPA_ph_J_max)
+                            j13min = MAX(ABS((j1_2-j3_2)/2),ABS((j2_2-j4_2)/2))
+
+
+                            DO j12 = j12min,j12max
+                               DO j13 = j13min,j13max
+
+                                  geom = (-1)**j12*(2*j12+1)*sixj(j2_2,j1_2,2*j12,j3_2,j4_2,2*j13)
+
+
+                                  DO n1 = 0, (Ho_Nmax - l1)/2
+                                     DO n2 = 0, (Ho_Nmax -l2)/2
+                                        DO n3 = 0, (Ho_Nmax - l3)/2
+                                           DO n4 = 0, (Ho_Nmax - l4)/2
+
+                                              !HF basis
+                                              i1 = Ho_index(l1,jindex1,n1)
+                                              i2 = Ho_index(l2,jindex2,n2)
+                                              i3 = Ho_index(l3,jindex3,n3)
+                                              i4 = Ho_index(l4,jindex4,n4)
+
+                                              DO nu1 = 0, (Ho_Nmax - l1)/2
+                                                 DO nu2 = 0, (Ho_Nmax -l2)/2
+                                                    DO nu3 = 0, (Ho_Nmax - l3)/2
+                                                       DO nu4 = 0, (Ho_Nmax - l4)/2
+                                                          
+                                                          !HO basis
+                                                          x1 = Ho_index(l1,jindex1,nu1)
+                                                          x2 = Ho_index(l2,jindex2,nu2)
+                                                          x3 = Ho_index(l3,jindex3,nu3)
+                                                          x4 = Ho_index(l4,jindex4,nu4)
+
+
+
+                                                          RPA_matels_j13(j13,i1,i2,i3,i4) = RPA_matels_j13(j13,i1,i2,i3,i4) + geom &
+                                                               *CONJG(hf_transform(l1,jindex1,nu1,n1))*CONJG(hf_transform(l2,jindex2,nu2,n1))&
+                                                               *hf_transform(l3,jindex3,nu3,n3)*hf_transform(l4,jindex4,nu4,n4)&
+                                                               *COMPLEX(matels_j12(j12,x1,x2,x3,x4),0.0_r_kind)&
+                                                               *v_scale
+
+
+
+                                                       END DO
+                                                    END DO
+                                                 END DO
+                                              END DO
+
+                                           END DO
+                                        END DO
+                                     END DO
+                                  END DO
+                               END DO
+                            END DO
+                         END DO
+                      END DO
+                   END DO
+                END DO
+             END DO
+          END DO
+       END DO
+    END DO
+
+    WRITE(*,*) ' Done recoupling'
+
+    WRITE(*,*) 'Setting up RPA matrix'
+
+    ALLOCATE(RPA_matrix(0:1,0:RPA_ph_J_max))
+    
+    DO ph_parity = 0,1
+       DO ph_J = 0,RPA_ph_J_max
+
+          dim = ph_blocks(ph_parity,ph_J)%size
+
+          RPA_matrix(ph_parity,ph_J)%dim = 2*dim
+          IF(dim > 0) THEN
+             ALLOCATE(RPA_matrix(ph_parity,ph_J)%mat(2*dim,2*dim))
+
+
+             DO II = 1,dim
+                DO JJ = 1,dim
+
+
+                   np = ph_blocks(ph_parity,ph_J)%ph_states(II)%p_n
+                   lp = ph_blocks(ph_parity,ph_J)%ph_states(II)%p_l
+                   jindexp = ph_blocks(ph_parity,ph_J)%ph_states(II)%p_jindex
+
+                   np_pr = ph_blocks(ph_parity,ph_J)%ph_states(JJ)%p_n
+                   lp_pr = ph_blocks(ph_parity,ph_J)%ph_states(JJ)%p_l
+                   jindexp_pr = ph_blocks(ph_parity,ph_J)%ph_states(JJ)%p_jindex
+
+                   nh = ph_blocks(ph_parity,ph_J)%ph_states(II)%h_n
+                   jindexh = ph_blocks(ph_parity,ph_J)%ph_states(II)%h_jindex
+                   lh =  ph_blocks(ph_parity,ph_J)%ph_states(II)%h_l
+
+                   nh_pr = ph_blocks(ph_parity,ph_J)%ph_states(JJ)%h_n
+                   jindexh_pr = ph_blocks(ph_parity,ph_J)%ph_states(JJ)%h_jindex
+                   lh_pr =  ph_blocks(ph_parity,ph_J)%ph_states(JJ)%h_l
+
+                   !upper left part
+                   i1 = Ho_index(lp,jindexp,np)
+                   i2 = Ho_index(lh_pr,jindexh_pr,nh_pr)
+                   i3 = Ho_index(lh,jindexh,nh)
+                   i4 = Ho_index(lp_pr,jindexp_pr,np_pr)                
+
+                   RPA_matrix(ph_parity,ph_J)%mat(II,JJ) = (-1)**((twoj(lp_pr,jindexp_pr)+twoj(lh,jindexh))/2)*RPA_matels_j13(ph_J,i1,i2,i3,i4)
+
+                   !upper right parrt
+                   i1 = Ho_index(lp,jindexp,np)
+                   i2 = Ho_index(lp_pr,jindexp_pr,np_pr)   
+                   i3 = Ho_index(lh,jindexh,nh)
+                   i4 = Ho_index(lh_pr,jindexh_pr,nh_pr)
+
+                   RPA_matrix(ph_parity,ph_J)%mat(II,dim+JJ) = (-1)**((twoj(lh_pr,jindexh_pr)+twoj(lh,jindexh))/2)*RPA_matels_j13(ph_J,i1,i2,i3,i4)
+
+
+                   !lower left part
+                   i1 = Ho_index(lp,jindexp,np)
+                   i2 = Ho_index(lp_pr,jindexp_pr,np_pr)   
+                   i3 = Ho_index(lh,jindexh,nh)
+                   i4 = Ho_index(lh_pr,jindexh_pr,nh_pr)
+
+
+                   RPA_matrix(ph_parity,ph_J)%mat(dim+II,JJ) = (-1)**((-1*twoj(lh_pr,jindexh_pr)+twoj(lp_pr,jindexp_pr))/2)*RPA_matels_j13(ph_J,i1,i2,i3,i4)
+
+                   !lower right part
+
+                   i1 = Ho_index(lp,jindexp,np)
+                   i2 = Ho_index(lh_pr,jindexh_pr,nh_pr)
+                   i3 = Ho_index(lh,jindexh,nh)
+                   i4 = Ho_index(lp_pr,jindexp_pr,np_pr)                
+
+                   RPA_matrix(ph_parity,ph_J)%mat(dim+II,dim+JJ) = (-1)**((-1*twoj(lp,jindexp)+twoj(lh_pr,jindexh_pr))/2)*RPA_matels_j13(ph_J,i1,i2,i3,i4)
+
+
+                END DO
+                !upper left diagonal
+                RPA_matrix(ph_parity,ph_J)%mat(II,II) = RPA_matrix(ph_parity,ph_J)%mat(II,II) + COMPLEX(ph_blocks(ph_parity,ph_J)%ph_states(II)%e_ph,0.0_r_kind)           
+                !lower right diagonal
+                RPA_matrix(ph_parity,ph_J)%mat(dim+II,dim+II) = RPA_matrix(ph_parity,ph_J)%mat(II,II) - COMPLEX(ph_blocks(ph_parity,ph_J)%ph_states(II)%e_ph,0.0_r_kind)            
+
+             END DO
+          END IF
+
+
+       END DO
+    END DO
+
+    WRITE(*,*) 'Done setting up RPA matrix'
+
+    
+
 
 
   END SUBROUTINE RPA_init_matrix
+
+
+  SUBROUTINE RPA_diagonalize
+
+    IMPLICIT NONE
+
+    COMPLEX(kind=r_kind), allocatable :: matrix(:,:), eigenvectors(:,:), eigenvals(:)
+    INTEGER :: ph_parity, ph_J, dim1, dim2
+
+    COMPLEX(kind=r_kind) :: VL(1)
+    COMPLEX(kind=r_kind), allocatable :: work(:)
+    INTEGER :: lwork
+    REAL(kind=r_kind), allocatable :: rwork(:)
+    INTEGER :: info
+   
+
+    !see http://www.netlib.org/lapack/explore-html/dd/dba/zgeev_8f.html
+    INTERFACE 
+       SUBROUTINE zgeev(JOBVL, JOBVR, N, A, LDA, W, VL, LDVL, VR, LDVR, WORK, LWORK, RWORK, INFO)
+         character :: JOBVL
+         character :: JOBVR
+         integer :: N
+         complex*16, dimension( lda, * ) :: A
+         integer :: LDA
+         complex*16, dimension( * ) :: W
+         complex*16, dimension( ldvl, * ) :: VL
+         integer :: LDVL
+         complex*16, dimension( ldvr, * ) :: VR
+         integer :: LDVR
+         complex*16, dimension( * ) :: WORK
+         integer :: LWORK
+         double precision, dimension( * ) :: RWORK
+         integer :: INFO 
+       END SUBROUTINE zgeev
+    END INTERFACE
+
+    IF(allocated(RPA_X)) DEALLOCATE(RPA_X)
+    IF(allocated(RPA_Y)) DEALLOCATE(RPA_Y)
+    IF(allocated(RPA_E)) DEALLOCATE(RPA_E)
+    ALLOCATE(RPA_X(0:1,0:RPA_ph_J_max),RPA_Y(0:1,0:RPA_ph_J_max),RPA_E(0:1,0:RPA_ph_J_max))
+
+
+    !CALL zgeev('N','V',dim,matrix,dim,eigenvals,dummy(size=1),1,eigenvectors,dim,workarray,dimwork,workarray2(size=2*dim),info)
+
+    WRITE(*,*) 'Diagonalizing RPA'
+
+     DO ph_parity = 0,1
+       DO ph_J = 0,RPA_ph_J_max
+
+          dim1 = ph_blocks(ph_parity,ph_J)%size
+          dim2 = RPA_matrix(ph_parity,ph_J)%dim
+
+          IF(dim2 /= 2*dim1) THEN
+             WRITE(*,*) 'In RPA_diagonalize: Inconsistent dimentions in RPA matrix!'
+             STOP
+          END IF
+
+          IF(dim2 > 0) THEN
+
+             RPA_X(ph_parity,ph_J)%rows = dim1
+             RPA_X(ph_parity,ph_J)%cols = dim2
+             ALLOCATE(RPA_X(ph_parity,ph_J)%mat(dim1,dim2))
+             RPA_Y(ph_parity,ph_J)%rows = dim1
+             RPA_Y(ph_parity,ph_J)%cols = dim2
+             ALLOCATE(RPA_Y(ph_parity,ph_J)%mat(dim1,dim2))
+             RPA_E(ph_parity,ph_J)%len = dim2
+             ALLOCATE(RPA_E(ph_parity,ph_J)%vec(dim2))
+
+             
+             
+             ALLOCATE(matrix(dim2,dim2),eigenvectors(dim2,dim2),eigenvals(dim2),rwork(2*dim2))
+
+             matrix = RPA_matrix(ph_parity,ph_J)%mat
+             
+             ALLOCATE(work(1))
+             lwork = -1
+
+             CALL zgeev('N','V',dim2,matrix,dim2,eigenvals,VL,1,eigenvectors,dim2,work,lwork,rwork,info)
+
+             lwork = work(1)
+             DEALLOCATE(work)             
+             ALLOCATE(work(lwork))
+             
+             CALL zgeev('N','V',dim2,matrix,dim2,eigenvals,VL,1,eigenvectors,dim2,work,lwork,rwork,info)
+             
+             RPA_X(ph_parity,ph_J)%mat = eigenvectors(1:dim1,:)
+             RPA_Y(ph_parity,ph_J)%mat = eigenvectors(dim1+1:dim2,:)
+             RPA_E(ph_parity,ph_J)%vec = eigenvals
+
+
+             DEALLOCATE(matrix,eigenvectors,eigenvals,rwork,work)
+
+          END IF
+
+       END DO
+    END DO
+
+    WRITE(*,*) 'Done'
+
+
+
+  END SUBROUTINE RPA_diagonalize
+  
+
+
+  SUBROUTINE RPA_print_info
+
+    IMPLICIT NONE
+
+    INTEGER :: ph_parity, ph_J, dim1, dim2
+    INTEGER :: II 
+    
+    WRITE(*,*) 'RPA eneriges:'
+    
+    DO ph_parity = 0,1
+       DO ph_J = 0,RPA_ph_J_max
+
+          dim2 = RPA_matrix(ph_parity,ph_J)%dim
+
+          IF(ph_parity == 0) THEN
+             WRITE(*,'(A5,I3,A)') '#    ',ph_J,'+'
+          ELSE
+             WRITE(*,'(A5,I3,A)') '#    ',ph_J,'-'
+          END IF
+          
+          IF(dim2 > 0) THEN
+             DO II = 1,dim2
+                WRITE(*,'(2F16.10)') REAL(RPA_E(ph_parity,ph_J)%vec(II),kind=r_kind),AIMAG(RPA_E(ph_parity,ph_J)%vec(II))
+             END DO
+          END IF
+          WRITE(*,*)
+
+       END DO
+    END DO
+    
+
+  END SUBROUTINE RPA_print_info
 
 
 
@@ -961,12 +1342,13 @@ CONTAINS
 
     INTEGER :: deg1,l12max, II, term, JJ
 
-    INTEGER :: i1,i2,i3,i4
-
+    INTEGER :: i1,i2,i3,i4    
 
     REAL(kind=r_kind), ALLOCATABLE :: T(:), R(:,:,:)
-                                            !j12,i1,i2,i3,i4              !j13,i1,i2,i3,i4 (used for RPA)
-    REAL(kind=r_kind), ALLOCATABLE :: matels_j12(:,:,:,:,:),    matels_j13(:,:,:,:,:)
+    
+! moved to module vars
+!                                        !j12,i1,i2,i3,i4             
+!    REAL(kind=r_kind), ALLOCATABLE :: matels_j12(:,:,:,:,:)
 
     REAL(kind=r_kind), ALLOCATABLE :: P1(:), P2(:), scaled_gp(:)
 
@@ -1337,8 +1719,7 @@ END IF
     END DO
 
     
-
-
+    
 
 
     WRITE(*,*) '   Done'
@@ -1347,7 +1728,7 @@ END IF
 
 
     !DEALLOCATE(T)
-    DEALLOCATE(matels_j12)
+    !DEALLOCATE(matels_j12)
 
 
     WRITE(*,*) 'Finished calculating matrix elements'
@@ -2652,7 +3033,7 @@ END IF
      ! if(is_RPA) then should calc all necessary matels at once,
      ! for now calculate first the ones needed for hf then the ones needed for rpa, some elemetns are calculated twice.
      
-     !Ho_is_RPA  = is_RPA
+     RPA_is_on  = is_RPA
      !IF(Ho_is_RPA) THEN
      !CALL calculate_matels_full
      !ELSE 
