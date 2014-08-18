@@ -512,8 +512,13 @@ CONTAINS
                    i2 = Ho_index(lh_pr,jindexh_pr,nh_pr)
                    i3 = Ho_index(lh,jindexh,nh)
                    i4 = Ho_index(lp_pr,jindexp_pr,np_pr)                
+                   
+                   !old
+                   !RPA_matrix(ph_parity,ph_J)%mat(II,JJ) = (-1)**((twoj(lp_pr,jindexp_pr)+twoj(lh,jindexh))/2)*RPA_matels_j13(ph_J,i1,i2,i3,i4)
 
-                   RPA_matrix(ph_parity,ph_J)%mat(II,JJ) = (-1)**((twoj(lp_pr,jindexp_pr)+twoj(lh,jindexh))/2)*RPA_matels_j13(ph_J,i1,i2,i3,i4)
+                   !new, absorbed phases in the definition of X and Y
+                   RPA_matrix(ph_parity,ph_J)%mat(II,JJ) = (-1)**((twoj(lp_pr,jindexp_pr)+twoj(lh_pr,jindexh_pr))/2)*RPA_matels_j13(ph_J,i1,i2,i3,i4)
+
 
                    !upper right parrt
                    i1 = Ho_index(lp,jindexp,np)
@@ -521,8 +526,11 @@ CONTAINS
                    i3 = Ho_index(lh,jindexh,nh)
                    i4 = Ho_index(lh_pr,jindexh_pr,nh_pr)
 
-                   RPA_matrix(ph_parity,ph_J)%mat(II,dim+JJ) = (-1)**((twoj(lh_pr,jindexh_pr)+twoj(lh,jindexh))/2)*RPA_matels_j13(ph_J,i1,i2,i3,i4)
+                   !old
+                   !RPA_matrix(ph_parity,ph_J)%mat(II,dim+JJ) = (-1)**((twoj(lh_pr,jindexh_pr)+twoj(lh,jindexh))/2)*RPA_matels_j13(ph_J,i1,i2,i3,i4)
 
+                   !new, absorbed phases in the definition of X and Y
+                   RPA_matrix(ph_parity,ph_J)%mat(II,dim+JJ) = (-1)**((twoj(lp_pr,jindexp_pr)+twoj(lh_pr,jindexh_pr))/2)*RPA_matels_j13(ph_J,i1,i2,i3,i4)
 
                    !lower left part
                    i1 = Ho_index(lp,jindexp,np)
@@ -530,8 +538,11 @@ CONTAINS
                    i3 = Ho_index(lh,jindexh,nh)
                    i4 = Ho_index(lh_pr,jindexh_pr,nh_pr)
 
-
-                   RPA_matrix(ph_parity,ph_J)%mat(dim+II,JJ) = (-1)**((-1*twoj(lh_pr,jindexh_pr)+twoj(lp_pr,jindexp_pr))/2)*RPA_matels_j13(ph_J,i1,i2,i3,i4)
+                   !old
+                   !RPA_matrix(ph_parity,ph_J)%mat(dim+II,JJ) = (-1)**((-1*twoj(lh_pr,jindexh_pr)+twoj(lp_pr,jindexp_pr))/2)*RPA_matels_j13(ph_J,i1,i2,i3,i4)
+                   !new, absorbed phases in the definition of X and Y
+                   RPA_matrix(ph_parity,ph_J)%mat(dim+II,JJ) = (-1)**(1+(twoj(lp_pr,jindexp_pr)+twoj(lh_pr,jindexh_pr))/2)*RPA_matels_j13(ph_J,i1,i2,i3,i4)
+                   
 
                    !lower right part
 
@@ -540,14 +551,17 @@ CONTAINS
                    i3 = Ho_index(lh,jindexh,nh)
                    i4 = Ho_index(lp_pr,jindexp_pr,np_pr)                
 
-                   RPA_matrix(ph_parity,ph_J)%mat(dim+II,dim+JJ) = (-1)**((-1*twoj(lp,jindexp)+twoj(lh_pr,jindexh_pr))/2)*RPA_matels_j13(ph_J,i1,i2,i3,i4)
+                   !old
+                   !RPA_matrix(ph_parity,ph_J)%mat(dim+II,dim+JJ) = (-1)**((-1*twoj(lp,jindexp)+twoj(lh_pr,jindexh_pr))/2)*RPA_matels_j13(ph_J,i1,i2,i3,i4)
 
+                   !new, absorbed phases in the definition of X and Y
+                   RPA_matrix(ph_parity,ph_J)%mat(dim+II,dim+JJ) = (-1)**(1+(twoj(lp_pr,jindexp_pr)+twoj(lh_pr,jindexh_pr))/2)*RPA_matels_j13(ph_J,i1,i2,i3,i4)
 
                 END DO
                 !upper left diagonal
                 RPA_matrix(ph_parity,ph_J)%mat(II,II) = RPA_matrix(ph_parity,ph_J)%mat(II,II) + COMPLEX(ph_blocks(ph_parity,ph_J)%ph_states(II)%e_ph,0.0_r_kind)           
                 !lower right diagonal
-                RPA_matrix(ph_parity,ph_J)%mat(dim+II,dim+II) = RPA_matrix(ph_parity,ph_J)%mat(II,II) - COMPLEX(ph_blocks(ph_parity,ph_J)%ph_states(II)%e_ph,0.0_r_kind)            
+                RPA_matrix(ph_parity,ph_J)%mat(dim+II,dim+II) = RPA_matrix(ph_parity,ph_J)%mat(dim+II,dim+II) - COMPLEX(ph_blocks(ph_parity,ph_J)%ph_states(II)%e_ph,0.0_r_kind)            
 
              END DO
           END IF
@@ -673,31 +687,163 @@ CONTAINS
     IMPLICIT NONE
 
     INTEGER :: ph_parity, ph_J, dim1, dim2
-    INTEGER :: II 
+    INTEGER :: II,JJ
+
+    INTEGER :: outunit
+
+    OPEN(unit=106,file = 'RPA_energies.dat')
+
+    DO outunit = 6,106,100
+
+       WRITE(outunit,*) '# RPA eneriges:'
+       WRITE(outunit,'(2A16)') '# Re(E)','Im(E)'
+       DO ph_parity = 0,1
+          DO ph_J = 0,RPA_ph_J_max
+
+             dim2 = RPA_matrix(ph_parity,ph_J)%dim
+
+             IF(ph_parity == 0) THEN
+                WRITE(outunit,'(A5,I3,A)') '#    ',ph_J,'+'
+             ELSE
+                WRITE(outunit,'(A5,I3,A)') '#    ',ph_J,'-'
+             END IF
+
+             IF(dim2 > 0) THEN
+                DO II = 1,dim2
+                   WRITE(outunit,'(2F16.10)') REAL(RPA_E(ph_parity,ph_J)%vec(II),kind=r_kind),AIMAG(RPA_E(ph_parity,ph_J)%vec(II))
+                END DO
+             END IF
+             WRITE(outunit,*)
+
+          END DO
+       END DO
+
+    END DO
+
+    CLOSE(106)
+
     
-    WRITE(*,*) 'RPA eneriges:'
-    
+    OPEN(unit=106,file = 'RPA_ph_states.dat')
+
+    outunit = 106
+
+    WRITE(outunit,'(A16,6A4)') '#           e_ph','h_n','h_l','h_2j','p_n','p_l','p_2j'
+
+    DO ph_parity = 0,1
+       DO ph_J = 0,RPA_ph_J_max
+
+          dim1 = ph_blocks(ph_parity,ph_J)%size
+
+          IF(ph_parity == 0) THEN
+             WRITE(outunit,'(A5,I3,A)') '#    ',ph_J,'+'
+          ELSE
+             WRITE(outunit,'(A5,I3,A)') '#    ',ph_J,'-'
+          END IF
+
+          IF(dim1 > 0) THEN
+             DO II = 1,dim1
+                WRITE(outunit,'(F16.10,6I4)') ph_blocks(ph_parity,ph_J)%ph_states(II)%e_ph,&
+                     ph_blocks(ph_parity,ph_J)%ph_states(II)%h_n, &
+                     ph_blocks(ph_parity,ph_J)%ph_states(II)%h_l, &
+                     twoj(ph_blocks(ph_parity,ph_J)%ph_states(II)%h_l,ph_blocks(ph_parity,ph_J)%ph_states(II)%h_jindex), &
+                     ph_blocks(ph_parity,ph_J)%ph_states(II)%p_n, &
+                     ph_blocks(ph_parity,ph_J)%ph_states(II)%p_l, &
+                     twoj(ph_blocks(ph_parity,ph_J)%ph_states(II)%p_l,ph_blocks(ph_parity,ph_J)%ph_states(II)%p_jindex)
+
+             END DO
+          END IF
+          WRITE(outunit,*)
+
+       END DO
+    END DO
+
+    CLOSE(106)
+
+    OPEN(unit=106,file = 'RPA_matrix.dat')
+
+    outunit = 106
+
+
+
     DO ph_parity = 0,1
        DO ph_J = 0,RPA_ph_J_max
 
           dim2 = RPA_matrix(ph_parity,ph_J)%dim
 
           IF(ph_parity == 0) THEN
-             WRITE(*,'(A5,I3,A)') '#    ',ph_J,'+'
+             WRITE(outunit,'(A5,I3,A)') '#    ',ph_J,'+'
           ELSE
-             WRITE(*,'(A5,I3,A)') '#    ',ph_J,'-'
+             WRITE(outunit,'(A5,I3,A)') '#    ',ph_J,'-'
           END IF
-          
+
           IF(dim2 > 0) THEN
              DO II = 1,dim2
-                WRITE(*,'(2F16.10)') REAL(RPA_E(ph_parity,ph_J)%vec(II),kind=r_kind),AIMAG(RPA_E(ph_parity,ph_J)%vec(II))
-             END DO
+                DO JJ = 1,dim2
+                   !WRITE(outunit,'(2F10.6)',advance='no') REAL(RPA_matrix(ph_parity,ph_J)%mat(II,JJ),kind=r_kind),AIMAG(RPA_matrix(ph_parity,ph_J)%mat(II,JJ))
+                   WRITE(outunit,'(F12.6)',advance='no') REAL(RPA_matrix(ph_parity,ph_J)%mat(II,JJ),kind=r_kind)
+                END DO
+                WRITE(outunit,*)
+             END DO            
           END IF
-          WRITE(*,*)
+          WRITE(outunit,*)
 
        END DO
     END DO
-    
+
+
+
+    CLOSE(106)
+
+
+    OPEN(unit=106,file = 'RPA_XY.dat')
+
+    outunit = 106
+
+
+
+    DO ph_parity = 0,1
+       DO ph_J = 0,RPA_ph_J_max
+
+           dim1 = RPA_X(ph_parity,ph_J)%rows
+           dim2 = RPA_X(ph_parity,ph_J)%cols        
+
+          IF(ph_parity == 0) THEN
+             WRITE(outunit,'(A5,I3,A)') '#    ',ph_J,'+'
+          ELSE
+             WRITE(outunit,'(A5,I3,A)') '#    ',ph_J,'-'
+          END IF
+
+          IF(dim1 > 0 .and. dim2>0) THEN
+             WRITE(outunit,*) '#X'
+             DO II = 1,dim1
+                DO JJ = 1,dim2
+                   WRITE(outunit,'(2F10.6)',advance='no') REAL(RPA_X(ph_parity,ph_J)%mat(II,JJ),kind=r_kind), AIMAG(RPA_X(ph_parity,ph_J)%mat(II,JJ))
+                  
+                END DO
+                WRITE(outunit,*)
+             END DO   
+             WRITE(outunit,*)
+             WRITE(outunit,*) '#Y'
+             DO II = 1,dim1
+                DO JJ = 1,dim2
+                   WRITE(outunit,'(2F10.6)',advance='no') REAL(RPA_Y(ph_parity,ph_J)%mat(II,JJ),kind=r_kind), AIMAG(RPA_Y(ph_parity,ph_J)%mat(II,JJ)) 
+                   !WRITE(outunit,'(F12.6)',advance='no') REAL(RPA_matrix(ph_parity,ph_J)%mat(II,JJ),kind=r_kind)
+                END DO
+                WRITE(outunit,*)
+             END DO  
+         
+          END IF
+          WRITE(outunit,*)
+
+       END DO
+    END DO
+
+
+
+    CLOSE(106)
+
+
+
 
   END SUBROUTINE RPA_print_info
 
