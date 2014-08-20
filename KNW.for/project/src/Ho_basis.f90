@@ -368,8 +368,11 @@ CONTAINS
 
     REAL(kind=r_kind) :: geom
 
+    WRITE(*,*) 'RPA_init_matrix :'
+    WRITE(*,*) 'v_scale = ',v_scale
 
-    WRITE(*,*) 'Recoupling matrix elements from pp to ph for RPA and trasnforming to HF basis'
+
+    WRITE(*,*) 'Recoupling matrix elements from pp to ph for RPA and transforming to HF basis'
 
     IF(ALLOCATED(RPA_matels_j13)) DEALLOCATE(RPA_matels_j13)     
 
@@ -571,7 +574,8 @@ CONTAINS
     END DO
 
     WRITE(*,*) 'Done setting up RPA matrix'
-
+    
+    WRITE(*,*) 'RPA_init_matrix: done'
     
 
 
@@ -691,6 +695,9 @@ CONTAINS
 
     INTEGER :: outunit
 
+    INTEGER :: s
+    CHARACTER(2) :: s_char
+
     OPEN(unit=106,file = 'RPA_energies.dat')
 
     DO outunit = 6,106,100
@@ -721,6 +728,55 @@ CONTAINS
     END DO
 
     CLOSE(106)
+
+    OPEN(unit=106,file = 'energies_rpa.agr')
+
+    outunit = 106
+
+    !WRITE(outunit,*) '# RPA eneriges:'
+    !WRITE(outunit,'(2A16)') '# Re(E)','Im(E)'
+    s = 0
+    DO ph_parity = 0,1
+       DO ph_J = 0,RPA_ph_J_max
+
+          dim2 = RPA_matrix(ph_parity,ph_J)%dim
+
+           IF(dim2 > 0) THEN
+
+             WRITE(s_char,'(I2)') s
+             
+             WRITE(outunit,'(A6,A2,A12)') '@    s',ADJUSTL(s_char),' line type 0'
+             WRITE(outunit,'(A6,A2,A10)') '@    s',ADJUSTL(s_char),' symbol 11'
+             WRITE(outunit,'(A6,A2,A15)') '@    s',ADJUSTL(s_char),' symbol char 95'
+             WRITE(outunit,'(A6,A2,A19)') '@    s',ADJUSTL(s_char),' symbol char font 8'
+             WRITE(outunit,'(A6,A2,A16)') '@    s',ADJUSTL(s_char),' symbol size 3.0'
+             IF(ph_parity == 0) THEN
+                !WRITE(outunit,*) '#    ',ph_J,'+'
+                WRITE(outunit,'(A6,A2,A15)') '@    s',ADJUSTL(s_char),' symbol color 1'
+             ELSE
+                !WRITE(outunit,*) '#    ',ph_J,'-'
+                WRITE(outunit,'(A6,A2,A15)') '@    s',ADJUSTL(s_char),' symbol color 4'
+             END IF
+
+            
+             WRITE(outunit,'(A12,A2)') '@target G0.S',ADJUSTL(s_char)
+             WRITE(outunit,'(A8)') '@type xy'
+             DO II = 1,dim2
+                WRITE(outunit,'(F16.10,F16.10)') REAL(ph_J,kind=r_kind),REAL(RPA_E(ph_parity,ph_J)%vec(II),kind=r_kind)
+             END DO
+             WRITE(outunit,*) '&'
+
+             s = s+1
+          END IF
+          
+
+       END DO
+    END DO
+
+
+    CLOSE(106)
+
+
 
     
     OPEN(unit=106,file = 'RPA_ph_states.dat')

@@ -16,9 +16,10 @@ PROGRAM hf_main
   INTEGER :: iter_max = 20
 
   logical :: is_RPA = .false. !to run RPA after hf calc
+  REAL(kind=r_kind) :: RPA_v_res_scale = 1.0_r_kind !scaling of residual interaction
 
 
-  NAMELIST/hf_data/num_part,hbaromega,Nmax,lmax,tol,iter_max,mixing,is_RPA
+  NAMELIST/hf_data/num_part,hbaromega,Nmax,lmax,tol,iter_max,mixing,is_RPA, RPA_v_res_scale
   READ(5,NML=hf_data)
 
   CALL hf_solver(num_part,hbaromega,b,Nmax,lmax,tol,iter_max,mixing,is_RPA)
@@ -27,7 +28,7 @@ PROGRAM hf_main
 
   IF(is_RPA) THEN
 
-     CALL RPA_solver
+     CALL RPA_solver(RPA_v_res_scale)
 
   END IF
 

@@ -4,17 +4,18 @@ MODULE RPA_solver_mod
 
 CONTAINS
   
-  SUBROUTINE RPA_solver
+  SUBROUTINE RPA_solver(v_scale)
     IMPLICIT NONE
 
-    REAL(kind=r_kind) :: Ecut, v_scale
+    REAL(kind=r_kind) :: Ecut
+    REAL(kind=r_kind) :: v_scale
 
     ! cutoff above fermi surface in units of MeV
     Ecut = -1.0_r_kind
     
     CALL RPA_init_ph_space(Ecut)
 
-    v_scale = 1.0_r_kind
+    !v_scale = 1.0_r_kind
 
     CALL RPA_init_matrix(v_scale)
 
