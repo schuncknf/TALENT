@@ -1899,9 +1899,17 @@ END IF
                                
 
                             END DO
-                            !to conform to the definition in the talent notes
-                            matel_val = matel_val / REAL(twoj(l2,jindex2)+1,kind=r_kind)
-                            !
+                           
+                            !Removed as i dont like the defnition of the reduced density matrix in the talent notes 
+                            !(in the notes the degeneracy of each j - shell is absorved into the deduce density matrix)
+                            !Removed also multiplication of my rho with degenracy 
+                            !in the update of the self-consistent field in the subroutine hf_update_hamiltonian
+
+!!$                            !to conform to the definition in the talent notes
+!!$                            matel_val = matel_val / REAL(twoj(l2,jindex2)+1,kind=r_kind)
+!!$                            !
+
+                            !end removed
 
                             Ho_two_body_matels(TBME_index(l1,jindex1,l2,jindex2,n1,n2,n3,n4)) =COMPLEX(matel_val,0.0_r_kind) 
 
@@ -2284,14 +2292,19 @@ END IF
                                !j2_1 = twoj(l1,jindex1)!2*l1+(-1)**jindex1
                                !j2_2 = 2*lpr+(-1)**jindexpr
 
+                               
+                               matel_val = matel_val + REAL((2*l12+1),kind=r_kind)/REAL(deg1,kind=r_kind) *matels_j(TBME_j_index_hf(l12,l1,jindex1,l2,jindex2,n1,n2,n3,n4))               
 
-                               matel_val = matel_val + REAL((2*l12+1),kind=r_kind)/REAL(deg1,kind=r_kind) *matels_j(TBME_j_index_hf(l12,l1,jindex1,l2,jindex2,n1,n2,n3,n4))                            
+                            
+                              
                                
 
                             END DO
-                            !to conform to the definition in the talent notes
-                            matel_val = matel_val / REAL(twoj(l2,jindex2)+1,kind=r_kind)
-                            !
+                            !removed division with degeneracy
+!!$                            !to conform to the definition in the talent notes
+!!$                            matel_val = matel_val / REAL(twoj(l2,jindex2)+1,kind=r_kind)
+!!$                            !
+                              !end removed division
 
                             Ho_two_body_matels(TBME_index(l1,jindex1,l2,jindex2,n1,n2,n3,n4)) =COMPLEX(matel_val,0.0_r_kind) 
 
@@ -2774,7 +2787,7 @@ END IF
                 DO lpr = 0,Ho_lmax
                    DO jindexpr = 0,1
                       IF(lpr==0 .and. jindexpr==1) CYCLE
-                      deg = Ho_degeneracy(lpr,jindexpr)
+                      !deg = Ho_degeneracy(lpr,jindexpr)
 
                       DO n3 = 0,(Ho_Nmax-lpr)/2
                          DO n4 = 0,(Ho_Nmax-lpr)/2 
@@ -2782,7 +2795,11 @@ END IF
                             !for the l=0 subspace
                             !Gamma = Gamma + Ho_two_body_matel(l,jindex,n1,n4,n2,n3)*density_matrix(l,jindex,n3,n4) 
                             !General
-                            Gamma = Gamma + deg*Ho_two_body_matels(TBME_index(l,jindex,lpr,jindexpr,n1,n4,n2,n3))*density_matrix(lpr,jindexpr,n3,n4) 
+
+                            !removed multiplication with degeneracy
+!!$                            Gamma = Gamma + deg*Ho_two_body_matels(TBME_index(l,jindex,lpr,jindexpr,n1,n4,n2,n3))*density_matrix(lpr,jindexpr,n3,n4)
+                             Gamma = Gamma + Ho_two_body_matels(TBME_index(l,jindex,lpr,jindexpr,n1,n4,n2,n3))*density_matrix(lpr,jindexpr,n3,n4)
+                             !end removed multiplication
 
 !!$                            !for debug
 !!$                            WRITE(*,*) 'n1,n2,n3,n4 = ',n1,n2,n3,n4
