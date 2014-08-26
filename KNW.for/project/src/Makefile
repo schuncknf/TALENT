@@ -10,9 +10,10 @@ FC = gfortran
 BINDIR = ./
 
 # Name of executable
-EXENAME = hf
+EXENAME = ndhfrpa
 
-LIBS = -L$/. -llapack -lblas
+#LIBS = -L$/. -llapack -lblas
+LIBS = -llapack -lblas
 
 OPTS = -O3  -funroll-loops -ffast-math -g -fcheck=all -fbounds-check -ffree-form -ffree-line-length-1024 -fbacktrace -ffpe-trap=invalid -fdefault-double-8 -fdefault-real-8
 

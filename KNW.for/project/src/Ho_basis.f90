@@ -703,7 +703,7 @@ CONTAINS
     DO outunit = 6,106,100
 
        WRITE(outunit,*) '# RPA eneriges:'
-       WRITE(outunit,'(2A16)') '# Re(E)','Im(E)'
+       WRITE(outunit,'(2A5,2A16)') '#J','par','Re(E)','Im(E)'
        DO ph_parity = 0,1
           DO ph_J = 0,RPA_ph_J_max
 
@@ -717,7 +717,7 @@ CONTAINS
 
              IF(dim2 > 0) THEN
                 DO II = 1,dim2
-                   WRITE(outunit,'(2F16.10)') REAL(RPA_E(ph_parity,ph_J)%vec(II),kind=r_kind),AIMAG(RPA_E(ph_parity,ph_J)%vec(II))
+                   WRITE(outunit,'(2I5,2F16.10)') ph_J,ph_parity,REAL(RPA_E(ph_parity,ph_J)%vec(II),kind=r_kind),AIMAG(RPA_E(ph_parity,ph_J)%vec(II))
                 END DO
              END IF
              WRITE(outunit,*)
@@ -1621,6 +1621,9 @@ IF(.true.) THEN
 
     WRITE(*,*) 'Using Gauss-Hermite quadrature'
     CALL init_grid_GH(50) !larger than 70 causes errors
+
+    ! 50 corresponds to degree 100. For exact quadrature the degree should be equal or larger than 4*Nmax + 2
+    !CALL init_grid_GH(9) !for test
     
     ALLOCATE(P1(grid_size_GH),P2(grid_size_GH),scaled_gp(grid_size_GH))
 
@@ -2155,16 +2158,23 @@ END IF
     
     ! for HF l1 = l3, j1 = j3,  l2 = l4, j2 = j4 
     !TBME_j_index_hf(j12,l1,jindex1,l2,jindex2,n1,n2,n3,n4)
-    WRITE(*,*) 'TMBE_j_index_hf_max = ',TBME_j_index_hf(2*Ho_Nmax + 1, Ho_Nmax + 1, 2, Ho_Nmax + 1, 2, Ho_Nmax/2 +1, Ho_Nmax/2 +1, Ho_Nmax/2 +1, Ho_Nmax/2 +1)
-    ALLOCATE(matels_j(TBME_j_index_hf(2*Ho_Nmax + 1, Ho_Nmax + 1, 2, Ho_Nmax + 1, 2, Ho_Nmax/2 +1, Ho_Nmax/2 +1, Ho_Nmax/2 +1, Ho_Nmax/2 +1)))
+   
+    !old
+!!$    WRITE(*,*) 'TMBE_j_index_hf_max = ',TBME_j_index_hf(2*Ho_Nmax + 1, Ho_Nmax + 1, 2, Ho_Nmax + 1, 2, Ho_Nmax/2 +1, Ho_Nmax/2 +1, Ho_Nmax/2 +1, Ho_Nmax/2 +1)
+!!$    ALLOCATE(matels_j(TBME_j_index_hf(2*Ho_Nmax + 1, Ho_Nmax + 1, 2, Ho_Nmax + 1, 2, Ho_Nmax/2 +1, Ho_Nmax/2 +1, Ho_Nmax/2 +1, Ho_Nmax/2 +1)))
+
+    !new
+    WRITE(*,*) 'TMBE_j_index_hf_max = ',TBME_j_index_hf(2*Ho_lmax + 1, Ho_lmax + 1, 2, Ho_lmax + 1, 2, Ho_Nmax/2 +1, Ho_Nmax/2 +1, Ho_Nmax/2 +1, Ho_Nmax/2 +1)
+    ALLOCATE(matels_j(TBME_j_index_hf(2*Ho_lmax + 1, Ho_lmax + 1, 2, Ho_lmax + 1, 2, Ho_Nmax/2 +1, Ho_Nmax/2 +1, Ho_Nmax/2 +1, Ho_Nmax/2 +1)))
+    
 
     matels_j = 0.0_r_kind
 
     
     
-    DO l12 = 0, 2*Ho_Nmax 
-       DO l1 = 0, Ho_Nmax
-          DO l2 = 0, Ho_Nmax
+    DO l12 = 0, 2*Ho_lmax !l12 = 0, 2*Ho_Nmax 
+       DO l1 = 0, Ho_lmax !Ho_Nmax
+          DO l2 = 0, Ho_lmax !Ho_Nmax
              DO n1 = 0, (Ho_Nmax - l1)/2
                 DO n2 = 0, (Ho_Nmax - l2)/2
                    E1 = 2*n1 + l1
@@ -3253,20 +3263,20 @@ END IF
      ! for now calculate first the ones needed for hf then the ones needed for rpa, some elemetns are calculated twice.
      
      RPA_is_on  = is_RPA
-     !IF(Ho_is_RPA) THEN
-     !CALL calculate_matels_full
-     !ELSE 
-     !CALL calculate_matels_hf
-     !END IF
-     !
-     !end TODO
+     IF(RPA_is_on) THEN
+        CALL calculate_matels_full
+     ELSE 
+        CALL calculate_matels_hf
+     END IF
+     
+     
      
      !CALL calculate_matels_hf
 
-     CALL calculate_matels_full
+     !CALL calculate_matels_full
 
 
-     CALL print_TBMEs
+     !CALL print_TBMEs
 
      !for test
      !Ho_two_body_matels = zero_c
