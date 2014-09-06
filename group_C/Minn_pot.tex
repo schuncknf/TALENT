@@ -1,0 +1,555 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+%\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage[pdftex,unicode]{hyperref}
+\hypersetup{pdftitle=Minnesota potential in laboratory frame}
+\hypersetup{pdfauthor=Anton Repko}
+\setlength{\oddsidemargin}{-25pt}
+\setlength{\topmargin}{-30pt}
+\setlength{\headheight}{0pt}
+\setlength{\headsep}{0pt}
+\addtolength{\textheight}{150pt}
+\addtolength{\textwidth}{160pt}
+
+\author{A.~Repko}
+\title{Minnesota potential in laboratory frame}
+
+\begin{document}
+
+\section{Minnesota potential}
+Antisymmetrized Minnesota potential is
+\begin{equation}
+\label{Minnesota_ini}
+\widetilde{V}(\vec{r}_1,\vec{r}_2) = \big[ \hat{V}_R(\vec{r}_1,\vec{r}_2)
++\tfrac{1}{2}(1+\hat{P}_\sigma)\hat{V}_t(\vec{r}_1,\vec{r}_2)
++\tfrac{1}{2}(1-\hat{P}_\sigma)\hat{V}_s(\vec{r}_1,\vec{r}_2) \big]
+\times\tfrac{1}{2}(1+\hat{P}_r)(1-\hat{P}_\sigma\hat{P}_r)
+\end{equation}
+where $\hat{P}_\sigma$ is spin-exchange and $\hat{P}_r$ space-exchange operator. The parts of the interaction are of gaussian type:
+\begin{subequations}
+\begin{align}
+\hat{V}_R(\vec{r}_1,\vec{r}_2) &= +V_{0,R}\mathrm{e}^{-\kappa_R(\vec{r}_1-\vec{r}_2)^2},&
+V_{0,R} &=200.00\ \mathrm{MeV},& \kappa_R &=1.487\ \mathrm{fm^{-2}} \\
+\hat{V}_t(\vec{r}_1,\vec{r}_2) &= -V_{0,t}\mathrm{e}^{-\kappa_t(\vec{r}_1-\vec{r}_2)^2},&
+V_{0,t} &=178.00\ \mathrm{MeV},& \kappa_t &=0.639\ \mathrm{fm^{-2}} \\
+\hat{V}_s(\vec{r}_1,\vec{r}_2) &= -V_{0,s}\mathrm{e}^{-\kappa_s(\vec{r}_1-\vec{r}_2)^2},&
+V_{0,s} &=91.85\ \mathrm{MeV},& \kappa_s &=0.465\ \mathrm{fm^{-2}}
+\end{align}
+\end{subequations}
+Due to antisymmetry, the space-exchange operator can be converted to spin-exchange and vice versa:
+\begin{equation}
+(1+\hat{P}_r)(1-\hat{P}_\sigma\hat{P}_r) = 1 + \hat{P}_r - \hat{P}_\sigma\hat{P}_r - \hat{P}_\sigma = (1-\hat{P}_\sigma)(1-\hat{P}_\sigma\hat{P}_r)
+\end{equation}
+and because of $(1+\hat{P}_\sigma)(1-\hat{P}_\sigma)=0$, the term $\hat{V}_t$ gives zero contribution and can be omitted. The final form is then
+\begin{equation}
+\label{Minnesota}
+\widetilde{V}(\vec{r}_1,\vec{r}_2) = \tfrac{1}{2}\big[ \hat{V}_R(\vec{r}_1,\vec{r}_2)
++\hat{V}_s(\vec{r}_1,\vec{r}_2) \big]
+(1-\hat{P}_\sigma)(1-\hat{P}_\sigma\hat{P}_r)
+\end{equation}
+
+\section{Multipolar decomposition of the Gaussian interaction}
+References in the following text beginnging with ``V.'' point to the formulas from the book D.~A.~Varshalovich, A.~N.~Moskalev, V.~K.~Khersonskii: Quantum Theory of Angular Momentum, World Scientific Singapore 1988. Following symmetry properties of Clebsch-Gordan coefficients will be used without further reference:
+\begin{equation}
+C_{l,m,\lambda,\mu}^{J,M} = (-1)^{l+\lambda-J} C_{l,-m,\lambda,-\mu}^{J,-M}
+= C_{\lambda,-\mu,l,-m}^{J,-M} =
+(-1)^{l-m}\sqrt{\frac{2J+1}{2\lambda+1}}\,C_{l,m,J,-M}^{\lambda,-\mu} =
+(-1)^{\lambda+\mu}\sqrt{\frac{2J+1}{2l+1}}\,C_{J,-M,\lambda,\mu}^{l,-m}
+\tag{V.~8.4.10,11}
+\end{equation}
+
+Since Talmi-Moshinsky transformation to center-of-mass frame is analytically difficult, I will factorize a two-body Gaussian interaction in laboratory frame as
+\begin{equation}
+\mathrm{e}^{-\mu(\vec{r}_1-\vec{r}_2)^2} = \mathrm{e}^{-\mu(r_1^2+r_2^2)}
+\mathrm{e}^{2\mu\vec{r}_1\cdot\vec{r}_2}
+\end{equation}
+The term with scalar product can be decomposed using a well known formula
+\begin{equation}
+\mathrm{e}^{\mathrm{i}\vec{k}\cdot\vec{r}} = 4\pi\sum_{LM} \mathrm{i}^L
+j_L(kr) Y_{LM}^*(\hat{k}) Y_{LM}(\hat{r})
+\tag{V.~5.17.14}
+\end{equation}
+where imaginary unit is eliminated by utilizing modified spherical Bessel function $i_L(z)$ instead of spherical Bessel function $j_L(z)$:
+\begin{equation}
+(-\mathrm{i})^L j_L(iz) = i_L(z) = i_L^*(z) = \sum_{k=0}^\infty
+\frac{z^{L+2k}}{2^k k! (2L+2k+1)!!}
+\end{equation}
+Desired formula is therefore
+\begin{equation}
+\label{gaus_dec}
+\mathrm{e}^{-\mu(\vec{r}_1-\vec{r}_2)^2} = \mathrm{e}^{-\mu(r_1^2+r_2^2)}
+4\pi\sum_{LM}i_L(2\mu r_1 r_2)Y_{LM}^*(\hat{r}_1)Y_{LM}(\hat{r}_2) =
+\mathrm{e}^{-\mu(r_1-r_2)^2}4\pi\sum_{LM}
+\frac{i_L(2\mu r_1 r_2)}{\exp(2\mu r_1 r_2)} Y_{LM}^*(\hat{r}_1)Y_{LM}(\hat{r}_2)
+\end{equation}
+Last expression takes into account exponentially divergent nature of $i_L(z)$ for large $z$. In fact, the version of $i_L(z)$ given by the GSL library is exactly  the one rescaled by an exponential.
+
+Sometimes, only the $L=0$ part is needed. It can be expressed analytically by well known functions ($Y_{00} = \sqrt{4\pi}$):
+\begin{equation}
+i_0(z) = \frac{\mathrm{e}^z - \mathrm{e}^{-z}}{2z} \quad\rightarrow\quad
+\Big(\mathrm{e}^{-\mu(\vec{r}_1-\vec{r}_2)^2}\Big)_{L=0} =
+\frac{\mathrm{e}^{-\mu(r_1-r_2)^2}-\mathrm{e}^{-\mu(r_1+r_2)^2}}{4\mu r_1 r_2}
+4\pi Y_{00}^*(\hat{r}_1) Y_{00}(\hat{r}_2)
+\end{equation}
+
+\section{Matrix elements of the particle-hole part (for HF)}
+Interaction is rewritten in second quantization as
+\begin{equation}
+\hat{V} = \tfrac{1}{4}\bar{v}_{acbd}\hat{a}_a^+\hat{a}_c^+\hat{a}_d\hat{a}_b
+\end{equation}
+where the labeling was chosen to give a convenient expression for the mean-field HF hamiltonian:
+\begin{equation}
+\label{HF_hamil}
+h_{ab} = t_{ab} + \sum_{cd}\bar{v}_{acbd}\rho_{dc} \qquad\textrm{where }
+\rho_{dc} = \langle\mathrm{HF}|\hat{a}_c^+\hat{a}_d|\mathrm{HF}\rangle
+\end{equation}
+Matrix element $\bar{v}_{acbd}$ is then calculated according to (\ref{Minnesota}) symbolically as
+\begin{subequations}\label{v_dec}
+\begin{align}
+\label{v_dec1}
+\bar{v}_{acbd} &= \big[\psi_a^\dagger(r_1\sigma_1)\psi_b(r_1\sigma_1)\big]V_{12}
+\big[\psi_c^\dagger(r_2\sigma_2)\psi_d(r_2\sigma_2)\big]
+- \big[\psi_a^\dagger(r_1\sigma_1)\psi_d(r_1\sigma_1)\big]V_{12}
+\big[\psi_c^\dagger(r_2\sigma_2)\psi_b(r_2\sigma_2)\big] \\
+\label{v_dec2}
+&\quad - \big[\psi_a^\dagger(r_1\sigma_1)\psi_b(r_1\sigma_2)\big]V_{12}
+\big[\psi_c^\dagger(r_2\sigma_2)\psi_d(r_2\sigma_1)\big]
++ \big[\psi_a^\dagger(r_1\sigma_1)\psi_d(r_1\sigma_2)\big]V_{12}
+\big[\psi_c^\dagger(r_2\sigma_2)\psi_b(r_2\sigma_1)\big]
+\end{align}
+\end{subequations}
+where the single particle wavefunction of spherical HO with quantum numbers $a=(n_a,j_a,l_a,m_a)$ is ($\chi$ is spinor)
+\begin{equation}
+\label{spin-orbit}
+\psi_a(\vec{r}) = R_{n_a l_a}(r) \sum_\sigma C_{l_a,m_a-\sigma,\frac{1}{2},\sigma}^{j_a,m_a} Y_{l_a,m_a-\sigma}(\hat{r}) \chi_\sigma
+\end{equation}
+and $V_{12}$ is a shortcut for $\tfrac{1}{2}V_{R,s}(\vec{r}_1,\vec{r}_2)$. Integration over $\vec{r}_1,\,\vec{r}_2$ and summation over $\sigma_1,\,\sigma_2$ is assumed in (\ref{v_dec}) without explicit notion.
+
+The terms in (\ref{v_dec}) will not be evaluated straight away, but only after considering the summation over $m$ of $cd$ in (\ref{HF_hamil}), and will be highlighted by $\textbf{[+]}$ and $\textbf{[--]}$. The point is that density matrix $\rho_{cd}$ mixes only the states with the same $(j,l,m)$, assuming unbroken spherical symmetry. Moreover, the density matrix is numerically the same for all $m$. The density matrix can be therefore broken into independent submatrices $\rho_{cd}^{(j,l)}$, where $j_c=j_d=j$, $l_c=l_d=l$ and $m_c=m_d$ is arbitrary (i.e.~there are $2j+1$ identical submatrices with different $m$).
+
+Analytical evaluation of $\sum_{m}\bar{v}_{acbd}\rho_{dc}$ for individual terms in (\ref{v_dec}) will go as follows:
+\begin{enumerate}
+\item Angular functions in $\big[\ldots\big]$ will be coupled into $Y_{LM}(r_{1/2})$, which will be then eliminated by angular integration (by orthogonality of $Y_{LM}$) with corresponding term from $V_{12}$. The second bracket will be first treated by relation $Y_{L,-M} = (-1)^M Y_{LM}^*$. The form of (\ref{v_dec1}) allows the summation over $\sigma_{1,2}$ to be performed in this step as well.
+\item Summation over $m_c=m_d=m$ with $\rho_{cd}^{(j,l)}$ will be applied in the second bracket. Besides forcing $j_c=j_d=j$ and $l_c=l_d=l$, this will lead to various simplification and equalities, often in a multi-step way. An important feature is the equality of $LM$ for the first and second bracket $\big[\ldots\big]$ due to (\ref{gaus_dec}).
+\item Finally, the equalities $j_a=j_b$, $l_a=l_b$ and $m_a=m_b$ (as Kronecker deltas) will be obtained together with final expressions. The final expression will still contain radial integrals over $r_1,\,r_2$ and summation over $L$. Finally, the density matrix $\rho_{cd}^{(j,l)}$ can be formally factorized out from the result to obtain effective matrix elements $\bar{v}_{acbd}$.
+\end{enumerate}
+
+When the coupling of spatial and spin part is not separated, spinorbitals can be directly multiplied to get
+\begin{align}
+\big[\psi_a^\dagger(r_1\sigma_1)\psi_b(r_1\sigma_1)\big] &=
+R_a(r_1)R_b(r_1)\sum_{LM}(-1)^{j_a+m_a+j_b+L+\frac{1}{2}}
+\sqrt{\frac{(2j_a+1)(2j_b+1)(2l_a+1)(2l_b+1)}{4\pi(2L+1)}} \nonumber\\
+\label{psi_ab} &\qquad\qquad\qquad\qquad
+\times\begin{Bmatrix} j_a & j_b & L \\ l_b & l_a & \frac{1}{2} \end{Bmatrix}
+C_{l_a 0 l_b 0}^{L 0} C_{j_a,-m_a,j_b,m_b}^{L,M} Y_{LM}(\hat{r}_1)
+\tag{V.~7.2.40}
+\end{align}
+Summation of the second bracket with density matrix leads to
+\begin{align}
+\sum_m\big[\psi_c^\dagger(r_2\sigma_2)\psi_d(r_2\sigma_2)\big]\rho_{dc}^{(j,l)} &=
+\rho_{dc}^{(j,l)} R_c(r_2) R_d(r_2) \sum_L
+\Big[\sum_m(-1)^{j+m}C_{j,-m,j,m}^{L,0}\Big] \nonumber\\
+&\qquad\times\frac{(2j+1)(2l+1)}{\sqrt{4\pi(2L+1)}}
+\begin{Bmatrix} j & j & L \\ l & l & \frac{1}{2} \end{Bmatrix}
+(-1)^{j+L+\frac{1}{2}} C_{l 0 l 0}^{L 0} Y_{L0}(\hat{r}_2)
+\end{align}
+This expression can be simplified by the following steps (orthogonality of CG coefficients etc.):
+\begin{equation}
+(-1)^{j+m} = \sqrt{2j+1}\,C_{j,-m,j,m}^{0,0},\quad
+\sum_m(-1)^{j+m}C_{j,-m,j,m}^{L,0} = \sqrt{2j+1}\,\delta_{L0}
+\tag{V.~8.5.1, 8.7.2 or 4}
+\end{equation}
+\begin{equation}
+C_{l0l0}^{00} = \frac{(-1)^l}{\sqrt{2l+1}},\quad
+\begin{Bmatrix} j & j & 0 \\ l & l & \frac{1}{2} \end{Bmatrix} =
+\frac{(-1)^{j+l+\frac{1}{2}}}{\sqrt{(2l+1)(2j+1)}}
+\tag{V.~9.5.1}
+\end{equation}
+to get
+\begin{equation}
+\sum_m\big[\psi_c^\dagger(r_2\sigma_2)\psi_d(r_2\sigma_2)\big]\rho_{dc}^{(j,l)} =
+(2j+1)\rho_{dc}^{(j,l)} R_c(r_2) R_d(r_2) \frac{1}{\sqrt{4\pi}}Y_{00}^*(\hat{r}_2)
+\end{equation}
+From $L=0$, I get $j_a=j_b$, $l_a=l_b$, and $m_a=m_b$ in (\ref{psi_ab}) due to Clebsch-Gordan coefficients (or $6j$ symbol), using also $C_{j,-m,j,m}^{0,0} = (-1)^{j+m}/\sqrt{2j+1}$:
+\begin{align}
+\sum_m &\big[\psi_a^\dagger(r_1\sigma_1)\psi_b(r_1\sigma_1)\big]V_{12}
+\big[\psi_c^\dagger(r_2\sigma_2)\psi_d(r_2\sigma_2)\big]\rho_{dc}^{(j,l)} =\nonumber\\
+\label{HFterm1}
+&= (2j+1)\rho_{dc}^{(j,l)} \int_0^\infty r_1^2\mathrm{d}r_1
+\int_0^\infty r_2^2\mathrm{d}r_2 R_a(r_1) R_b(r_1)
+\frac{\mathrm{e}^{-\mu(r_1-r_2)^2}-\mathrm{e}^{-\mu(r_1+r_2)^2}}{4\mu r_1 r_2}
+R_c(r_2) R_d(r_2) \qquad \textbf{[+]}
+\end{align}
+
+Exchange term in (\ref{v_dec1}) is more complicated:
+\begin{align}
+\sum_m &\big[\psi_a^\dagger(r_1\sigma_1)\psi_d(r_1\sigma_1)\big]V_{12}
+\big[\psi_c^\dagger(r_2\sigma_2)\psi_b(r_2\sigma_2)\big]\rho_{dc}^{(j,l)} =\nonumber\\
+&= \rho_{dc}^{(j,l)} \int_0^\infty r_1^2\mathrm{d}r_1
+\int_0^\infty r_2^2\mathrm{d}r_2 R_a(r_1) R_d(r_1)
+\mathrm{e}^{-\mu(r_1-r_2)^2} R_c(r_2) R_b(r_2)
+\sum_{LM}\frac{i_L(2\mu r_1 r_2)}{\exp(2\mu r_1 r_2)}
+\frac{(-1)^{j_a-j_b+m_a-m_b}}{2L+1} \nonumber\\
+&\quad\times \sqrt{(2j_a+1)(2j_b+1)(2l_a+1)(2l_b+1)}\,(2j+1)(2l+1)
+\begin{Bmatrix} j_a & j & L \\ l & l_a & \frac{1}{2} \end{Bmatrix}
+\begin{Bmatrix} j & j_b & L \\ l_b & l & \frac{1}{2} \end{Bmatrix}
+C_{l_a 0 l 0}^{L0} C_{l 0 l_b 0}^{L0} \nonumber\\
+&\quad\times \sum_m C_{j_a,-m_a,j,m}^{L,M} C_{j,-m,j_b,m_b}^{L,-M}
+\end{align}
+Sum over $m$ and $M$ in two last CG coefficients is
+\begin{equation}
+\sum_{mM} C_{j_a,-m_a,j,m}^{L,M} C_{j,-m,j_b,m_b}^{L,-M} = \frac{2L+1}{\sqrt{(2j_a+1)(2j_b+1)}}\sum_{mM} C_{L,-M,j,m}^{j_a,m_a} C_{L,-M,j,m}^{j_b,m_b}
+= \frac{2L+1}{2j_a+1} \delta_{j_a j_b} \delta_{m_a m_b}
+\end{equation}
+Then, the coefficients $C_{l_a 0 l 0}^{L0} C_{l 0 l_b 0}^{L0}$ imply that both $l_a,\,l_b$ are either even or odd. So they are equal (due to $j=l\pm\tfrac{1}{2}$). Final result is
+\begin{align}
+\sum_m &\big[\psi_a^\dagger(r_1\sigma_1)\psi_d(r_1\sigma_1)\big]V_{12}
+\big[\psi_c^\dagger(r_2\sigma_2)\psi_b(r_2\sigma_2)\big]\rho_{dc}^{(j,l)} =\nonumber\\
+&= (2j+1)\rho_{dc}^{(j,l)} \int_0^\infty r_1^2\mathrm{d}r_1
+\int_0^\infty r_2^2\mathrm{d}r_2 R_a(r_1) R_d(r_1)
+\mathrm{e}^{-\mu(r_1-r_2)^2} R_c(r_2) R_b(r_2) \nonumber\\
+&\qquad\times (2l_a+1)(2l+1)\sum_L \frac{i_L(2\mu r_1 r_2)}{\exp(2\mu r_1 r_2)}
+\begin{Bmatrix} j_a & j & L \\ l & l_a & \frac{1}{2} \end{Bmatrix}^2
+\Big(C_{l_a 0 l 0}^{L0}\Big)^2 \qquad \textbf{[--]}
+\end{align}
+
+Terms with spin-exchanged coordinates (\ref{v_dec2}) need to be decomposed to spatial and spin part (\ref{spin-orbit}). Spatial part will be coupled first:
+\begin{equation}
+Y_{l_a,m_a-\sigma_1}^*(\hat{r}_1) Y_{l_b,m_b-\sigma_2}(\hat{r}_1) =
+\sum_{LM} (-1)^{m_a-\sigma_1}
+\sqrt{\frac{(2l_a+1)(2l_b+1)}{4\pi(2L+1)}}\,C_{l_a 0 l_b 0}^{L 0}
+C_{l_a,-m_a+\sigma_1,l_b,m_b-\sigma_2}^{L,M}
+Y_{LM}(\hat{r}_1)
+\tag{V.~5.6.9}
+\end{equation}
+and spin part $\sigma_{1,2}$ will be coupled and eliminated later. Second bracket of the first term in (\ref{v_dec2}) after summation with $\rho_{dc}$ gives:
+\begin{align}
+\sum_m \big[\psi_c^\dagger(r_2\sigma_2)\psi_d(r_2\sigma_1)\big]\rho_{dc}^{(j,l)} &=
+\rho_{dc}^{(j,l)} R_c(r_2)R_d(r_2)\sum_L \frac{2l+1}{\sqrt{4\pi(2L+1)}}
+C_{l0l0}^{L0} Y_{L,\sigma_2-\sigma_1}(\hat{r}_2) \nonumber\\
+\label{HFterm3a}
+&\quad\times \sum_m (-1)^{m-\sigma_2} C_{l,m-\sigma_2,\frac{1}{2},\sigma_2}^{j,m}
+C_{l,m-\sigma_1,\frac{1}{2},\sigma_1}^{j,m}
+C_{l,-m+\sigma_2,l,m-\sigma_1}^{L,\sigma_2-\sigma_1}
+\end{align}
+The sum of CG coefficients in the last line can be converted into a $6j$ symbol:
+\begin{align}
+\sum_m (-1)^{m-\sigma_2} &C_{l,-m+\sigma_2,l,m-\sigma_1}^{L,\sigma_2-\sigma_1}
+C_{l,m-\sigma_2,\frac{1}{2},\sigma_2}^{j,m}
+C_{l,m-\sigma_1,\frac{1}{2},\sigma_1}^{j,m} = \nonumber\\
+&=(-1)^{j+\frac{1}{2}} \sqrt{\frac{2L+1}{2}}\,(2j+1)
+C_{L,\sigma_2-\sigma_1,\frac{1}{2},\sigma_1}^{\frac{1}{2},\sigma_2}
+\begin{Bmatrix} l & l & L \\ \frac{1}{2} & \frac{1}{2} & j \end{Bmatrix}
+\tag{V.~8.7.16} \\
+&= (-1)^{l}\frac{2j+1}{2\sqrt{2l+1}}\delta_{\sigma_1\sigma_2}
+\end{align}
+The last equality is based on the following: Triangular inequality in the obtained CG coefficient allows an $L$ equal to 0 or 1. So, according to $C_{l0l0}^{L0}$ in (\ref{HFterm3a}), $L$ is even, and thus $L=0$ and $\sigma_1 = \sigma_2$. Then, $l_a = l_b$ follows from $C_{l_a 0 l_b 0}^{00}$, $m_a = m_b$ follows from $C_{l_a,-m_a+\sigma,l_a,m_b-\sigma}^{0,0}$, and $j_a = j_b$ follows from
+\begin{equation}
+\sum_{\sigma} C_{l_a,m_a-\sigma,\frac{1}{2},\sigma}^{j_a,m_a}
+C_{l_a,m_a-\sigma,\frac{1}{2},\sigma}^{j_b,m_a} = \delta_{j_a j_b}
+\tag{V.~8.7.4}
+\end{equation}
+Final result for the third term of (\ref{v_dec}) is then (it is half of the first term (\ref{HFterm1}))
+\begin{align}
+\sum_m &\big[\psi_a^\dagger(r_1\sigma_1)\psi_b(r_1\sigma_2)\big]V_{12}
+\big[\psi_c^\dagger(r_2\sigma_2)\psi_d(r_2\sigma_1)\big]\rho_{dc}^{(j,l)} =\nonumber\\
+&= \frac{1}{2} (2j+1)\rho_{dc}^{(j,l)} \int_0^\infty r_1^2\mathrm{d}r_1
+\int_0^\infty r_2^2\mathrm{d}r_2 R_a(r_1) R_b(r_1)
+\frac{\mathrm{e}^{-\mu(r_1-r_2)^2}-\mathrm{e}^{-\mu(r_1+r_2)^2}}{4\mu r_1 r_2}
+R_c(r_2) R_d(r_2) \qquad \textbf{[--]}
+\end{align}
+
+Last term is more tricky, since simplifications are possible only when the term is written in its entirety:
+\begin{align}
+\sum_m &\big[\psi_a^\dagger(r_1\sigma_1)\psi_d(r_1\sigma_2)\big]V_{12}
+\big[\psi_c^\dagger(r_2\sigma_2)\psi_b(r_2\sigma_1)\big]\rho_{dc}^{(j,l)} =\nonumber\\
+&= \rho_{dc}^{(j,l)}\int_0^\infty r_1^2\mathrm{d}r_1
+\int_0^\infty r_2^2\mathrm{d}r_2 R_a(r_1) R_d(r_1)
+\mathrm{e}^{-\mu(r_1-r_2)^2} R_c(r_2) R_b(r_2) \\
+&\quad\times\sum_L \frac{i_L(2\mu r_1 r_2)}{\exp(2\mu r_1 r_2)}
+\frac{\sqrt{(2l_a+1)(2l_b+1)}\,(2l+1)}{2L+1}
+C_{l_a 0 l 0}^{L0} C_{l 0 l_b 0}^{L0} (-1)^{m_a-m_b} \nonumber\\
+&\quad\times\sum_{mM\sigma_1\sigma_2}
+C_{l_a,m_a-\sigma_1,\frac{1}{2},\sigma_1}^{j_a,m_a}
+C_{l,m-\sigma_2,\frac{1}{2},\sigma_2}^{j,m}
+C_{l_a,-m_a+\sigma_1,l,m-\sigma_2}^{L,M}
+C_{l,m-\sigma_2,\frac{1}{2},\sigma_2}^{j,m}
+C_{l_b,m_b-\sigma_1,\frac{1}{2},\sigma_1}^{j_b,m_b}
+C_{l,-m+\sigma_2,l_b,m_b-\sigma_1}^{L,-M} \nonumber
+\end{align}
+Last summation contains four degrees of freedom (in fact, only three degrees of freedom give nontrivial contribution) which have to be treated carefully. First I will sum over $m$ and $\sigma_2$, keeping constant $m-\sigma_2$ (thus eliminating one degree of freedom), then over $m-\sigma_2$ and $M$, and finally over $\sigma_1$:
+\begin{subequations}
+\begin{align}
+\sum_{m,\sigma_2}^{(1)} C_{l,m-\sigma_2,\frac{1}{2},\sigma_2}^{j,m}
+C_{l,m-\sigma_2,\frac{1}{2},\sigma_2}^{j,m} &=
+\frac{2j+1}{2l+1}\sum_{m,\sigma_2}^{(1)}
+C_{j,-m,\frac{1}{2},\sigma_2}^{l,-m+\sigma_2}
+C_{j,-m,\frac{1}{2},\sigma_2}^{l,-m+\sigma_2} = \frac{2j+1}{2l+1} \\
+\sum_{m-\sigma_2,M} C_{l_a,-m_a+\sigma_1,l,m-\sigma_2}^{L,M}
+C_{l,-m+\sigma_2,l_b,m_b-\sigma_1}^{L,-M} &= \frac{2L+1}{\sqrt{(2l_a+1)(2l_b+1)}}
+\sum_{m-\sigma_2,M} C_{L,-M,l,m-\sigma_2}^{l_a,m_a-\sigma_1}
+C_{L,-M,l,m-\sigma_2}^{l_b,m_b-\sigma_1} \nonumber\\
+&= \frac{2L+1}{2l_a+1}\delta_{l_a l_b} \delta_{m_a m_b} \\
+\sum_{\sigma_1} C_{l_a,m_a-\sigma_1,\frac{1}{2},\sigma_1}^{j_a,m_a}
+C_{l_a,m_a-\sigma_1,\frac{1}{2},\sigma_1}^{j_b,m_a} &= \delta_{j_a j_b}
+\end{align}
+\end{subequations}
+The fourth term of (\ref{v_dec}) is then
+\begin{align}
+\sum_m &\big[\psi_a^\dagger(r_1\sigma_1)\psi_d(r_1\sigma_2)\big]V_{12}
+\big[\psi_c^\dagger(r_2\sigma_2)\psi_b(r_2\sigma_1)\big]\rho_{dc}^{(j,l)} =\nonumber\\
+&= (2j+1)\rho_{dc}^{(j,l)} \int_0^\infty r_1^2\mathrm{d}r_1
+\int_0^\infty r_2^2\mathrm{d}r_2 R_a(r_1) R_d(r_1)
+\mathrm{e}^{-\mu(r_1-r_2)^2} R_c(r_2) R_b(r_2)
+\sum_L \frac{i_L(2\mu r_1 r_2)}{\exp(2\mu r_1 r_2)}
+\Big(C_{l_a 0 l 0}^{L0}\Big)^2 \quad \textbf{[+]}
+\end{align}
+
+\section{Matrix elements of the particle-particle part (for HFB)}
+Pairing part of the HFB mean-field is
+\begin{equation}
+\Delta_{ab} = \frac{1}{2}\sum_{cd} \bar{v}_{abcd}\kappa_{cd} \qquad\textrm{where }
+\kappa_{cd}=\langle\mathrm{HFB}|\hat{a}_d\hat{a}_c|\mathrm{HFB}\rangle
+\end{equation}
+Independence of $\kappa_{cd}$ on $m$ has to be treated more carefully, it is not given a priori, also because $m_c = -m_d$. It turns out that independence on $m$ can be implemented by using time-reversed states (I use convention $\hat{T} = \mathrm{i}\hat{\sigma}_y\hat{K}$, where $\hat{K}$ is complex conjugation):
+\begin{equation}
+\psi_{\bar{a}} = \hat{T}\psi_a = \begin{pmatrix} 0 & 1 \\ -1 & 0 \end{pmatrix}
+\psi_a^* = R_{n_a,l_a}\sum_\sigma C_{l_a,m_a-\sigma,\frac{1}{2},\sigma}^{j_a,m_a}
+(-1)^{m_a-\sigma} Y_{l_a,-m_a+\sigma} (-1)^{\sigma+\frac{1}{2}} \chi_{-\sigma}
+= (-1)^{l_a+j_a+m_a}\psi_{-a}
+\end{equation}
+where $-a=(n_a,j_a,l_a,-m_a)$. So an $m$-independent pairing tensor can be defined as
+\begin{equation}
+\kappa_{c\bar{d}}^{(j,l)} = (-1)^{l+j+m}\kappa_{c,-d} \qquad(m=m_c=m_d)
+\end{equation}
+Matrix element of the interaction can be then calculated in four parts
+\begin{subequations}\label{vpair_dec}
+\begin{align}
+\label{vpair_dec1}
+\bar{v}_{a\bar{b}c\bar{d}} &= \big[\psi_a^\dagger(r_1\sigma_1)\psi_c(r_1\sigma_1)\big]V_{12}
+\big[\psi_{\bar{b}}^\dagger(r_2\sigma_2)\psi_{\bar{d}}(r_2\sigma_2)\big]
+- \big[\psi_a^\dagger(r_1\sigma_1)\psi_{\bar{d}}(r_1\sigma_1)\big]V_{12}
+\big[\psi_{\bar{b}}^\dagger(r_2\sigma_2)\psi_c(r_2\sigma_2)\big] \\
+\label{vpair_dec2}
+&\quad -\big[\psi_a^\dagger(r_1\sigma_1)\psi_c(r_1\sigma_2)\big]V_{12}
+\big[\psi_{\bar{b}}^\dagger(r_2\sigma_2)\psi_{\bar{d}}(r_2\sigma_1)\big]
++ \big[\psi_a^\dagger(r_1\sigma_1)\psi_{\bar{d}}(r_1\sigma_2)\big]V_{12}
+\big[\psi_{\bar{b}}^\dagger(r_2\sigma_2)\psi_c(r_2\sigma_1)\big]
+\end{align}
+\end{subequations}
+
+The first term is
+\begin{align}
+\sum_m &\big[\psi_a^\dagger(r_1\sigma_1)\psi_c(r_1\sigma_1)\big]V_{12}
+\big[\psi_{\bar{b}}^\dagger(r_2\sigma_2)\psi_{\bar{d}}(r_2\sigma_2)\big]
+\kappa_{c\bar{d}}^{(j,l)} = \nonumber\\
+&\quad =\kappa_{c\bar{d}}^{(j,l)} \int_0^\infty r_1^2\mathrm{d}r_1
+\int_0^\infty r_2^2\mathrm{d}r_2 R_a(r_1) R_c(r_1) \mathrm{e}^{-\mu(r_1-r_2)^2}
+R_b(r_2) R_d(r_2) \sum_{LM}\frac{i_L(2\mu r_1 r_2)}{\exp(2\mu r_1 r_2)}
+\frac{(2j+1)(2l+1)}{2L+1} \nonumber\\
+&\qquad\times\sqrt{(2j_a+1)(2j_b+1)(2l_a+1)(2l_b+1)}\,
+\begin{Bmatrix} j_a & j & L \\ l & l_a & \frac{1}{2} \end{Bmatrix}
+\begin{Bmatrix} j_b & j & L \\ l & l_b & \frac{1}{2} \end{Bmatrix}
+C_{l_a 0 l 0}^{L0} C_{l_b 0 l 0}^{L0} \nonumber\\
+&\qquad\times\sum_m (-1)^{j_a-j_b+m_a+m}(-1)^{l_b+l+j_b+j+m_b+m}
+C_{j_a,-m_a,j,m}^{L,M} C_{j_b,m_b,j,-m}^{L,-M}
+\end{align}
+Sum over $m$ and $M$ is evaluated as
+\begin{equation}
+\sum_{mM} C_{j_a,-m_a,j,m}^{L,M} C_{j_b,m_b,j,-m}^{L,-M} =
+\frac{(-1)^{j_b+j-L} (2L+1)}{\sqrt{(2j_a+1)(2j_b+1)}} \sum_{mM}
+C_{L,-M,j,m}^{j_a,m_a} C_{L,-M,j,m}^{j_b,m_b} =
+(-1)^{j_a+j+L} \frac{2L+1}{2j_a+1} \delta_{j_a j_b} \delta_{m_a m_b}
+\end{equation}
+Equality $l_a=l_b$ then follows from parity in $C_{l_a 0 l 0}^{L0} C_{l_b 0 l 0}^{L0}$. Final result is
+\begin{align}
+\sum_m &\big[\psi_a^\dagger(r_1\sigma_1)\psi_c(r_1\sigma_1)\big]V_{12}
+\big[\psi_{\bar{b}}^\dagger(r_2\sigma_2)\psi_{\bar{d}}(r_2\sigma_2)\big]
+\kappa_{c\bar{d}}^{(j,l)} = \nonumber\\
+&\quad =(2j+1)\kappa_{c\bar{d}}^{(j,l)} \int_0^\infty r_1^2\mathrm{d}r_1
+\int_0^\infty r_2^2\mathrm{d}r_2 R_a(r_1) R_c(r_1) \mathrm{e}^{-\mu(r_1-r_2)^2}
+R_b(r_2) R_d(r_2) \nonumber\\
+&\qquad\times(2l_a+1)(2l+1) \sum_L\frac{i_L(2\mu r_1 r_2)}{\exp(2\mu r_1 r_2)}
+\begin{Bmatrix} j_a & j & L \\ l & l_a & \frac{1}{2} \end{Bmatrix}^2
+\Big(C_{l_a 0 l 0}^{L0}\Big)^2 \qquad \textbf{[+]}
+\end{align}
+
+The second term is
+\begin{align}
+\sum_m &\big[\psi_a^\dagger(r_1\sigma_1)\psi_{\bar{d}}(r_1\sigma_1)\big]V_{12}
+\big[\psi_{\bar{b}}^\dagger(r_2\sigma_2)\psi_c(r_2\sigma_2)\big]
+\kappa_{c\bar{d}}^{(j,l)} = \nonumber\\
+&\quad =\kappa_{c\bar{d}}^{(j,l)} \int_0^\infty r_1^2\mathrm{d}r_1
+\int_0^\infty r_2^2\mathrm{d}r_2 R_a(r_1) R_d(r_1) \mathrm{e}^{-\mu(r_1-r_2)^2}
+R_b(r_2) R_c(r_2) \sum_{LM}\frac{i_L(2\mu r_1 r_2)}{\exp(2\mu r_1 r_2)}
+\frac{(2j+1)(2l+1)}{2L+1} \nonumber\\
+&\qquad\times\sqrt{(2j_a+1)(2j_b+1)(2l_a+1)(2l_b+1)}\,
+\begin{Bmatrix} j_a & j & L \\ l & l_a & \frac{1}{2} \end{Bmatrix}
+\begin{Bmatrix} j_b & j & L \\ l & l_b & \frac{1}{2} \end{Bmatrix}
+C_{l_a 0 l 0}^{L0} C_{l_b 0 l 0}^{L0} \nonumber\\
+&\qquad\times\sum_m (-1)^{j_a-j_b+m_a-m}(-1)^{l+l_b+j+j_b+m+m_b}
+C_{j_a,-m_a,j,-m}^{L,M} C_{j_b,m_b,j,m}^{L,-M} \nonumber\\
+&\quad= -(2j+1)\kappa_{c\bar{d}}^{(j,l)} \int_0^\infty r_1^2\mathrm{d}r_1
+\int_0^\infty r_2^2\mathrm{d}r_2 R_a(r_1) R_d(r_1) \mathrm{e}^{-\mu(r_1-r_2)^2}
+R_b(r_2) R_c(r_2) \nonumber\\
+&\qquad\times(2l_a+1)(2l+1) \sum_L\frac{i_L(2\mu r_1 r_2)}{\exp(2\mu r_1 r_2)}
+\begin{Bmatrix} j_a & j & L \\ l & l_a & \frac{1}{2} \end{Bmatrix}^2
+\Big(C_{l_a 0 l 0}^{L0}\Big)^2 \qquad \textbf{[--]}
+\end{align}
+
+The third term is
+\begin{align}
+\sum_m &\big[\psi_a^\dagger(r_1\sigma_1)\psi_c(r_1\sigma_2)\big]V_{12}
+\big[\psi_{\bar{b}}^\dagger(r_2\sigma_2)\psi_{\bar{d}}(r_2\sigma_1)\big]
+\kappa_{c\bar{d}}^{(j,l)} = \nonumber\\
+&\quad =\kappa_{c\bar{d}}^{(j,l)} \int_0^\infty r_1^2\mathrm{d}r_1
+\int_0^\infty r_2^2\mathrm{d}r_2 R_a(r_1) R_c(r_1) \mathrm{e}^{-\mu(r_1-r_2)^2}
+R_b(r_2) R_d(r_2) \sum_{LM}\frac{i_L(2\mu r_1 r_2)}{\exp(2\mu r_1 r_2)}
+\frac{2l+1}{2L+1} \nonumber\\
+&\qquad\times\sqrt{(2l_a+1)(2l_b+1)}\,
+C_{l_a 0 l 0}^{L0} C_{l_b 0 l 0}^{L0} \sum_{m\sigma_1\sigma_2}
+(-1)^{m_a+m+l_b+l+j_b+j+m_b+m} \nonumber\\
+&\qquad\times C_{l_a,m_a-\sigma_1,\frac{1}{2},\sigma_1}^{j_a,m_a}
+C_{l,m-\sigma_2,\frac{1}{2},\sigma_2}^{j,m}
+C_{l_a,-m_a+\sigma_1,l,m-\sigma_2}^{L,M}
+C_{l_b,-m_b-\sigma_2,\frac{1}{2},\sigma_2}^{j_b,-m_b}
+C_{l,-m-\sigma_1,\frac{1}{2},\sigma_1}^{j,-m}
+C_{l_b,m_b+\sigma_2,l,-m-\sigma_1}^{L,-M}
+\end{align}
+The sum can be converted into a $9j$ symbol:
+\begin{align}
+\sum_{mM\sigma_1\sigma_2}\!\!\! &
+C_{l_a,-m_a+\sigma_1,l,m-\sigma_2}^{L,M}
+C_{l,-m-\sigma_1,\frac{1}{2},\sigma_1}^{j,-m}
+C_{l_a,m_a-\sigma_1,\frac{1}{2},\sigma_1}^{j_a,m_a}
+C_{l_b,m_b+\sigma_2,l,-m-\sigma_1}^{L,-M}
+C_{l,m-\sigma_2,\frac{1}{2},\sigma_2}^{j,m}
+C_{l_b,-m_b-\sigma_2,\frac{1}{2},\sigma_2}^{j_b,-m_b} = \nonumber\\
+&\quad=\sum_{mM\sigma_1\sigma_2}
+(-1)^{-\sigma_2-\sigma_1+l+\frac{1}{2}-j+l_b+l-L+\sigma_1+\sigma_2+l_b+\frac{1}{2}-j_b}
+\frac{(2L+1)(2j+1)}{2\sqrt{(2l_a+1)(2l_b+1)}} \nonumber\\
+&\qquad\qquad\times C_{L,-M,l,m-\sigma_2}^{l_a,m_a-\sigma_1}
+C_{l,m+\sigma_1,j,-m}^{\frac{1}{2},\sigma_1}
+C_{l_a,m_a-\sigma_1,\frac{1}{2},\sigma_1}^{j_a,m_a}
+C_{L,-M,l,m+\sigma_1}^{l_b,m_b+\sigma_2}
+C_{l,m-\sigma_2,j,-m}^{\frac{1}{2},-\sigma_2}
+C_{l_b,m_b+\sigma_2,\frac{1}{2},-\sigma_2}^{j_b,m_b} \nonumber\\
+&\quad=(-1)^{L+j-j_b} (2L+1)(2j+1)
+\begin{Bmatrix} L & l & l_a \\ l & j & \frac{1}{2} \\
+l_b & \frac{1}{2} & j_a \end{Bmatrix}\delta_{j_a j_b}\delta_{m_a m_b}
+\tag{V.~10.1.8}
+\end{align}
+Equality $l_a=l_b$ then follows from $C_{l_a 0 l 0}^{L0} C_{l_b 0 l 0}^{L0}$. The final result is
+\begin{align}
+\sum_m &\big[\psi_a^\dagger(r_1\sigma_1)\psi_c(r_1\sigma_2)\big]V_{12}
+\big[\psi_{\bar{b}}^\dagger(r_2\sigma_2)\psi_{\bar{d}}(r_2\sigma_1)\big]
+\kappa_{c\bar{d}}^{(j,l)} = \nonumber\\
+&\quad =-(2j+1)\kappa_{c\bar{d}}^{(j,l)} \int_0^\infty r_1^2\mathrm{d}r_1
+\int_0^\infty r_2^2\mathrm{d}r_2 R_a(r_1) R_c(r_1) \mathrm{e}^{-\mu(r_1-r_2)^2}
+R_b(r_2) R_d(r_2) \nonumber\\
+&\qquad\times (2l_a+1)(2l+1) \sum_L\frac{i_L(2\mu r_1 r_2)}{\exp(2\mu r_1 r_2)}
+\begin{Bmatrix} L & l & l_a \\ l & j & \frac{1}{2} \\
+l_a & \frac{1}{2} & j_a \end{Bmatrix}
+\Big(C_{l_a 0 l 0}^{L0}\Big)^2 \qquad \textbf{[--]}
+\end{align}
+
+The fourth term is similar
+\begin{align}
+\sum_m &\big[\psi_a^\dagger(r_1\sigma_1)\psi_{\bar{d}}(r_1\sigma_2)\big]V_{12}
+\big[\psi_{\bar{b}}^\dagger(r_2\sigma_2)\psi_c(r_2\sigma_1)\big]
+\kappa_{c\bar{d}}^{(j,l)} = \nonumber\\
+&\quad =\kappa_{c\bar{d}}^{(j,l)} \int_0^\infty r_1^2\mathrm{d}r_1
+\int_0^\infty r_2^2\mathrm{d}r_2 R_a(r_1) R_d(r_1) \mathrm{e}^{-\mu(r_1-r_2)^2}
+R_b(r_2) R_c(r_2) \sum_{LM}\frac{i_L(2\mu r_1 r_2)}{\exp(2\mu r_1 r_2)}
+\frac{2l+1}{2L+1} \nonumber\\
+&\qquad\times\sqrt{(2l_a+1)(2l_b+1)}\,
+C_{l_a 0 l 0}^{L0} C_{l_b 0 l 0}^{L0} \sum_{m\sigma_1\sigma_2}
+(-1)^{m_a-m+l+l_b+j+j_b+m+m_b} \nonumber\\
+&\qquad\times C_{l_a,m_a-\sigma_1,\frac{1}{2},\sigma_1}^{j_a,m_a}
+C_{l,-m-\sigma_2,\frac{1}{2},\sigma_2}^{j,-m}
+C_{l_a,-m_a+\sigma_1,l,-m-\sigma_2}^{L,M}
+C_{l_b,-m_b-\sigma_2,\frac{1}{2},\sigma_2}^{j_b,-m_b}
+C_{l,m-\sigma_1,\frac{1}{2},\sigma_1}^{j,m}
+C_{l_b,m_b+\sigma_2,l,m-\sigma_1}^{L,-M} \nonumber\\
+&\quad =(2j+1)\kappa_{c\bar{d}}^{(j,l)} \int_0^\infty r_1^2\mathrm{d}r_1
+\int_0^\infty r_2^2\mathrm{d}r_2 R_a(r_1) R_d(r_1) \mathrm{e}^{-\mu(r_1-r_2)^2}
+R_b(r_2) R_c(r_2) \nonumber\\
+&\qquad\times (2l_a+1)(2l+1) \sum_L\frac{i_L(2\mu r_1 r_2)}{\exp(2\mu r_1 r_2)}
+\begin{Bmatrix} L & l & l_a \\ l & j & \frac{1}{2} \\
+l_a & \frac{1}{2} & j_a \end{Bmatrix}
+\Big(C_{l_a 0 l 0}^{L0}\Big)^2 \qquad \textbf{[+]}
+\end{align}
+
+\section{Some considerations of HFB equations}
+During the solution of Hartree-Fock-Bogoliubov task, the particle creation and annihilation operators in spherical harmonic oscillator basis $\hat{a}_a^+,\,\hat{a}_a$ are transformed into quasiparticle creation and annihilation operators $\hat{\beta}_k^+,\,\hat{\beta}_k$, so that
+\begin{equation}
+\hat{\beta}_k|\mathrm{HFB}\rangle = 0, \qquad
+\hat{\beta}_k^+|\mathrm{HFB}\rangle = |k\rangle, \qquad
+\langle k|\hat{H}|k \rangle -
+\langle\mathrm{HFB}|\hat{H}|\mathrm{HFB}\rangle = E_k
+\end{equation}
+The transformation between particles and quasiparticles is unitary
+\begin{equation}
+\begin{array}{ll}
+\displaystyle\hat{\beta}_k^+ = \sum_a U_{ak}\hat{a}_a^+ + V_{ak}\hat{a}_a \qquad &
+\displaystyle\hat{a}_a^+ = \sum_k U_{ak}^*\hat{\beta}_k^+ + V_{ak}\hat{\beta}_k \\
+\displaystyle\hat{\beta}_k = \sum_a V_{ak}^*\hat{a}_a^+ + U_{ak}^*\hat{a}_a &
+\displaystyle\hat{a}_a = \sum_k V_{ak}^*\hat{\beta}_k^+ + U_{ak}\hat{\beta}_k
+\end{array}
+\end{equation}
+Density matrices are then
+\begin{equation}
+\rho_{ab} = \langle\mathrm{HFB}|\hat{a}_b^+\hat{a}_a|\mathrm{HFB}\rangle
+= \sum_k V_{bk} V_{ak}^*, \qquad
+\kappa_{ab} = \langle\mathrm{HFB}|\hat{a}_b\hat{a}_a|\mathrm{HFB}\rangle
+= \sum_k U_{bk} V_{ak}^*
+\end{equation}
+The ground state energy is
+\begin{equation}
+E_0 = \sum_{ab} t_{ab} +
+\frac{1}{2}\sum_{abcd} \bar{v}_{acbd}\rho_{ba}\rho_{dc} +
+\frac{1}{4}\sum_{abcd} \bar{v}_{abcd}\kappa_{ab}^*\kappa_{cd}
+\end{equation}
+The HFB equations (with particle-number constrain) can be formulated as an eigenvalue problem
+\begin{equation}
+\label{HFB_eq}
+\begin{pmatrix} h-\lambda & \Delta \\ -\Delta^* & -h^*+\lambda \end{pmatrix}
+\begin{pmatrix} U_k \\ V_k \end{pmatrix} = \begin{pmatrix} U_k \\ V_k \end{pmatrix} E_k
+\end{equation}
+
+Since our system has spherical symmetry, the matrices and coefficients are real and the only non-zero terms are (I consider $m_a = m_b$ in each term)
+\begin{equation}
+h_{ab} = h_{\bar{a}\bar{b}},\quad \Delta_{a\bar{b}} = -\Delta_{\bar{a}b},\quad
+U_{ak} = U_{\bar{a}\bar{k}},\quad V_{a\bar{k}} = -V_{\bar{a}k},\quad
+\rho_{ab} = \rho_{\bar{a}\bar{b}},\quad \kappa_{a\bar{b}} = -\kappa_{\bar{a}b}
+\end{equation}
+Similarly as in the previous section, I will prefer terms $h_{ab},\,\Delta_{a\bar{b}},\,\rho_{ab},\,\kappa_{a\bar{b}}$ in the final expressions. So for example
+\begin{equation}
+\hat{\beta}_k^+ = \sum_a U_{ak}\hat{a}_a^+ - V_{a\bar{k}}\hat{a}_{\bar{a}},\quad
+\rho_{ab} = \sum_k V_{a\bar{k}}V_{b\bar{k}},\quad
+\kappa_{a\bar{b}} = \sum_k V_{a\bar{k}} U_{bk}
+\end{equation}
+The HFB equation (\ref{HFB_eq}) can be separated into blocks
+\begin{equation}
+\begin{pmatrix} h_{ab}-\lambda & 0 & 0 & \Delta_{a\bar{b}} \\
+0 & h_{\bar{a}\bar{b}}-\lambda & \Delta_{\bar{a}b} & 0 \\
+0 & -\Delta_{a\bar{b}} & -h_{ab}+\lambda & 0 \\
+-\Delta_{\bar{a}b} & 0 & 0 & -h_{\bar{a}\bar{b}}+\lambda \end{pmatrix}
+\begin{pmatrix} U_{bk} \\ 0 \\ 0 \\ V_{\bar{b}k} \end{pmatrix} \textrm{or}
+\begin{pmatrix} 0 \\ U_{\bar{b}\bar{k}} \\ V_{b\bar{k}} \\ 0 \end{pmatrix} =
+\begin{pmatrix} U_{ak} \\ 0 \\ 0 \\ V_{\bar{a}k} \end{pmatrix} \textrm{or}
+\begin{pmatrix} 0 \\ U_{\bar{a}\bar{k}} \\ V_{b\bar{k}} \\ 0 \end{pmatrix}
+E_{k,\bar{k}}
+\end{equation}
+Its solution is numerically equivalent to the solution of
+\begin{equation}
+\begin{pmatrix} h_{ab}-\lambda & -\Delta_{a\bar{b}} \\
+-\Delta_{a\bar{b}} & -h_{ab}+\lambda \end{pmatrix}
+\begin{pmatrix} U_{bk} \\ V_{b\bar{k}} \end{pmatrix} =
+E_k \begin{pmatrix} U_{ak} \\ V_{a\bar{k}} \end{pmatrix}
+\end{equation}
+
+\end{document}
