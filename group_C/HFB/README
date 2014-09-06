@@ -6,6 +6,11 @@ exp(-mu(vec{r1}-vec{r2})^2)  = exp(-mu(r1-r2)^2) * 4pi
         * sum_LM iL(2*mu*r1*r2)/exp(2*mu*r1*r2) * Y*_LM(1) * Y_LM(2)
 where iL(x)/exp(x) is (scaled) modified spherical Bessel function, calculated by GSL
 
+Program is still not working properly for open-shell drops. Newton method is almost
+unusable at the beginning, so the program is taking small steps in the vicinity of
+changing N, but still the result doesn't converge (by the way: pairing is energetically
+favorable only for small hw).
+
 
 Usage: ./run hw Nmax lmax n_part
    or: ./run -i Vme_aaa.dat n_part
