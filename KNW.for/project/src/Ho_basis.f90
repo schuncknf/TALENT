@@ -381,8 +381,6 @@ CONTAINS
 
     WRITE(*,*) 'Number of two-body matrix elements in hf basis stored for RPA= ', (RPA_ph_J_max+1)*Ho_size_all**4
 
-    !RPA_matels_j13 = 0.0_r_kind
-
     RPA_matels_j13 = (0.0_r_kind,0.0_r_kind)
 
     DO l1 = 0,Ho_lmax
@@ -418,14 +416,6 @@ CONTAINS
                             j13min = MAX(ABS((j1_2-j3_2)/2),ABS((j2_2-j4_2)/2))
 
 
-                            !for debug
-                            j12max = 2*Ho_lmax
-                            j12min = 0
-                            j13max = RPA_ph_J_max
-                            j13min = 0
-                            !end for debug
-
-                            
                             DO j13 = j13min,j13max
                                DO j12 = j12min,j12max
 
@@ -443,30 +433,9 @@ CONTAINS
                                               i3 = Ho_index(l3,jindex3,n3)
                                               i4 = Ho_index(l4,jindex4,n4)
 
-!!$
-!!$                                              !for debug
-!!$                                              WRITE(*,*) 'j12=',j12,'j13=',j13,'i1,i2,i3,i4=',i1,i2,i3,i4
-!!$                                              !end for debug
-
-
-                                              !new:
-!!$                                              RPA_matels_j13(j13,i1,i2,i3,i4) = RPA_matels_j13(j13,i1,i2,i3,i4) + geom &                
-!!$                                                   *COMPLEX(matels_j12(j12,i1,i2,i3,i4),0.0_r_kind)&
-!!$                                                   *v_scale 
-                                              !original:
 
                                               !Transforming to HF basis
                                               DO nu1 = 0, (Ho_Nmax - l1)/2
-
-!!$                                                 !for debug
-!!$
-!!$                                                 x1 = Ho_index(l1,jindex1,nu1)
-!!$                                                 IF(ABS(hf_transform(l1,jindex1,nu1,n1))>0.0001) THEN
-!!$                                                    WRITE(*,*) 'j12=',j12,'j13=',j13,'n1=',n1,'nu1=',nu1,'i1=',i1,'x1=',x1
-!!$                                                 END IF
-!!$
-!!$                                                 !end for debug
-
                                                  DO nu2 = 0, (Ho_Nmax -l2)/2
                                                     DO nu3 = 0, (Ho_Nmax - l3)/2
                                                        DO nu4 = 0, (Ho_Nmax - l4)/2
@@ -477,22 +446,14 @@ CONTAINS
                                                           x3 = Ho_index(l3,jindex3,nu3)
                                                           x4 = Ho_index(l4,jindex4,nu4)     
 
-!!$                                                          IF(ABS(CONJG(hf_transform(l1,jindex1,nu1,n1))*CONJG(hf_transform(l2,jindex2,nu2,n2))&
-!!$                                                               *hf_transform(l3,jindex3,nu3,n3)*hf_transform(l4,jindex4,nu4,n4))>1e-10) THEN
-!!$                                                             IF(i1/=x1 .or. i2/=x2 .or. i3/=x3 .or. i4/=x4) THEN
-!!$                                                                WRITE(*,*) 'i1,i2,i3,i4=',i1,i2,i3,i4,'x1,x2,x3,x4=',x1,x2,x3,x4
-!!$                                                                WRITE(*,*) 'n1,n2,n3,n4=',n1,n2,n3,n4,'nu1,nu2,nu3,nu4=',nu1,nu2,nu3,nu4
-!!$                                                             END IF
-!!$                                                          END IF
-
-!ERROR HERE
+                                                          !ERROR HERE
 !!$                                                          RPA_matels_j13(j13,i1,i2,i3,i4) = RPA_matels_j13(j13,i1,i2,i3,i4) + geom &
 !!$                                                               *CONJG(hf_transform(l1,jindex1,nu1,n1))*CONJG(hf_transform(l2,jindex2,nu2,n1))&
 !!$                                                               *hf_transform(l3,jindex3,nu3,n3)*hf_transform(l4,jindex4,nu4,n4)&
 !!$                                                               *COMPLEX(matels_j12(j12,x1,x2,x3,x4),0.0_r_kind)&
 !!$                                                               *v_scale                                          
 
-!FIXED
+                                                          !FIXED
 
                                                           RPA_matels_j13(j13,i1,i2,i3,i4) = RPA_matels_j13(j13,i1,i2,i3,i4) + geom &
                                                                *CONJG(hf_transform(l1,jindex1,nu1,n1))*CONJG(hf_transform(l2,jindex2,nu2,n2))&
@@ -569,28 +530,6 @@ CONTAINS
 
                    !new, absorbed phases in the definition of X and Y
                    RPA_matrix(ph_parity,ph_J)%mat(II,JJ) = (-1)**((twoj(lp_pr,jindexp_pr)+twoj(lh_pr,jindexh_pr))/2)*RPA_matels_j13(ph_J,i1,i2,i3,i4)
-
-
-                   !for debug
-!!$                   RPA_matrix(ph_parity,ph_J)%mat(II,JJ)=(0.0,0.0)
-!!$                   DO j12 = 0,2*Ho_lmax
-!!$                      RPA_matrix(ph_parity,ph_J)%mat(II,JJ) = RPA_matrix(ph_parity,ph_J)%mat(II,JJ)&
-!!$                           +(-1)**((twoj(lp_pr,jindexp_pr)+twoj(lh_pr,jindexh_pr))/2)&
-!!$                           *(-1)**j12*(2*j12+1)*sixj(twoj(lh_pr,jindexh_pr),twoj(lp,jindexp),2*j12,twoj(lh,jindexh),twoj(lp_pr,jindexp_pr),2*ph_J)&
-!!$                           *COMPLEX(matels_j12(j12,i1,i2,i3,i4),0.0_r_kind)
-!!$
-!!$                   END DO
-
-                   !end for debug
-
-
-!!$                   !for debug
-!!$                   WRITE(*,*) 'i1,i2,i3,i4=',i1,i2,i3,i4,'RPA_matels_j13(ph_J,i1,i2,i3,i4)=',REAL(RPA_matels_j13(ph_J,i1,i2,i3,i4)),'RPA_matels_j13(ph_J,i4,i3,i2,i1)=',REAL(RPA_matels_j13(ph_J,i4,i3,i2,i1))
-!!$
-!!$                   WRITE(*,*) 'matels_j12(2,i1,i2,i3,i4)=',REAL(matels_j12(2,i1,i2,i3,i4)),'matels_j12(2,i4,i3,i2,i1)=',matels_j12(2,i4,i3,i2,i1)
-!!$                   !end for debug
-
-
 
                    !upper right parrt
                    i1 = Ho_index(lp,jindexp,np)
@@ -765,7 +704,7 @@ CONTAINS
     INTEGER :: outunit
 
     INTEGER :: s
-    CHARACTER(2) :: s_char
+    CHARACTER(4) :: s_char
 
     OPEN(unit=106,file = 'RPA_energies.dat')
 
@@ -810,34 +749,55 @@ CONTAINS
 
           dim2 = RPA_matrix(ph_parity,ph_J)%dim
 
-           IF(dim2 > 0) THEN
+          IF(dim2 > 0) THEN
 
-             WRITE(s_char,'(I2)') s
-             
-             WRITE(outunit,'(A6,A2,A12)') '@    s',ADJUSTL(s_char),' line type 0'
-             WRITE(outunit,'(A6,A2,A10)') '@    s',ADJUSTL(s_char),' symbol 11'
-             WRITE(outunit,'(A6,A2,A15)') '@    s',ADJUSTL(s_char),' symbol char 95'
-             WRITE(outunit,'(A6,A2,A19)') '@    s',ADJUSTL(s_char),' symbol char font 8'
-             WRITE(outunit,'(A6,A2,A16)') '@    s',ADJUSTL(s_char),' symbol size 3.0'
-             IF(ph_parity == 0) THEN
-                !WRITE(outunit,*) '#    ',ph_J,'+'
-                WRITE(outunit,'(A6,A2,A15)') '@    s',ADJUSTL(s_char),' symbol color 1'
-             ELSE
-                !WRITE(outunit,*) '#    ',ph_J,'-'
-                WRITE(outunit,'(A6,A2,A15)') '@    s',ADJUSTL(s_char),' symbol color 4'
-             END IF
+!!$             WRITE(s_char,'(I2)') s
+!!$             
+!!$             WRITE(outunit,'(A6,A2,A12)') '@    s',ADJUSTL(s_char),' line type 0'
+!!$             WRITE(outunit,'(A6,A2,A10)') '@    s',ADJUSTL(s_char),' symbol 11'
+!!$             WRITE(outunit,'(A6,A2,A15)') '@    s',ADJUSTL(s_char),' symbol char 95'
+!!$             WRITE(outunit,'(A6,A2,A19)') '@    s',ADJUSTL(s_char),' symbol char font 8'
+!!$             WRITE(outunit,'(A6,A2,A16)') '@    s',ADJUSTL(s_char),' symbol size 3.0'
+!!$             IF(ph_parity == 0) THEN
+!!$                !WRITE(outunit,*) '#    ',ph_J,'+'
+!!$                WRITE(outunit,'(A6,A2,A15)') '@    s',ADJUSTL(s_char),' symbol color 1'
+!!$             ELSE
+!!$                !WRITE(outunit,*) '#    ',ph_J,'-'
+!!$                WRITE(outunit,'(A6,A2,A15)') '@    s',ADJUSTL(s_char),' symbol color 4'
+!!$             END IF
+!!$
+!!$            
+!!$             WRITE(outunit,'(A12,A2)') '@target G0.S',ADJUSTL(s_char)
+!!$             WRITE(outunit,'(A8)') '@type xy'
+!!$             DO II = 1,dim2
+!!$                WRITE(outunit,'(F16.10,F16.10)') REAL(ph_J,kind=r_kind),REAL(RPA_E(ph_parity,ph_J)%vec(II),kind=r_kind)
+!!$             END DO
+!!$             WRITE(outunit,*) '&'
 
-            
-             WRITE(outunit,'(A12,A2)') '@target G0.S',ADJUSTL(s_char)
-             WRITE(outunit,'(A8)') '@type xy'
              DO II = 1,dim2
-                WRITE(outunit,'(F16.10,F16.10)') REAL(ph_J,kind=r_kind),REAL(RPA_E(ph_parity,ph_J)%vec(II),kind=r_kind)
-             END DO
-             WRITE(outunit,*) '&'
 
-             s = s+1
+                IF( REAL(RPA_E(ph_parity,ph_J)%vec(II),kind=r_kind) >= 0.0 ) THEN
+                   WRITE(s_char,'(I4)') s
+                   IF(ph_parity == 0) THEN
+                      WRITE(outunit,'(A6,A4,A13)') '@    s',ADJUSTL(s_char),' line color 2'
+                      WRITE(outunit,'(A6,A4,A17)') '@    s',ADJUSTL(s_char),' line linestyle 1'
+                   ELSE
+                      WRITE(outunit,'(A6,A4,A13)') '@    s',ADJUSTL(s_char),' line color 4'
+                      WRITE(outunit,'(A6,A4,A17)') '@    s',ADJUSTL(s_char),' line linestyle 3'
+                   END IF
+
+                   WRITE(outunit,'(A12,A4)') '@target G0.S',ADJUSTL(s_char)
+                   WRITE(outunit,'(A8)') '@type xy'
+                   WRITE(outunit,'(F16.10,F16.10)') REAL(ph_J,kind=r_kind)-0.2,REAL(RPA_E(ph_parity,ph_J)%vec(II),kind=r_kind)
+                   WRITE(outunit,'(F16.10,F16.10)') REAL(ph_J,kind=r_kind)+0.2,REAL(RPA_E(ph_parity,ph_J)%vec(II),kind=r_kind)
+                   WRITE(outunit,*) '&'
+
+                   s = s+1
+                END IF
+             END DO
+
           END IF
-          
+
 
        END DO
     END DO
