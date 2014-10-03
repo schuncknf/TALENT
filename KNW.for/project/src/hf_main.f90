@@ -17,12 +17,12 @@ PROGRAM hf_main
 
   logical :: is_RPA = .false. !to run RPA after hf calc
   REAL(kind=r_kind) :: RPA_v_res_scale = 1.0_r_kind !scaling of residual interaction
+  REAL(kind=r_kind) :: HF_v_2body_scale = 1.0_r_kind !scaling of 2body matrix elements used in HF calc
 
-
-  NAMELIST/hf_data/num_part,hbaromega,Nmax,lmax,tol,iter_max,mixing,is_RPA, RPA_v_res_scale
+  NAMELIST/hf_data/num_part,hbaromega,Nmax,lmax,tol,iter_max,mixing,is_RPA, RPA_v_res_scale, HF_v_2body_scale
   READ(5,NML=hf_data)
 
-  CALL hf_solver(num_part,hbaromega,b,Nmax,lmax,tol,iter_max,mixing,is_RPA)
+  CALL hf_solver(num_part,hbaromega,b,Nmax,lmax,tol,iter_max,mixing,is_RPA,HF_v_2body_scale)
   
  
 

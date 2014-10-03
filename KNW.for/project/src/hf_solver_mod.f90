@@ -5,7 +5,7 @@ MODULE hf_solver_mod
 
 CONTAINS
 
-  SUBROUTINE hf_solver(num_part,hbaromega,b,Nmax,lmax,tol,iteration_max,mixing,is_RPA)
+  SUBROUTINE hf_solver(num_part,hbaromega,b,Nmax,lmax,tol,iteration_max,mixing,is_RPA,HF_v_2body_scale)
 
   IMPLICIT NONE
 
@@ -16,6 +16,8 @@ CONTAINS
   INTEGER :: num_part
   REAL(kind=r_kind) :: e_fermi, mixing, E_HF, E_HF_v2
   LOGICAL :: is_RPA
+
+  REAL(kind=r_kind), intent(in) :: HF_v_2body_scale
 
   
   !b = 1.0_r_kind !maby have default value based on mass
@@ -48,7 +50,7 @@ CONTAINS
   WRITE(*,*) 'hbarc = ',hbarc
   WRITE(*,*) 'neuron mass = ',mnc2
   
-  CALL hf_init(is_RPA) !generates matrix elements needed etc
+  CALL hf_init(is_RPA,HF_v_2body_scale) !generates matrix elements needed etc
 
   CALL hf_init_dens(num_part) !generates initial density matrix
   

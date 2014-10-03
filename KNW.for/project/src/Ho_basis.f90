@@ -381,7 +381,9 @@ CONTAINS
 
     WRITE(*,*) 'Number of two-body matrix elements in hf basis stored for RPA= ', (RPA_ph_J_max+1)*Ho_size_all**4
 
-    RPA_matels_j13 = 0.0_r_kind
+    !RPA_matels_j13 = 0.0_r_kind
+
+    RPA_matels_j13 = (0.0_r_kind,0.0_r_kind)
 
     DO l1 = 0,Ho_lmax
        DO jindex1 = 0,1
@@ -416,8 +418,16 @@ CONTAINS
                             j13min = MAX(ABS((j1_2-j3_2)/2),ABS((j2_2-j4_2)/2))
 
 
-                            DO j12 = j12min,j12max
-                               DO j13 = j13min,j13max
+                            !for debug
+                            j12max = 2*Ho_lmax
+                            j12min = 0
+                            j13max = RPA_ph_J_max
+                            j13min = 0
+                            !end for debug
+
+                            
+                            DO j13 = j13min,j13max
+                               DO j12 = j12min,j12max
 
                                   geom = (-1)**j12*(2*j12+1)*sixj(j2_2,j1_2,2*j12,j3_2,j4_2,2*j13)
 
@@ -433,24 +443,62 @@ CONTAINS
                                               i3 = Ho_index(l3,jindex3,n3)
                                               i4 = Ho_index(l4,jindex4,n4)
 
+!!$
+!!$                                              !for debug
+!!$                                              WRITE(*,*) 'j12=',j12,'j13=',j13,'i1,i2,i3,i4=',i1,i2,i3,i4
+!!$                                              !end for debug
+
+
+                                              !new:
+!!$                                              RPA_matels_j13(j13,i1,i2,i3,i4) = RPA_matels_j13(j13,i1,i2,i3,i4) + geom &                
+!!$                                                   *COMPLEX(matels_j12(j12,i1,i2,i3,i4),0.0_r_kind)&
+!!$                                                   *v_scale 
+                                              !original:
+
+                                              !Transforming to HF basis
                                               DO nu1 = 0, (Ho_Nmax - l1)/2
+
+!!$                                                 !for debug
+!!$
+!!$                                                 x1 = Ho_index(l1,jindex1,nu1)
+!!$                                                 IF(ABS(hf_transform(l1,jindex1,nu1,n1))>0.0001) THEN
+!!$                                                    WRITE(*,*) 'j12=',j12,'j13=',j13,'n1=',n1,'nu1=',nu1,'i1=',i1,'x1=',x1
+!!$                                                 END IF
+!!$
+!!$                                                 !end for debug
+
                                                  DO nu2 = 0, (Ho_Nmax -l2)/2
                                                     DO nu3 = 0, (Ho_Nmax - l3)/2
                                                        DO nu4 = 0, (Ho_Nmax - l4)/2
-                                                          
+
                                                           !HO basis
                                                           x1 = Ho_index(l1,jindex1,nu1)
                                                           x2 = Ho_index(l2,jindex2,nu2)
                                                           x3 = Ho_index(l3,jindex3,nu3)
-                                                          x4 = Ho_index(l4,jindex4,nu4)
+                                                          x4 = Ho_index(l4,jindex4,nu4)     
 
+!!$                                                          IF(ABS(CONJG(hf_transform(l1,jindex1,nu1,n1))*CONJG(hf_transform(l2,jindex2,nu2,n2))&
+!!$                                                               *hf_transform(l3,jindex3,nu3,n3)*hf_transform(l4,jindex4,nu4,n4))>1e-10) THEN
+!!$                                                             IF(i1/=x1 .or. i2/=x2 .or. i3/=x3 .or. i4/=x4) THEN
+!!$                                                                WRITE(*,*) 'i1,i2,i3,i4=',i1,i2,i3,i4,'x1,x2,x3,x4=',x1,x2,x3,x4
+!!$                                                                WRITE(*,*) 'n1,n2,n3,n4=',n1,n2,n3,n4,'nu1,nu2,nu3,nu4=',nu1,nu2,nu3,nu4
+!!$                                                             END IF
+!!$                                                          END IF
 
+!ERROR HERE
+!!$                                                          RPA_matels_j13(j13,i1,i2,i3,i4) = RPA_matels_j13(j13,i1,i2,i3,i4) + geom &
+!!$                                                               *CONJG(hf_transform(l1,jindex1,nu1,n1))*CONJG(hf_transform(l2,jindex2,nu2,n1))&
+!!$                                                               *hf_transform(l3,jindex3,nu3,n3)*hf_transform(l4,jindex4,nu4,n4)&
+!!$                                                               *COMPLEX(matels_j12(j12,x1,x2,x3,x4),0.0_r_kind)&
+!!$                                                               *v_scale                                          
+
+!FIXED
 
                                                           RPA_matels_j13(j13,i1,i2,i3,i4) = RPA_matels_j13(j13,i1,i2,i3,i4) + geom &
-                                                               *CONJG(hf_transform(l1,jindex1,nu1,n1))*CONJG(hf_transform(l2,jindex2,nu2,n1))&
+                                                               *CONJG(hf_transform(l1,jindex1,nu1,n1))*CONJG(hf_transform(l2,jindex2,nu2,n2))&
                                                                *hf_transform(l3,jindex3,nu3,n3)*hf_transform(l4,jindex4,nu4,n4)&
                                                                *COMPLEX(matels_j12(j12,x1,x2,x3,x4),0.0_r_kind)&
-                                                               *v_scale
+                                                               *v_scale          
 
 
 
@@ -521,6 +569,27 @@ CONTAINS
 
                    !new, absorbed phases in the definition of X and Y
                    RPA_matrix(ph_parity,ph_J)%mat(II,JJ) = (-1)**((twoj(lp_pr,jindexp_pr)+twoj(lh_pr,jindexh_pr))/2)*RPA_matels_j13(ph_J,i1,i2,i3,i4)
+
+
+                   !for debug
+!!$                   RPA_matrix(ph_parity,ph_J)%mat(II,JJ)=(0.0,0.0)
+!!$                   DO j12 = 0,2*Ho_lmax
+!!$                      RPA_matrix(ph_parity,ph_J)%mat(II,JJ) = RPA_matrix(ph_parity,ph_J)%mat(II,JJ)&
+!!$                           +(-1)**((twoj(lp_pr,jindexp_pr)+twoj(lh_pr,jindexh_pr))/2)&
+!!$                           *(-1)**j12*(2*j12+1)*sixj(twoj(lh_pr,jindexh_pr),twoj(lp,jindexp),2*j12,twoj(lh,jindexh),twoj(lp_pr,jindexp_pr),2*ph_J)&
+!!$                           *COMPLEX(matels_j12(j12,i1,i2,i3,i4),0.0_r_kind)
+!!$
+!!$                   END DO
+
+                   !end for debug
+
+
+!!$                   !for debug
+!!$                   WRITE(*,*) 'i1,i2,i3,i4=',i1,i2,i3,i4,'RPA_matels_j13(ph_J,i1,i2,i3,i4)=',REAL(RPA_matels_j13(ph_J,i1,i2,i3,i4)),'RPA_matels_j13(ph_J,i4,i3,i2,i1)=',REAL(RPA_matels_j13(ph_J,i4,i3,i2,i1))
+!!$
+!!$                   WRITE(*,*) 'matels_j12(2,i1,i2,i3,i4)=',REAL(matels_j12(2,i1,i2,i3,i4)),'matels_j12(2,i4,i3,i2,i1)=',matels_j12(2,i4,i3,i2,i1)
+!!$                   !end for debug
+
 
 
                    !upper right parrt
@@ -783,7 +852,7 @@ CONTAINS
 
     outunit = 106
 
-    WRITE(outunit,'(A16,6A4)') '#           e_ph','h_n','h_l','h_2j','p_n','p_l','p_2j'
+    WRITE(outunit,'(A16,8A4)') '#           e_ph','h_n','h_l','h_2j','h_i','p_n','p_l','p_2j','p_i'
 
     DO ph_parity = 0,1
        DO ph_J = 0,RPA_ph_J_max
@@ -798,13 +867,15 @@ CONTAINS
 
           IF(dim1 > 0) THEN
              DO II = 1,dim1
-                WRITE(outunit,'(F16.10,6I4)') ph_blocks(ph_parity,ph_J)%ph_states(II)%e_ph,&
+                WRITE(outunit,'(F16.10,8I4)') ph_blocks(ph_parity,ph_J)%ph_states(II)%e_ph,&
                      ph_blocks(ph_parity,ph_J)%ph_states(II)%h_n, &
                      ph_blocks(ph_parity,ph_J)%ph_states(II)%h_l, &
                      twoj(ph_blocks(ph_parity,ph_J)%ph_states(II)%h_l,ph_blocks(ph_parity,ph_J)%ph_states(II)%h_jindex), &
+                     Ho_index(ph_blocks(ph_parity,ph_J)%ph_states(II)%h_l,ph_blocks(ph_parity,ph_J)%ph_states(II)%h_jindex,ph_blocks(ph_parity,ph_J)%ph_states(II)%h_n), &                     
                      ph_blocks(ph_parity,ph_J)%ph_states(II)%p_n, &
                      ph_blocks(ph_parity,ph_J)%ph_states(II)%p_l, &
-                     twoj(ph_blocks(ph_parity,ph_J)%ph_states(II)%p_l,ph_blocks(ph_parity,ph_J)%ph_states(II)%p_jindex)
+                     twoj(ph_blocks(ph_parity,ph_J)%ph_states(II)%p_l,ph_blocks(ph_parity,ph_J)%ph_states(II)%p_jindex), &
+                     Ho_index(ph_blocks(ph_parity,ph_J)%ph_states(II)%p_l,ph_blocks(ph_parity,ph_J)%ph_states(II)%p_jindex,ph_blocks(ph_parity,ph_J)%ph_states(II)%p_n)
 
              END DO
           END IF
@@ -3127,10 +3198,11 @@ END IF
   END FUNCTION Ho_collective_index
 
 
-  SUBROUTINE hf_init(is_RPA)
+  SUBROUTINE hf_init(is_RPA,HF_v_2body_scale)
     IMPLICIT NONE
 
     LOGICAL, intent(in) :: is_RPA
+    REAL(kind=r_kind), intent(in) :: HF_v_2body_scale
 
     INTEGER :: l,jindex,n1,n2,n3,n4,max_n
 
@@ -3269,7 +3341,9 @@ END IF
         CALL calculate_matels_hf
      END IF
      
-     
+     !scaling of the 2-body interaction
+     Ho_two_body_matels = HF_v_2body_scale*Ho_two_body_matels
+
      
      !CALL calculate_matels_hf
 
